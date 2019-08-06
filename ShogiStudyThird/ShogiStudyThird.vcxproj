@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="koma.cpp" />
+    <ClCompile Include="kyokumen.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
