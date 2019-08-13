@@ -157,17 +157,28 @@
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="move.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="usi.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="agent.h" />
     <ClInclude Include="bb_kiki.h" />
     <ClInclude Include="bitboard.h" />
+    <ClInclude Include="commander.h" />
+    <ClInclude Include="evaluated_nodes.h" />
+    <ClInclude Include="evaluator.h" />
     <ClInclude Include="koma.h" />
     <ClInclude Include="koma_motion.h" />
     <ClInclude Include="kyokumen.h" />
+    <ClInclude Include="move.h" />
+    <ClInclude Include="node.h" />
+    <ClInclude Include="player.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="tree.h" />
+    <ClInclude Include="usi.h" />
     <ClInclude Include="vec2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

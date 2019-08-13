@@ -8,7 +8,6 @@
 
 void BBkiki::init() {
 	genData();
-	//loadData();
 }
 
 const Bitboard BBkiki::getDashKiki(const Bitboard& allBB, const koma::Koma dkoma, const unsigned komapos) {
