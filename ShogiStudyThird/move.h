@@ -1,5 +1,6 @@
 #pragma once
 #include "koma.h"
+#include <vector>
 
 class Move {
 public:

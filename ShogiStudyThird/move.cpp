@@ -2,19 +2,23 @@
 #include "move.h"
 #include "usi.h"
 
+std::vector<Move> Move::usiToMoves(const std::vector<std::string>& tokens) {
+
+}
+
 std::string Move::toUSI() const {
 	using namespace koma;
 	using namespace usi;
-	if (from() == SQNum && to() = SQNum)return "startpos";
+	if ((from() == SQNum) && (to() == SQNum))return "startpos";
 	std::string str;
 	if (koma::isInside(from())) {
 		str += posToUsi(from());
 	}
 	else {
-		usi += mochigomaToUsi(true, MposToMochi(from()));
-		usi += '*';
+		str += mochigomaToUsi(true, MposToMochi(from()));
+		str += '*';
 	}
-	usi += posToUsi(to());
-	if (promote())usi += '+';
-	return usi;
+	str += posToUsi(to());
+	if (promote())str += '+';
+	return str;
 }
