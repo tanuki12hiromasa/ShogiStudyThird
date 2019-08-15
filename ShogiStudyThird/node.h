@@ -12,6 +12,10 @@ public:
 
 	SearchNode* addChild(const Move& move);
 
+	SearchNode* choiceNode(const double pip, const double T)const;
+	void updateNode(const double T);
+	void updateMateNode();
+	void setEvaluation(const double eval);
 
 	std::vector<SearchNode*> children;
 	Move move;
