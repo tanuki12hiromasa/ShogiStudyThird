@@ -150,6 +150,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="apery_feature.cpp" />
     <ClCompile Include="bb_kiki.cpp" />
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="koma.cpp" />
@@ -165,6 +166,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="agent.h" />
+    <ClInclude Include="apery_evaluate.h" />
+    <ClInclude Include="apery_feature.h" />
+    <ClInclude Include="apery_param.h" />
     <ClInclude Include="bb_kiki.h" />
     <ClInclude Include="bitboard.h" />
     <ClInclude Include="commander.h" />

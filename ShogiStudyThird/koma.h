@@ -62,13 +62,14 @@ namespace koma {
 		SQ71, SQ72, SQ73, SQ74, SQ75, SQ76, SQ77, SQ78, SQ79,
 		SQ81, SQ82, SQ83, SQ84, SQ85, SQ86, SQ87, SQ88, SQ89,
 		SQ91, SQ92, SQ93, SQ94, SQ95, SQ96, SQ97, SQ98, SQ99,
-		
+
 		m_sFu, m_sKyou, m_sKei, m_sGin, m_sKaku, m_sHi, m_sKin,
 		m_gFu, m_gKyou, m_gKei, m_gGin, m_gKaku, m_gHi, m_gKin,
 
-		SQNum = SQ99 + 1,
 		SQMin = SQ11, SQMax = SQ99,
-		SQm_Min = m_sFu, SQm_Max = m_gKin
+		SQNum = SQMax + 1,
+		SQm_Min = m_sFu, SQm_Max = m_gKin,
+		SQm_Num = SQm_Max + 1
 	};
 	enum Dan : int {
 		Dan1 = 0, Dan2, Dan3, Dan4, Dan5, Dan6, Dan7, Dan8, Dan9

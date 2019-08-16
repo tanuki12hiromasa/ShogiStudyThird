@@ -54,6 +54,9 @@
     <ClCompile Include="move.cpp">
       <Filter>ソース ファイル\kiso</Filter>
     </ClCompile>
+    <ClCompile Include="apery_feature.cpp">
+      <Filter>apery</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -106,6 +109,15 @@
     </ClInclude>
     <ClInclude Include="history.h">
       <Filter>ヘッダー ファイル\search</Filter>
+    </ClInclude>
+    <ClInclude Include="apery_feature.h">
+      <Filter>apery</Filter>
+    </ClInclude>
+    <ClInclude Include="apery_param.h">
+      <Filter>apery</Filter>
+    </ClInclude>
+    <ClInclude Include="apery_evaluate.h">
+      <Filter>apery</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
