@@ -32,6 +32,7 @@ public:
 	unsigned pop_first();//先頭の1のbitを探してindexを返し、0にする
 	unsigned find_first()const;	//bitを順に探す 見つからなければbbNumを返す
 	unsigned find_next(const unsigned)const;
+	unsigned find_last()const;
 	unsigned popcount()const;
 	bool test(const unsigned pos)const;
 	void set(const unsigned pos, const bool value);

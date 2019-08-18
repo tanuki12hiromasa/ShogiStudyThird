@@ -76,6 +76,22 @@ unsigned Bitboard::find_next(const unsigned first) const {
 	return operator&(~fillOne(first + 1u)).find_first();
 }
 
+unsigned Bitboard::find_last()const {
+	unsigned long index;
+	if (_BitScanReverse64(&index, _p[2])) {
+		return index;
+	}
+	else if (_BitScanReverse64(&index, _p[1])) {
+		return index;
+	}
+	else if (_BitScanReverse64(&index, _p[0])) {
+		return index;
+	}
+	else {
+		return size();
+	}
+}
+
 unsigned Bitboard::popcount()const {
 	return __popcnt64(_p[0]) + __popcnt64(_p[1]) + __popcnt64(_p[2]);
 }

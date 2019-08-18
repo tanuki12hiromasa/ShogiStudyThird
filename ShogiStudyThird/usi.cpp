@@ -17,6 +17,15 @@ namespace usi {
 		else
 			return KomaUsi[static_cast<size_t>(koma) + 14];
 	}
+	std::string mposToUsi(Position mpos) {
+		assert(mpos >= Position::SQm_Min && mpos < Position::SQm_Num);
+		if (mpos < Position::m_gFu) {
+			return KomaUsi[mpos - Position::m_sFu];
+		}
+		else {
+			return KomaUsi[(size_t)(mpos - Position::m_gFu) + 14u];
+		}
+	}
 
 	Mochigoma usiToMochi(const char usi) {
 		switch (usi) {

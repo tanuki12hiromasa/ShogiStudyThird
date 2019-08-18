@@ -8,6 +8,7 @@ namespace usi {
 
 	extern std::string komaToUsi(koma::Koma koma);//Koma::Noneは渡してはいけないので注意
 	extern std::string mochigomaToUsi(bool teban, koma::Mochigoma koma);
+	extern std::string mposToUsi(koma::Position mpos);
 
 	extern const std::array<char, 9> ColumUsi;
 	extern const std::array<char, 9> RawUsi;

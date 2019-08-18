@@ -8,16 +8,18 @@ class Kyokumen {
 	friend class BBkiki;
 	friend class SearchPlayer;
 public:
-	Kyokumen();
+	Kyokumen():Kyokumen(prime_bammen, true) {}
 	Kyokumen(const std::array<koma::Koma, 81>&, const std::array<unsigned,7>&, const std::array<unsigned, 7>&, bool);
-	Kyokumen(std::array<koma::Koma, 81>&&, std::array<unsigned, 7>&&, std::array<unsigned, 7>&&, bool);
+	Kyokumen(const std::array<std::uint8_t, 95>&, bool);
+	Kyokumen(std::array<std::uint8_t, 95>&&, bool);
 	Kyokumen(const std::vector<std::string>& usitokens);
 	std::string toSfen()const;
 	
 	koma::Position proceed(const Move);
 
 	bool teban()const { return isSente; }
-	koma::Koma getKoma(koma::Position pos) { assert(pos < 81); return static_cast<koma::Koma> (bammen[static_cast<size_t>(pos)]); }
+	koma::Koma getKoma(const koma::Position pos)const { assert(pos < 81); return static_cast<koma::Koma> (bammen[static_cast<size_t>(pos)]); }
+	koma::Koma getKoma(const unsigned pos)const { assert(pos < 81); return static_cast<koma::Koma> (bammen[static_cast<size_t>(pos)]); }
 	unsigned getMochigomaNum(koma::Position mpos) { assert(mpos >= 81); return static_cast<unsigned> (bammen[static_cast<size_t>(mpos)]); }
 	unsigned getMochigomaNum(bool teban, koma::Mochigoma koma) { return teban ? static_cast<unsigned>(bammen[static_cast<size_t>(koma) + 81]) : static_cast<unsigned>(bammen[static_cast<size_t>(koma) + 81 + 7]); }
 	const Bitboard& getAllBB()const { return allKomaBB; }
@@ -36,7 +38,9 @@ public:
 	Bitboard pinMaskGote(const unsigned pos)const;
 
 private:
+	void setKoma(size_t pos, koma::Koma k) { assert(0 <= pos && pos < 81); bammen[pos] = static_cast<std::uint8_t>(k); }
 	void reflectBitboard();
+	bool pinCheck(const unsigned ou,Bitboard line, const Bitboard& enemies)const;
 	Bitboard pinned_linescan(const koma::Vector2 ou, const koma::Vector2 dir, const std::vector<koma::Koma> scanned)const;
 
 	bool isSente;
