@@ -201,3 +201,20 @@ koma::Position Kyokumen::proceed(const Move move) {
 	isSente = !isSente;
 	return captured;
 }
+
+std::vector<Bitboard> Kyokumen::getSenteOuCheck(const Move m)const {
+	std::vector<Bitboard> kusemono;
+	const unsigned ouPos = sOuPos();
+	const unsigned from = m.from();
+	const unsigned to = m.to();
+	//親局面が存在しない、または玉自身が動いた場合は全体を調べる
+	if (from == Position::NullMove || to==ouPos) {
+		return getSenteOuCheck();
+	}
+	//fromでどいたところから空き王手がないか調べる
+	Bitboard fpBB = pinMaskSente(from);
+	if (fpBB != bbmask::AllOne)
+		kusemono.push_back(fpBB);
+	//toに移動した駒が玉に効いているか調べる
+
+}

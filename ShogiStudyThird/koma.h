@@ -69,7 +69,8 @@ namespace koma {
 		SQMin = SQ11, SQMax = SQ99,
 		SQNum = SQMax + 1,
 		SQm_Min = m_sFu, SQm_Max = m_gKin,
-		SQm_Num = SQm_Max + 1
+		SQm_Num = SQm_Max + 1,
+		NullMove
 	};
 	enum Dan : int {
 		Dan1 = 0, Dan2, Dan3, Dan4, Dan5, Dan6, Dan7, Dan8, Dan9

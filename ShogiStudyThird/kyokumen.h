@@ -29,10 +29,10 @@ public:
 	unsigned sOuPos()const { return eachKomaBB[static_cast<size_t>(koma::Koma::s_Ou)].find_first(); }
 	unsigned gOuPos()const { return eachKomaBB[static_cast<size_t>(koma::Koma::g_Ou)].find_first(); }
 	
-	bool isSenteChecked(const Move)const;
-	bool isGoteChecked(const Move)const;
-	std::vector<Bitboard> getSenteOuCheck(const Move)const;
+	std::vector<Bitboard> getSenteOuCheck(const Move)const;//moveは直前のもの
 	std::vector<Bitboard> getGoteOuCheck(const Move)const;
+	std::vector<Bitboard> getSenteOuCheck()const;//盤全体をチェック
+	std::vector<Bitboard> getGoteOuCheck()const;
 
 	Bitboard pinMaskSente(const unsigned pos)const;//pos上の駒が敵駒にpinされていれば移動可能な直線範囲を返す pinされてなければAllOneが返る
 	Bitboard pinMaskGote(const unsigned pos)const;
