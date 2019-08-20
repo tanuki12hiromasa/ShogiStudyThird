@@ -46,6 +46,7 @@ public:
 
 	//演算子
 	bool operator==(const Bitboard&)const;
+	bool operator!=(const Bitboard&)const;
 	Bitboard operator&(const Bitboard&)const;
 	Bitboard operator|(const Bitboard&)const;
 	Bitboard& operator&=(const Bitboard&);
@@ -66,4 +67,36 @@ namespace bbmask {
 	static const Bitboard Dan3to9{ 0b111111100ULL,0b111111100111111100111111100111111100111111100111111100111111100ULL,0b111111100ULL };//"111111100111111100111111100111111100111111100111111100111111100111111100111111100"
 	static const Bitboard AllOne{ 0b111111111ULL,0b111111111111111111111111111111111111111111111111111111111111111ULL,0b111111111ULL };//"111111111111111111111111111111111111111111111111111111111111111111111111111111111"
 	static const Bitboard AllZero{ 0,0,0 };
+}
+
+
+inline bool Bitboard::operator==(const Bitboard& rhs) const {
+	return _p == rhs._p;
+}
+
+inline bool Bitboard::operator!=(const Bitboard& rhs)const {
+	return _p != rhs._p;
+}
+
+inline Bitboard Bitboard::operator&(const Bitboard& rhs) const {
+	return Bitboard(_p[0] & rhs._p[0], _p[1] & rhs._p[1], _p[2] & rhs._p[2]);
+}
+
+inline Bitboard Bitboard::operator|(const Bitboard& rhs) const {
+	return Bitboard(_p[0] | rhs._p[0], _p[1] | rhs._p[1], _p[2] | rhs._p[2]);
+}
+
+inline Bitboard& Bitboard::operator&=(const Bitboard& rhs) {
+	_p[0] &= rhs._p[0]; _p[1] &= rhs._p[1]; _p[2] &= rhs._p[2];
+	return *this;
+}
+
+inline Bitboard& Bitboard::operator|=(const Bitboard& rhs) {
+	_p[0] |= rhs._p[0]; _p[1] |= rhs._p[1]; _p[2] |= rhs._p[2];
+	return *this;
+}
+
+inline Bitboard Bitboard::operator~()const {
+	//そのまま反転させると不使用ビットが1になってしまうが、コンストラクタ内でマスクして0になるので大丈夫
+	return Bitboard(~_p[0], ~_p[1], ~_p[2]);
 }

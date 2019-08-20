@@ -174,30 +174,3 @@ Bitboard Bitboard::fillOne(unsigned index) {
 	}
 	return Bitboard(std::move(p));
 }
-
-bool Bitboard::operator==(const Bitboard& rhs) const {
-	return _p == rhs._p;
-}
-
-Bitboard Bitboard::operator&(const Bitboard& rhs) const {
-	return Bitboard(_p[0] & rhs._p[0], _p[1] & rhs._p[1], _p[2] & rhs._p[2]);
-}
-
-Bitboard Bitboard::operator|(const Bitboard& rhs) const {
-	return Bitboard(_p[0] | rhs._p[0], _p[1] | rhs._p[1], _p[2] | rhs._p[2]);
-}
-
-Bitboard& Bitboard::operator&=(const Bitboard& rhs) {
-	_p[0] &= rhs._p[0]; _p[1] &= rhs._p[1]; _p[2] &= rhs._p[2];
-	return *this;
-}
-
-Bitboard& Bitboard::operator|=(const Bitboard& rhs) {
-	_p[0] |= rhs._p[0]; _p[1] |= rhs._p[1]; _p[2] |= rhs._p[2];
-	return *this;
-}
-
-Bitboard Bitboard::operator~()const {
-	//そのまま反転させると不使用ビットが1になってしまうが、コンストラクタ内でマスクして0になるので大丈夫
-	return Bitboard(~_p[0], ~_p[1], ~_p[2]);
-}
