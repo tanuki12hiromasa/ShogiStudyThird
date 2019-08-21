@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "kyokumen.h"
 #include "usi.h"
+#include "bb_kiki.h"
 
 using namespace koma;
 
@@ -213,8 +214,71 @@ std::vector<Bitboard> Kyokumen::getSenteOuCheck(const Move m)const {
 	}
 	//fromでどいたところから空き王手がないか調べる
 	Bitboard fpBB = pinMaskSente(from);
-	if (fpBB != bbmask::AllOne)
+	if (fpBB != bbmask::AllOne) {
+		fpBB.set(from);
 		kusemono.push_back(fpBB);
+	}
 	//toに移動した駒が玉に効いているか調べる
+	const Koma movedKoma = getKoma(to);
+	if (isDashable(movedKoma)) {
+		Bitboard kiki = BBkiki::getDashKiki(allKomaBB, movedKoma, to);
+		kiki.set(to);
+		kiki &= BBkiki::getDashKiki(allKomaBB, sgInv(movedKoma), ouPos);
+		if (kiki.any()) {
+			kusemono.push_back(kiki);
+		}
+	}
+	else {
+		Bitboard tpBB = Bitboard(to);
+		tpBB &= BBkiki::getStepKiki(sgInv(movedKoma), ouPos);
+		if (tpBB.any()) {
+			kusemono.push_back(tpBB);
+		}
+	}
+	return kusemono;
+}
 
+std::vector<Bitboard> Kyokumen::getGoteOuCheck(const Move m)const {
+	std::vector<Bitboard> kusemono;
+	const unsigned ouPos = gOuPos();
+	const unsigned from = m.from();
+	const unsigned to = m.to();
+	//親局面が存在しない、または玉自身が動いた場合は全体を調べる
+	if (from == Position::NullMove || to == ouPos) {
+		return getGoteOuCheck();
+	}
+	//fromでどいたところから空き王手がないか調べる
+	Bitboard fpBB = pinMaskGote(from);
+	if (fpBB != bbmask::AllOne) {
+		fpBB.set(from);
+		kusemono.push_back(fpBB);
+	}
+	//toに移動した駒が玉に効いているか調べる
+	const Koma movedKoma = getKoma(to);
+	if (isDashable(movedKoma)) {
+		Bitboard kiki = BBkiki::getDashKiki(allKomaBB, movedKoma, to);
+		kiki.set(to);
+		kiki &= BBkiki::getDashKiki(allKomaBB, sgInv(movedKoma), ouPos);
+		if (kiki.any()) {
+			kusemono.push_back(kiki);
+		}
+	}
+	else {
+		Bitboard tpBB = Bitboard(to);
+		tpBB &= BBkiki::getStepKiki(sgInv(movedKoma), ouPos);
+		if (tpBB.any()) {
+			kusemono.push_back(tpBB);
+		}
+	}
+	return kusemono;
+}
+
+std::vector<Bitboard> Kyokumen::getSenteOuCheck()const {
+	std::vector<Bitboard> kusemono;
+	const unsigned ouPos = sOuPos();
+	for (Koma koma : {Koma::g_Fu, Koma::g_Kei, Koma::g_Gin, Koma::g_Kin, Koma::g_Ou,
+		Koma::g_nFu, Koma::g_nKyou, Koma::g_nKei, Koma::g_nGin}) {
+		Bitboard komaBB = getEachBB(koma);
+
+	}
 }
