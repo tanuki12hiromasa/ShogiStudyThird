@@ -8,6 +8,7 @@ public:
 	static void init();
 	static const Bitboard getStepKiki(const koma::Koma koma, const unsigned komapos);
 	static const Bitboard getDashKiki(const Bitboard& allbb, const koma::Koma koma, const unsigned komapos);
+	static const Bitboard getKiki(const Bitboard& allbb, const koma::Koma koma, const unsigned komapos);
 private:
 	static const Bitboard getSKyouDashKiki(const Bitboard& allbb, const unsigned komapos);
 	static const Bitboard getGKyouDashKiki(const Bitboard& allbb, const unsigned komapos);
