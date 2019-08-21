@@ -38,15 +38,6 @@ namespace koma {
 		}
 		else return koma;
 	}
-	bool isDashableS(Koma koma) {
-		return  koma == Koma::s_Hi || koma == Koma::s_Kaku || koma == Koma::s_nHi || koma == Koma::s_nKaku || koma == Koma::s_Kyou;
-	}
-	bool isDashableG(Koma koma) {
-		return  koma == Koma::g_Hi || koma == Koma::g_Kaku || koma == Koma::g_nHi || koma == Koma::g_nKaku || koma == Koma::g_Kyou;
-	}
-	bool isDashable(Koma koma) {
-		return isDashableS(koma) || isDashableG(koma);
-	}
 
 	Mochigoma KomaToMochi(const Koma koma) {
 		assert(koma != Koma::s_Ou && koma != Koma::g_Ou);//王は持ち駒にならない

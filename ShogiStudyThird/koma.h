@@ -39,9 +39,15 @@ namespace koma {
 	extern Koma dispromote(Koma koma);
 
 	//遠距離移動できる駒かどうか
-	extern bool isDashableS(Koma koma);
-	extern bool isDashableG(Koma koma);
-	extern bool isDashable(Koma koma);
+	bool isDashableS(Koma koma) {
+		return  koma == Koma::s_Hi || koma == Koma::s_Kaku || koma == Koma::s_nHi || koma == Koma::s_nKaku || koma == Koma::s_Kyou;
+	}
+	bool isDashableG(Koma koma) {
+		return  koma == Koma::g_Hi || koma == Koma::g_Kaku || koma == Koma::g_nHi || koma == Koma::g_nKaku || koma == Koma::g_Kyou;
+	}
+	bool isDashable(Koma koma) {
+		return isDashableS(koma) || isDashableG(koma);
+	}
 
 	//持ち駒を表すenum 
 	enum class Mochigoma : std::uint8_t {
