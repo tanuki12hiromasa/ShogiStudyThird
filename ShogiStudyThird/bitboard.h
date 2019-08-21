@@ -21,8 +21,11 @@ private:
 	static const unsigned bbNum = 81;
 public:
 	Bitboard() :_p({ 0,0,0 }) {}
-	Bitboard(std::uint64_t, std::uint64_t, std::uint64_t);
-	Bitboard(std::array<std::uint64_t, 3>&&);
+	Bitboard(std::uint64_t rside, std::uint64_t center, std::uint64_t lside)
+		: _p({ rside & 0x01FFULL, center & 0x7FFFFFFFFFFFFFFFULL, lside & 0x01FFULL }){} //不使用ビットが1にならないようにマスクする
+	Bitboard(std::array<std::uint64_t, 3> && val): _p(std::move(val))
+		{_p[0] &= 0x1FFULL; _p[1] &= 0x7FFFFFFFFFFFFFFFULL; _p[2] &= 0x1FFULL;}
+	Bitboard(const unsigned pos) : Bitboard() {	set(pos);}
 	Bitboard(const LittleBitboard& lb);
 	Bitboard(const std::string& bits);
 	LittleBitboard toLittle();

@@ -10,16 +10,6 @@ Bitboard::Bitboard(const std::string& bits)
 		std::stoul(bits.substr(72,9),nullptr,2) })
 {}
 
-Bitboard::Bitboard(std::uint64_t rside, std::uint64_t center, std::uint64_t lside)
-	: _p({ rside & 0x01FFULL, center & 0x7FFFFFFFFFFFFFFFULL, lside & 0x01FFULL })
-{} //不使用ビットが1にならないようにマスクする
-
-Bitboard::Bitboard(std::array<std::uint64_t, 3> && val)
-	: _p(std::move(val))
-{
-	_p[0] &= 0x1FFULL; _p[1] &= 0x7FFFFFFFFFFFFFFFULL; _p[2] &= 0x1FFULL;
-}
-
 Bitboard::Bitboard(const LittleBitboard& lb)
 	: _p({ lb.side[0],lb.center,lb.side[1] })
 {}
