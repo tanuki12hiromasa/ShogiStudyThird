@@ -282,3 +282,22 @@ std::vector<Bitboard> Kyokumen::getSenteOuCheck()const {
 
 	}
 }
+
+Bitboard Kyokumen::pinMaskSente(const unsigned pos)const {
+	const unsigned ouPos = sOuPos();
+	Bitboard dpBB(allKomaBB);
+	dpBB.reset(pos);
+	for (Koma ek : {Koma::g_Kyou, Koma::g_Kaku, Koma::g_Hi, Koma::g_nKaku, Koma::g_nHi}) {
+		Bitboard kikiBB = BBkiki::getDashKiki(dpBB, sgInv(ek), ouPos);
+		Bitboard eBB = kikiBB & getEachBB(ek);
+		if (eBB.any()) {
+			Bitboard result;
+			for (unsigned i = eBB.pop_first(); eBB.none(); i = eBB.pop_first()) {
+				result |= kikiBB & BBkiki::getDashKiki(dpBB, ek, i);
+				result.set(i);
+			}
+			return result;
+		}
+		return bbmask::AllOne;
+	}
+}
