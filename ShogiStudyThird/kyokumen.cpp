@@ -19,6 +19,11 @@ const std::array<std::uint8_t, 95> prime_bammen = {
 	0u,0u,0u,0u,0u,0u,0u
 };
 
+const std::array<Koma, 9> sStepKomas = { Koma::s_Fu, Koma::s_Kei, Koma::s_Gin, Koma::s_Kin, Koma::s_Ou, Koma::s_nFu, Koma::s_nKyou, Koma::s_nKei, Koma::s_nGin };
+const std::array<Koma, 5> sDashKomas = { Koma::s_Kyou, Koma::s_Kaku, Koma::s_Hi, Koma::s_nKaku, Koma::s_nHi };
+const std::array<Koma, 9> gStepKomas = { Koma::g_Fu, Koma::g_Kei, Koma::g_Gin, Koma::g_Kin, Koma::g_Ou, Koma::g_nFu, Koma::g_nKyou, Koma::g_nKei, Koma::g_nGin };
+const std::array<Koma, 5> gDashKomas = { Koma::g_Kyou, Koma::g_Kaku, Koma::g_Hi, Koma::g_nKaku, Koma::g_nHi };
+
 Kyokumen::Kyokumen():
 	Kyokumen(prime_bammen,true){}
 
@@ -276,23 +281,61 @@ std::vector<Bitboard> Kyokumen::getGoteOuCheck(const Move m)const {
 std::vector<Bitboard> Kyokumen::getSenteOuCheck()const {
 	std::vector<Bitboard> kusemono;
 	const unsigned ouPos = sOuPos();
-	for (Koma koma : {Koma::g_Fu, Koma::g_Kei, Koma::g_Gin, Koma::g_Kin, Koma::g_Ou,
-		Koma::g_nFu, Koma::g_nKyou, Koma::g_nKei, Koma::g_nGin}) {
-		Bitboard komaBB = getEachBB(koma);
-
+	for (const Koma koma : gStepKomas) {
+		Bitboard kusemonoBB = BBkiki::getStepKiki(sgInv(koma), ouPos) & getEachBB(koma);
+		if (kusemonoBB.any()) {
+			kusemono.push_back(kusemonoBB);
+			break;
+		}
 	}
+	for (const Koma koma : gDashKomas) {
+		Bitboard kikiBB = BBkiki::getDashKiki(allKomaBB, sgInv(koma), ouPos);
+		Bitboard eBB = kikiBB & getEachBB(koma);
+		if (eBB.any()) {
+			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
+				Bitboard kusemonoBB = BBkiki::getDashKiki(allKomaBB, koma, i) & kikiBB;
+				kusemonoBB.set(i);
+				kusemono.push_back(kusemonoBB);
+			}
+		}
+	}
+	return kusemono;
+}
+
+std::vector<Bitboard> Kyokumen::getGoteOuCheck()const {
+	std::vector<Bitboard> kusemono;
+	const unsigned ouPos = gOuPos();
+	for (const Koma koma : sStepKomas) {
+		Bitboard kusemonoBB = BBkiki::getStepKiki(sgInv(koma), ouPos) & getEachBB(koma);
+		if (kusemonoBB.any()) {
+			kusemono.push_back(kusemonoBB);
+			break;
+		}
+	}
+	for (const Koma koma : sDashKomas) {
+		Bitboard kikiBB = BBkiki::getDashKiki(allKomaBB, sgInv(koma), ouPos);
+		Bitboard eBB = kikiBB & getEachBB(koma);
+		if (eBB.any()) {
+			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
+				Bitboard kusemonoBB = BBkiki::getDashKiki(allKomaBB, koma, i) & kikiBB;
+				kusemonoBB.set(i);
+				kusemono.push_back(kusemonoBB);
+			}
+		}
+	}
+	return kusemono;
 }
 
 Bitboard Kyokumen::pinMaskSente(const unsigned pos)const {
 	const unsigned ouPos = sOuPos();
 	Bitboard dpBB(allKomaBB);
 	dpBB.reset(pos);
-	for (Koma ek : {Koma::g_Kyou, Koma::g_Kaku, Koma::g_Hi, Koma::g_nKaku, Koma::g_nHi}) {
+	for (Koma ek : gDashKomas) {
 		Bitboard kikiBB = BBkiki::getDashKiki(dpBB, sgInv(ek), ouPos);
 		Bitboard eBB = kikiBB & getEachBB(ek);
 		if (eBB.any()) {
 			Bitboard result;
-			for (unsigned i = eBB.pop_first(); eBB.none(); i = eBB.pop_first()) {
+			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
 				result |= kikiBB & BBkiki::getDashKiki(dpBB, ek, i);
 				result.set(i);
 			}
@@ -300,4 +343,43 @@ Bitboard Kyokumen::pinMaskSente(const unsigned pos)const {
 		}
 		return bbmask::AllOne;
 	}
+}
+
+Bitboard Kyokumen::pinMaskGote(const unsigned pos)const {
+	const unsigned ouPos = gOuPos();
+	Bitboard dpBB(allKomaBB);
+	dpBB.reset(pos);
+	for (Koma ek : sDashKomas) {
+		Bitboard kikiBB = BBkiki::getDashKiki(dpBB, sgInv(ek), ouPos);
+		Bitboard eBB = kikiBB & getEachBB(ek);
+		if (eBB.any()) {
+			Bitboard result;
+			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
+				result |= kikiBB & BBkiki::getDashKiki(dpBB, ek, i);
+				result.set(i);
+			}
+			return result;
+		}
+		return bbmask::AllOne;
+	}
+}
+
+void Kyokumen::reflectBitboard() {
+	//bitboard
+	for (auto& bb : eachKomaBB) {
+		bb.all_reset();
+	}
+	for (int i = 0; i < 81; i++) {
+		if (getKoma(i) != koma::Koma::None)
+			eachKomaBB[bammen[i]].set(i);
+	}
+	senteKomaBB.all_reset();
+	for (size_t i = static_cast<size_t>(koma::Koma::s_Min); i < static_cast<size_t>(koma::Koma::s_Num); i++) {
+		senteKomaBB |= eachKomaBB[i]; //先手の駒をすべて集めたbb
+	}
+	goteKomaBB.all_reset();
+	for (size_t i = static_cast<size_t>(koma::Koma::g_Min); i < static_cast<size_t>(koma::Koma::g_Num); i++) {
+		goteKomaBB |= eachKomaBB[i]; //後手の駒をすべて集めたbb
+	}
+	allKomaBB = senteKomaBB | goteKomaBB;//全体のbbは先後のものを合成する
 }

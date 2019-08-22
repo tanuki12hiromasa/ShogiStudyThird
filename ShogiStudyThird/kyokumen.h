@@ -40,8 +40,6 @@ public:
 private:
 	void setKoma(size_t pos, koma::Koma k) { assert(0 <= pos && pos < 81); bammen[pos] = static_cast<std::uint8_t>(k); }
 	void reflectBitboard();
-	bool pinCheck(const unsigned ou,Bitboard line, const Bitboard& enemies)const;
-	Bitboard pinned_linescan(const koma::Vector2 ou, const koma::Vector2 dir, const std::vector<koma::Koma> scanned)const;
 
 	bool isSente;
 	std::array<std::uint8_t,95> bammen;//81番以降は持ち駒の数 SS2ndでは別の配列にしていたのを統合
