@@ -5,10 +5,9 @@
 #include "vec2.h"
 
 class Kyokumen {
-	friend class BBkiki;
-	friend class SearchPlayer;
+	friend class MoveGenerator;
 public:
-	Kyokumen():Kyokumen(prime_bammen, true) {}
+	Kyokumen();
 	Kyokumen(const std::array<koma::Koma, 81>&, const std::array<unsigned,7>&, const std::array<unsigned, 7>&, bool);
 	Kyokumen(const std::array<std::uint8_t, 95>&, bool);
 	Kyokumen(std::array<std::uint8_t, 95>&&, bool);
@@ -20,8 +19,8 @@ public:
 	bool teban()const { return isSente; }
 	koma::Koma getKoma(const koma::Position pos)const { assert(pos < 81); return static_cast<koma::Koma> (bammen[static_cast<size_t>(pos)]); }
 	koma::Koma getKoma(const unsigned pos)const { assert(pos < 81); return static_cast<koma::Koma> (bammen[static_cast<size_t>(pos)]); }
-	unsigned getMochigomaNum(koma::Position mpos) { assert(mpos >= 81); return static_cast<unsigned> (bammen[static_cast<size_t>(mpos)]); }
-	unsigned getMochigomaNum(bool teban, koma::Mochigoma koma) { return teban ? static_cast<unsigned>(bammen[static_cast<size_t>(koma) + 81]) : static_cast<unsigned>(bammen[static_cast<size_t>(koma) + 81 + 7]); }
+	unsigned getMochigomaNum(koma::Position mpos)const { assert(mpos >= 81); return static_cast<unsigned> (bammen[static_cast<size_t>(mpos)]); }
+	unsigned getMochigomaNum(bool teban, koma::Mochigoma koma)const { return teban ? static_cast<unsigned>(bammen[static_cast<size_t>(koma) + 81]) : static_cast<unsigned>(bammen[static_cast<size_t>(koma) + 81 + 7]); }
 	const Bitboard& getAllBB()const { return allKomaBB; }
 	const Bitboard& getSenteBB()const { return senteKomaBB; }
 	const Bitboard& getGoteBB()const { return goteKomaBB; }
