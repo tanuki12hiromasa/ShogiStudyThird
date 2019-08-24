@@ -57,6 +57,15 @@
     <ClCompile Include="apery_feature.cpp">
       <Filter>apery</Filter>
     </ClCompile>
+    <ClCompile Include="node.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
+    <ClCompile Include="apery_evaluate.cpp">
+      <Filter>apery</Filter>
+    </ClCompile>
+    <ClCompile Include="move_gen.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -118,6 +127,9 @@
     </ClInclude>
     <ClInclude Include="apery_evaluate.h">
       <Filter>apery</Filter>
+    </ClInclude>
+    <ClInclude Include="move_gen.h">
+      <Filter>ヘッダー ファイル\search</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

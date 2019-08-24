@@ -150,6 +150,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="apery_evaluate.cpp" />
     <ClCompile Include="apery_feature.cpp" />
     <ClCompile Include="bb_kiki.cpp" />
     <ClCompile Include="bitboard.cpp" />
@@ -159,6 +160,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="move.cpp" />
+    <ClCompile Include="move_gen.cpp" />
+    <ClCompile Include="node.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
@@ -179,6 +182,7 @@
     <ClInclude Include="koma_motion.h" />
     <ClInclude Include="kyokumen.h" />
     <ClInclude Include="move.h" />
+    <ClInclude Include="move_gen.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="stdafx.h" />
