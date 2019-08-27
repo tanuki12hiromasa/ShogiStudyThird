@@ -11,7 +11,7 @@
 class EvaluatedNodes_diff {
 public:
 	SearchNode* const parentNode;//親
-	const Kyokumen kyokumen;
+	const Kyokumen& kyokumen;
 	std::vector<SearchNode*> nodes;
 	bool evaluated = false;//評価が終了したかどうか
 

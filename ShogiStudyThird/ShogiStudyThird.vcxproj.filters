@@ -66,6 +66,9 @@
     <ClCompile Include="move_gen.cpp">
       <Filter>ソース ファイル\search</Filter>
     </ClCompile>
+    <ClCompile Include="evaluated_nodes.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
