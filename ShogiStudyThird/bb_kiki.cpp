@@ -10,85 +10,7 @@ void BBkiki::init() {
 	genData();
 }
 
-const Bitboard BBkiki::getDashKiki(const Bitboard& allBB, const koma::Koma dkoma, const unsigned komapos) {
-	using namespace koma;
-	switch (dkoma) {
-	case Koma::s_Kyou:
-		return getSKyouDashKiki(allBB, komapos);
-	case Koma::g_Kyou:
-		return getGKyouDashKiki(allBB, komapos);
-	case Koma::s_Hi:
-	case Koma::g_Hi:
-		return getHiDashKiki(allBB, komapos);
-	case Koma::s_nHi:
-	case Koma::g_nHi:
-		return getHiDashKiki(allBB, komapos) | Bitboard(RyuStep[komapos]);
-	case Koma::s_Kaku:
-	case Koma::g_Kaku:
-		return getKakuDashKiki(allBB, komapos);
-	case Koma::s_nKaku:
-	case Koma::g_nKaku:
-		return getKakuDashKiki(allBB, komapos) | Bitboard(UmaStep[komapos]);
-	default:
-		assert(0);
-		return bbmask::AllZero;
-	}
-}
-
-const Bitboard BBkiki::getKiki(const Bitboard& allBB, const koma::Koma koma, const unsigned komapos) {
-	using namespace koma;
-	switch (koma)
-	{
-	case Koma::s_Fu:
-		return Bitboard(sFu[komapos]);
-	case Koma::s_Kei:
-		return Bitboard(sKei[komapos]);
-	case Koma::s_Gin:
-		return Bitboard(sGin[komapos]);
-	case Koma::s_Kin:
-	case Koma::s_nFu:
-	case Koma::s_nKyou:
-	case Koma::s_nKei:
-	case Koma::s_nGin:
-		return Bitboard(sKin[komapos]);
-	case Koma::g_Fu:
-		return Bitboard(gFu[komapos]);
-	case Koma::g_Kei:
-		return Bitboard(gKei[komapos]);
-	case Koma::g_Gin:
-		return Bitboard(gGin[komapos]);
-	case Koma::g_Kin:
-	case Koma::g_nFu:
-	case Koma::g_nKyou:
-	case Koma::g_nKei:
-	case Koma::g_nGin:
-		return Bitboard(gKin[komapos]);
-	case Koma::s_Ou:
-	case Koma::g_Ou:
-		return Bitboard(Ou[komapos]);
-	case Koma::s_Kyou:
-		return getSKyouDashKiki(allBB, komapos);
-	case Koma::g_Kyou:
-		return getGKyouDashKiki(allBB, komapos);
-	case Koma::s_Hi:
-	case Koma::g_Hi:
-		return getHiDashKiki(allBB, komapos);
-	case Koma::s_nHi:
-	case Koma::g_nHi:
-		return getHiDashKiki(allBB, komapos) | Bitboard(RyuStep[komapos]);
-	case Koma::s_Kaku:
-	case Koma::g_Kaku:
-		return getKakuDashKiki(allBB, komapos);
-	case Koma::s_nKaku:
-	case Koma::g_nKaku:
-		return getKakuDashKiki(allBB, komapos) | Bitboard(UmaStep[komapos]);
-	default:
-		assert(0);
-		return bbmask::AllZero;
-	}
-}
-
-inline const Bitboard BBkiki::getSKyouDashKiki(const Bitboard& allbb, const unsigned komapos) {
+const Bitboard BBkiki::getSKyouDashKiki(const Bitboard& allbb, const unsigned komapos) {
 	//利きテーブルをindexから参照して利きを求める 利きテーブルの結果は1筋(side[0])にあるので他の筋の場合はシフトさせる
 	if (komapos < 9u) {//1筋はy=komaposなので%9しなくていい
 		auto p = _pext_u64(allbb._p[0], sKyouMask[komapos]);
@@ -104,7 +26,7 @@ inline const Bitboard BBkiki::getSKyouDashKiki(const Bitboard& allbb, const unsi
 		return Bitboard(0u, 0u, sKyouDash[sKIndex[komapos % 9] + p]);
 	}
 }
-inline const Bitboard BBkiki::getGKyouDashKiki(const Bitboard& allbb, const unsigned komapos) {
+const Bitboard BBkiki::getGKyouDashKiki(const Bitboard& allbb, const unsigned komapos) {
 	if (komapos < 9u) {//1筋
 		auto p = _pext_u64(allbb._p[0], gKyouMask[komapos]);
 		return Bitboard(gKyouDash[gKIndex[komapos] + p], 0u, 0u);
@@ -119,7 +41,7 @@ inline const Bitboard BBkiki::getGKyouDashKiki(const Bitboard& allbb, const unsi
 		return Bitboard(0u, 0u, gKyouDash[gKIndex[komapos % 9] + p]);
 	}
 }
-inline const Bitboard BBkiki::getHiDashKiki(const Bitboard& allbb, const unsigned komapos) {
+const Bitboard BBkiki::getHiDashKiki(const Bitboard& allbb, const unsigned komapos) {
 	Bitboard kiki;
 	//縦
 	if (komapos < 9u) {//1筋
@@ -144,7 +66,7 @@ inline const Bitboard BBkiki::getHiDashKiki(const Bitboard& allbb, const unsigne
 	}
 	return kiki;
 }
-inline const Bitboard BBkiki::getKakuDashKiki(const Bitboard& allbb, const unsigned komapos) {
+const Bitboard BBkiki::getKakuDashKiki(const Bitboard& allbb, const unsigned komapos) {
 	Bitboard kiki;
 	//posi
 	{
