@@ -153,6 +153,22 @@ Bitboard Bitboard::getLineOR() const {
 	return lines;
 }
 
+Bitboard Bitboard::getNoFuLines()const {
+	Bitboard lines(bbmask::AllOne);
+	if (_p[0] != 0) {
+		lines._p[0] = 0x0ULL;
+	}
+	for (unsigned i = 0; i < 7; i++) {
+		if ((_p[1] & (0x1FFULL << (i * 9u))) != 0u) {
+			lines._p[1] &= ~(0x1FFULL << (i * 9u));
+		}
+	}
+	if (_p[2] != 0) {
+		lines._p[2] = 0x0ULL;
+	}
+	return lines;
+}
+
 Bitboard Bitboard::fillOne(unsigned index) {
 	std::array<std::uint64_t, 3> p = { 0,0,0 };
 	p[0] = (1ULL << std::min(index, 9u)) - 1u;

@@ -45,6 +45,7 @@ public:
 	bool none()const;//すべて0ならtrue
 	bool any()const { return !none(); }
 	Bitboard getLineOR()const;//1のある筋を全て1で埋めたBBを返す
+	Bitboard getNoFuLines()const;//1のある筋を0でマスクしたBBを返す
 	static Bitboard fillOne(const unsigned numofone);//左からnumofone個の1で埋めたBBを返す
 
 	//演算子
