@@ -32,6 +32,7 @@ public:
 	std::vector<SearchNode*> children;
 	Move move;
 	bool isRep = false;
+	bool isCapExtended = false;
 	std::atomic_bool isLeaf;
 	std::atomic<double> eval;
 	std::atomic<double> mass;

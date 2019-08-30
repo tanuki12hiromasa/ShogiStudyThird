@@ -69,6 +69,12 @@
     <ClCompile Include="evaluated_nodes.cpp">
       <Filter>ソース ファイル\search</Filter>
     </ClCompile>
+    <ClCompile Include="agent.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
+    <ClCompile Include="tree.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

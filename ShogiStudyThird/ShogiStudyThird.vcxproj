@@ -150,6 +150,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="agent.cpp" />
     <ClCompile Include="apery_evaluate.cpp" />
     <ClCompile Include="apery_feature.cpp" />
     <ClCompile Include="bb_kiki.cpp" />
@@ -166,6 +167,7 @@
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="tree.cpp" />
     <ClCompile Include="usi.cpp" />
   </ItemGroup>
   <ItemGroup>

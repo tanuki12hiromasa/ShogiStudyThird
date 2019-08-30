@@ -8,7 +8,7 @@ inline void addByBitboard(EvaluatedNodes& en, unsigned from, Bitboard toBB, bool
 	}
 }
 
-void genSenteBanMove_koma(EvaluatedNodes& en, koma::Koma piece, bool prom, const Bitboard& mask) {
+inline void genSenteBanMove_koma(EvaluatedNodes& en, koma::Koma piece, bool prom, const Bitboard& mask) {
 	const Kyokumen& kyokumen = en.kyokumen;
 	const Bitboard& allBB = kyokumen.getAllBB();
 	Bitboard komabb = kyokumen.getEachBB(piece);
@@ -17,7 +17,7 @@ void genSenteBanMove_koma(EvaluatedNodes& en, koma::Koma piece, bool prom, const
 		addByBitboard(en, from, kikibb, prom);
 	}
 }
-void genGoteBanMove_koma(EvaluatedNodes& en, koma::Koma piece, bool prom, const Bitboard& mask) {
+inline void genGoteBanMove_koma(EvaluatedNodes& en, koma::Koma piece, bool prom, const Bitboard& mask) {
 	const Kyokumen& kyokumen = en.kyokumen;
 	const Bitboard& allBB = kyokumen.getAllBB();
 	Bitboard komabb = kyokumen.getEachBB(piece);
@@ -27,7 +27,7 @@ void genGoteBanMove_koma(EvaluatedNodes& en, koma::Koma piece, bool prom, const 
 	}
 }
 
-void genSenteOuMove(EvaluatedNodes& en, const Bitboard& mask) {
+inline void genSenteOuMove(EvaluatedNodes& en, const Bitboard& mask) {
 	using namespace koma;
 	Bitboard enemykikibb;
 	const Kyokumen& kyokumen = en.kyokumen;
@@ -42,7 +42,7 @@ void genSenteOuMove(EvaluatedNodes& en, const Bitboard& mask) {
 	addByBitboard(en, oupos, kikibb, false);
 }
 
-void genGoteOuMove(EvaluatedNodes& en, const Bitboard& mask) {
+inline void genGoteOuMove(EvaluatedNodes& en, const Bitboard& mask) {
 	using namespace koma;
 	Bitboard enemykikibb;
 	const Kyokumen& kyokumen = en.kyokumen;
