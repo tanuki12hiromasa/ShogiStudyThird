@@ -4,7 +4,16 @@
 #include <atomic>
 #include <vector>
 
+using s_mutex = std::shared_mutex;
+using s_lock = std::shared_lock<std::shared_mutex>;
+using p_lock = std::lock_guard<std::shared_mutex>;
+
 class SearchNode {
+	enum class State : std::int8_t {
+		NotExtended, LimitExtended, LimitExtendedTerminal, Extended, CheckMate, Repetitoin,
+		NE = NotExtended, LE = LimitExtended, LT = LimitExtendedTerminal,
+		EX = Extended, CM = CheckMate, RP = Repetitoin
+	};
 private:
 	static double repEval;
 	static double T_depth;
@@ -22,21 +31,21 @@ public:
 	SearchNode* choiceNode(const double pip, const double T_choice)const;
 	void updateNode();
 	void updateMateNode();
-	void setEvaluation(const double eval);
-	double getEvaluation() { return isRep ? repEval : eval.load(); }
+	void setEvaluation(const double evaluation) { eval = evaluation; }
+	double getEvaluation()const { return state == State::RP ? repEval : eval.load(); }
 
 	void setMate();
 	void setUchiFuMate();
 	void setDeclare();
 
+	bool isLeaf()const { return state == State::NE; }
+
 	std::vector<SearchNode*> children;
 	Move move;
-	bool isRep = false;
-	bool isCapExtended = false;
-	std::atomic_bool isLeaf;
+	std::atomic<State> state;
 	std::atomic<double> eval;
 	std::atomic<double> mass;
-
+	s_mutex _mutex;
 };
 
 double SearchNode::repEval = 0;

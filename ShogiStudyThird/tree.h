@@ -12,8 +12,9 @@ public:
 	void proceed(SearchNode* node);
 	void addNodenum(int n) { nodenum += n; }
 
-
+	SearchNode* getRoot();
 	const std::vector<SearchNode*>& getHistory()const { return history; }
+	Kyokumen getRootKyokumen()const { return rootKyokumen; }
 	double getTchoice();
 	double getTeval() { return T_eval; }
 
@@ -29,6 +30,8 @@ private:
 	std::atomic_uint T_c_count;
 	double T_eval;
 	double T_depth;
+
+	
 
 #ifdef EVAL_DIFF_ONLY //差分計算を行う場合の
 public:
