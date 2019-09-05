@@ -31,4 +31,13 @@ namespace apery {
 			node->setEvaluation((double)cfeat.sum.sum(!en.kyokumen.teban()) / FVScale);
 		}
 	}
+
+	void apery_evaluator::evaluate(std::vector<SearchNode*> nodes, const SearchPlayer& player) {
+		//rootノードから展開ノードまで進めてきたfeatで差分計算する
+		for (auto& node : nodes) {
+			apery_feat cfeat(player.feature);
+			cfeat.proceed(player.kyokumen, node->move);
+			node->setEvaluation((double)cfeat.sum.sum(!player.kyokumen.teban()) / FVScale);
+		}
+	}
 }

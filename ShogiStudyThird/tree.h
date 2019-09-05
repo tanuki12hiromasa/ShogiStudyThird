@@ -2,6 +2,7 @@
 #include "node.h"
 #include "kyokumen.h"
 #include "evaluator.h"
+#include "player.h"
 
 class SearchTree {
 public:
@@ -14,14 +15,14 @@ public:
 
 	SearchNode* getRoot();
 	const std::vector<SearchNode*>& getHistory()const { return history; }
-	Kyokumen getRootKyokumen()const { return rootKyokumen; }
+	const SearchPlayer& getRootPlayer()const { return rootPlayer; }
 	double getTchoice();
 	double getTeval() { return T_eval; }
 
 private:
 	SearchNode* rootNode;
 	SearchNode* oldrootNode;
-	Kyokumen rootKyokumen;
+	SearchPlayer rootPlayer;
 	std::vector<SearchNode*> history;
 	Kyokumen startKyokumen;
 	std::atomic_uint64_t nodenum;
@@ -30,14 +31,4 @@ private:
 	std::atomic_uint T_c_count;
 	double T_eval;
 	double T_depth;
-
-	
-
-#ifdef EVAL_DIFF_ONLY //差分計算を行う場合の
-public:
-	const Feature& getRootFeature()const { return rootFeature; }
-private:
-	Feature rootFeature;//root局面の特徴量
-#endif
-
 };
