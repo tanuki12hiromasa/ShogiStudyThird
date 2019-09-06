@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "agent.h"
+#include "move_gen.h"
+#include <algorithm>
 
 SearchAgent::SearchAgent(SearchTree& tree, int seed)
 	:tree(tree), engine(seed), root(nullptr)
@@ -23,11 +25,7 @@ void SearchAgent::simulate() {
 	using ChildN = std::pair<double, SearchNode*>;
 	const double T_c = tree.getTchoice();
 	SearchNode* node = root = tree.getRoot();
-	Feature feature(tree.getRootFeature());
-	Kyokumen kyokumen(tree.getRootKyokumen());
-#ifdef EVAL_DIFF_ONLY
-	Feature feature(tree.getRootFeature());
-#endif
+	SearchPlayer player(tree.getRootPlayer());
 	//下り
 	yarinaoushi:
 	while (!node->isLeaf()) {
@@ -60,9 +58,21 @@ void SearchAgent::simulate() {
 			child++;
 		}
 		//局面を進める
+		player.proceed(node->move);
+	}
+	//展開・評価
+	{
+		std::vector<SearchNode*> gennodes;
+		if (node->isNotExpanded()) gennodes = MoveGenerator::genMove(node, player.kyokumen);
+		else gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
+		Evaluator::evaluate(gennodes, player);
+		node->state = SearchNode::State::LE;
+		
+	}
+	//今展開したノード
+	{
 
 	}
-	//展開
 
 	{
 		/*

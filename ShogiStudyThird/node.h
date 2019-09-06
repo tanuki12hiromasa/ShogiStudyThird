@@ -9,10 +9,11 @@ using s_lock = std::shared_lock<std::shared_mutex>;
 using p_lock = std::lock_guard<std::shared_mutex>;
 
 class SearchNode {
+public:
 	enum class State : std::int8_t {
-		NotExtended, LimitExtended, LimitExtendedTerminal, Extended, CheckMate, Repetitoin,
+		NotExtended, LimitExtended, LimitExtendedTerminal, Extended, CheckMate, Declare, Repetitoin,
 		NE = NotExtended, LE = LimitExtended, LT = LimitExtendedTerminal,
-		EX = Extended, CM = CheckMate, RP = Repetitoin
+		EX = Extended, CM = CheckMate, DC=Declare, RP = Repetitoin
 	};
 private:
 	static double repEval;
@@ -38,7 +39,8 @@ public:
 	void setUchiFuMate();
 	void setDeclare();
 
-	bool isLeaf()const { return state == State::NE; }
+	bool isNotExpanded()const { return state == State::NE; }
+	bool isLeaf()const { return state == State::NE || state == State::LE || state == State::LT; }
 
 	std::vector<SearchNode*> children;
 	Move move;
