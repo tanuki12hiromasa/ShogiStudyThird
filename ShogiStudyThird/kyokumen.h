@@ -28,6 +28,8 @@ public:
 	unsigned sOuPos()const { return eachKomaBB[static_cast<size_t>(koma::Koma::s_Ou)].find_first(); }
 	unsigned gOuPos()const { return eachKomaBB[static_cast<size_t>(koma::Koma::g_Ou)].find_first(); }
 	
+	bool isDeclarable()const;
+
 	std::vector<Bitboard> getSenteOuCheck(const Move)const;//moveは直前のもの
 	std::vector<Bitboard> getGoteOuCheck(const Move)const;
 	std::vector<Bitboard> getSenteOuCheck()const;//盤全体をチェック

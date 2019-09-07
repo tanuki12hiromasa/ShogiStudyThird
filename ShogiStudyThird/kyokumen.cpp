@@ -208,6 +208,87 @@ koma::Position Kyokumen::proceed(const Move move) {
 	return captured;
 }
 
+bool Kyokumen::isDeclarable()const {
+	using namespace koma;
+	//王手チェックはしないのでこの関数を呼ぶ前に確認しておくこと(パフォーマンス向上のため)
+	if (teban()) {
+		//宣言側の玉が敵陣三段目以内
+		if (sOuPos() % 9 > 3) {
+			return false;
+		}
+		Bitboard tekijinSenteBB = senteKomaBB & bbmask::Dan1to3;
+		//宣言側の敵陣三段目以内の駒が玉含めずに10枚以上存在する (玉含めて11枚以上)
+		if (tekijinSenteBB.popcount() <= 10) {
+			return false;
+		}
+		//宣言側の駒の点数が、大駒5点 小駒1点 玉0点で計算して、28点以上(後手は27点以上)
+		int komapoint = 0;
+		for (unsigned pos = tekijinSenteBB.pop_first(); pos < tekijinSenteBB.size(); pos = tekijinSenteBB.pop_first()) {
+			const Koma koma = getKoma(pos);
+			switch (koma) {
+			case Koma::s_Fu:
+			case Koma::s_Kyou:
+			case Koma::s_Kei:
+			case Koma::s_Gin:
+			case Koma::s_Kin:
+			case Koma::s_nFu:
+			case Koma::s_nKyou:
+			case Koma::s_nKei:
+			case Koma::s_nGin:
+				komapoint += 1;
+				break;
+			case Koma::s_Hi:
+			case Koma::s_Kaku:
+			case Koma::s_nHi:
+			case Koma::s_nKaku:
+				komapoint += 5;
+				break;
+			}
+		}
+		if (komapoint >= 28)
+			return true;
+		else return false;
+	}
+	else {
+		//宣言側の玉が敵陣三段目以内
+		if (gOuPos() % 9 > 3) {
+			return false;
+		}
+		Bitboard tekijinGoteBB = goteKomaBB & bbmask::Dan7to9;
+		//宣言側の敵陣三段目以内の駒が玉含めずに10枚以上存在する (玉含めて11枚以上)
+		if (tekijinGoteBB.popcount() <= 10) {
+			return false;
+		}
+		//宣言側の駒の点数が、大駒5点 小駒1点 玉0点で計算して、27点以上(先手は28点以上)
+		int komapoint = 0;
+		for (unsigned pos = tekijinGoteBB.pop_first(); pos < tekijinGoteBB.size(); pos = tekijinGoteBB.pop_first()) {
+			const Koma koma = getKoma(pos);
+			switch (koma) {
+			case Koma::g_Fu:
+			case Koma::g_Kyou:
+			case Koma::g_Kei:
+			case Koma::g_Gin:
+			case Koma::g_Kin:
+			case Koma::g_nFu:
+			case Koma::g_nKyou:
+			case Koma::g_nKei:
+			case Koma::g_nGin:
+				komapoint += 1;
+				break;
+			case Koma::g_Hi:
+			case Koma::g_Kaku:
+			case Koma::g_nHi:
+			case Koma::g_nKaku:
+				komapoint += 5;
+				break;
+			}
+		}
+		if (komapoint >= 27)
+			return true;
+		else return false;
+	}
+}
+
 std::vector<Bitboard> Kyokumen::getSenteOuCheck(const Move m)const {
 	std::vector<Bitboard> kusemono;
 	const unsigned ouPos = sOuPos();
