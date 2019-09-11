@@ -24,6 +24,7 @@ bool SearchAgent::immigrated() {
 void SearchAgent::simulate() {
 	using ChildN = std::pair<double, SearchNode*>;
 	const double T_c = tree.getTchoice();
+	const double T_e = tree.getTeval();
 	SearchNode* node = root = tree.getRoot();
 	SearchPlayer player(tree.getRootPlayer());
 	//下り
@@ -67,12 +68,23 @@ void SearchAgent::simulate() {
 		else gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
 		Evaluator::evaluate(gennodes, player);
 		node->state = SearchNode::State::LE;
-		
+		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->getEvaluation() < b->getEvaluation(); });
 	}
-	//今展開したノード
+	//今展開したノードから静止探索
 	{
+		const double qsmassmax = tree.getMQS();
+		const double T_cq = tree.getTcQ();
+		while (node->state != SearchNode::State::LT && node->mass < qsmassmax) {
+			SearchNode* qnode = node;
+			while (qnode->isNotExpanded()) {
+				double emin = std::numeric_limits<double>::max();
+				std::vector<ChildN> evals;
 
+			}
+
+		}
 	}
+
 
 	{
 		/*
