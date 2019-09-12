@@ -27,6 +27,9 @@ public:
 	double getTdepth()const { return T_depth; }
 	double getMQS()const { return MassMax_QS; }
 
+	std::mutex& getMutex(const SearchNode* const node);
+	void restoreMutex(const SearchNode* const node);
+
 private:
 	SearchNode* rootNode;
 	SearchNode* oldrootNode;

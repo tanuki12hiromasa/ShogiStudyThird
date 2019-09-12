@@ -40,6 +40,7 @@ public:
 	void setDeclare();
 
 	bool isNotExpanded()const { return state == State::NE; }
+	bool isQSTerminal()const { return state == State::LT; }
 	bool isLeaf()const { return state == State::NE || state == State::LE || state == State::LT; }
 
 	std::vector<SearchNode*> children;
@@ -47,7 +48,6 @@ public:
 	std::atomic<State> state;
 	std::atomic<double> eval;
 	std::atomic<double> mass;
-	s_mutex _mutex;
 };
 
 double SearchNode::repEval = 0;
