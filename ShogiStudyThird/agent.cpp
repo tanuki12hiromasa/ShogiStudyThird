@@ -23,12 +23,12 @@ bool SearchAgent::immigrated() {
 
 void SearchAgent::simulate() {
 	using ChildN = std::pair<double, SearchNode*>;
+	yarinaoshi:
 	const double T_c = tree.getTchoice();
 	const double T_e = tree.getTeval();
 	SearchNode* node = root = tree.getRoot();
 	SearchPlayer player(tree.getRootPlayer());
 	//下り
-	yarinaoshi:
 	while (!node->isLeaf()) {
 		//ノード選択
 		double CE = std::numeric_limits<double>::max();
@@ -58,14 +58,11 @@ void SearchAgent::simulate() {
 		//局面を進める
 		player.proceed(node->move);
 	}
+	//末端ノードが他スレッドで展開中になっていないかチェック
+	if (!tree.resisterLeafNode(node))
+		goto yarinaoshi;
+	//展開・評価
 	{
-		std::mutex& mtx = tree.getMutex(node);
-		std::lock_guard<std::mutex> lock(mtx);
-		if (!node->isLeaf()) {
-			tree.restoreMutex(node);
-			goto yarinaoshi;
-		}
-		//展開・評価
 		{
 			std::vector<SearchNode*> gennodes;
 			if (node->isNotExpanded()) gennodes = MoveGenerator::genMove(node, player.kyokumen);
@@ -106,11 +103,12 @@ void SearchAgent::simulate() {
 		}
 		//バックアップ
 
-		tree.restoreMutex(node);
+
+		tree.excludeLeafNode(node);
 	}
 
 
-
+	//バックアップ
 	{
 		/*
 			while (!node->isLeaf()) {
@@ -142,8 +140,4 @@ void SearchAgent::simulate() {
 	}
 		*/
 	}
-	//
-	//
-	//
-	//上り
 }

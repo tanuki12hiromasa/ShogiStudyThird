@@ -3,6 +3,7 @@
 #include "kyokumen.h"
 #include "evaluator.h"
 #include "player.h"
+#include <unordered_map>
 
 class SearchTree {
 public:
@@ -27,8 +28,8 @@ public:
 	double getTdepth()const { return T_depth; }
 	double getMQS()const { return MassMax_QS; }
 
-	std::mutex& getMutex(const SearchNode* const node);
-	void restoreMutex(const SearchNode* const node);
+	bool resisterLeafNode(const SearchNode* const node);
+	void excludeLeafNode(const SearchNode* const node);
 
 private:
 	SearchNode* rootNode;
@@ -44,5 +45,7 @@ private:
 	double T_eval;
 	double T_depth;
 	double MassMax_QS;
+
+	std::unordered_map<SearchNode*, unsigned> nmap;
 
 };
