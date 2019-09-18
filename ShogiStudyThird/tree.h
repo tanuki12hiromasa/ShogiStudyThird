@@ -28,8 +28,8 @@ public:
 	double getTdepth()const { return T_depth; }
 	double getMQS()const { return MassMax_QS; }
 
-	bool resisterLeafNode(const SearchNode* const node);
-	void excludeLeafNode(const SearchNode* const node);
+	bool resisterLeafNode(SearchNode* const node);
+	void excludeLeafNode(SearchNode* const node);
 
 private:
 	SearchNode* rootNode;
@@ -47,5 +47,5 @@ private:
 	double MassMax_QS;
 
 	std::unordered_map<SearchNode*, unsigned> nmap;
-
+	std::mutex lnmutex;
 };
