@@ -23,18 +23,17 @@ bool SearchAgent::immigrated() {
 
 void SearchAgent::simulate() {
 	using ChildN = std::pair<double, SearchNode*>;
-	yarinaoshi:
+	searchstart:
 	const double T_c = tree.getTchoice();
 	const double T_e = tree.getTeval();
 	SearchNode* node = root = tree.getRoot();
 	SearchPlayer player(tree.getRootPlayer());
-	//下り
+	//選択
 	while (!node->isLeaf()) {
-		//ノード選択
 		double CE = std::numeric_limits<double>::max();
 		std::vector<double> evals;
 		for (const auto& child : node->children) {
-			double eval = child->getEvaluation();
+			double eval = child->getChoiceEvaluation();
 			evals.push_back(eval);
 			if (eval < CE)
 				CE = eval;
@@ -59,30 +58,54 @@ void SearchAgent::simulate() {
 		player.proceed(node->move);
 	}
 	//末端ノードが他スレッドで展開中になっていないかチェック
-	if (!tree.resisterLeafNode(node))
-		goto yarinaoshi;
+	if (!tree.resisterLeafNode(node)) {
+		goto searchstart;
+	}
 	//展開・評価
 	{
-		{
-			std::vector<SearchNode*> gennodes;
-			if (node->isNotExpanded()) gennodes = MoveGenerator::genMove(node, player.kyokumen);
-			else gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
-			Evaluator::evaluate(gennodes, player);
-			node->state = SearchNode::State::LE;
-			std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->getEvaluation() < b->getEvaluation(); });
+		std::vector<SearchNode*> gennodes;
+		if (player.kyokumen.isDeclarable()) {
+			node->setDeclare();
+			goto backup;
 		}
+		switch (node->state)
+		{
+		case SearchNode::State::NE:
+			gennodes = MoveGenerator::genMove(node, player.kyokumen);
+			break;
+		case SearchNode::State::LE:
+		case SearchNode::State::LT:
+			gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
+			break;
+		//case EQ は全て展開済みなので手生成不要
+		}
+		Evaluator::evaluate(gennodes, player);
+		if (node->children.empty()) {
+			auto from = node->move.from();
+			if (from == koma::Position::m_sFu || from == koma::Position::m_gFu) {
+				node->setUchiFuMate();
+			}
+			else {
+				node->setMate();
+			}
+			goto backup;
+		}
+		node->state = SearchNode::State::EQ;
+		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
+	
 		//今展開したノードから静止探索
 		{
 			const double qsmassmax = tree.getMQS();
 			const double T_cq = tree.getTcQ();
 			while (!node->isQSTerminal() && node->mass < qsmassmax) {
 				SearchNode* qnode = node;
+				//選択
 				while (!qnode->isNotExpanded()) {
 					double emin = std::numeric_limits<double>::max();
 					std::vector<ChildN> evals;
 					for (auto child : qnode->children) {
 						if (!qnode->isQSTerminal) {
-							const double eval = child->getEvaluation();
+							const double eval = child->getChoiceEvaluation();
 							evals.emplace_back(std::make_pair(eval, child));
 							if (eval < emin) {
 								emin = eval;
@@ -90,19 +113,33 @@ void SearchAgent::simulate() {
 						}
 					}
 					double Z = 0;
-					
+					for (const auto& dn : evals) {
+						Z += std::exp(-(dn.first - emin) / T_cq);
+					}
+					double pip = Z * random(engine);
+					qnode = evals.front().second;
+					for (const auto& dn : evals) {
+						pip -= std::exp(-(dn.first - emin) / T_cq);
+					}
 				}
 				//展開
-				
+				{
+					std::vector<SearchNode*> gennodes;
+				}
 				//評価
-				
+				{
+
+				}
 				//バックアップ
+				{
 				//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
+
+				}
 
 			}
 		}
 		//バックアップ
-
+		backup:
 
 		tree.excludeLeafNode(node);
 	}
