@@ -11,8 +11,8 @@ using p_lock = std::lock_guard<std::shared_mutex>;
 class SearchNode {
 public:
 	enum class State : std::int8_t {
-		NotExpanded, LimitExpanded, LimitExpandedTerminal, ExpandedInQSearch, Expanded, CheckMate, Declare, Repetitoin,
-		NE = NotExpanded, LE = LimitExpanded, LT = LimitExpandedTerminal, EQ = ExpandedInQSearch,
+		NotExpanded, LimitExpanded, LimitExpandedTerminal, ExpandedInQuiescence, Expanded, CheckMate, Declare, Repetitoin,
+		NE = NotExpanded, LE = LimitExpanded, LT = LimitExpandedTerminal, EQ = ExpandedInQuiescence,
 		EX = Expanded, CM = CheckMate, DC=Declare, RP = Repetitoin
 	};
 private:

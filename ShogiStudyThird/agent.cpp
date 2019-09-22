@@ -28,6 +28,7 @@ void SearchAgent::simulate() {
 	const double T_e = tree.getTeval();
 	SearchNode* node = root = tree.getRoot();
 	SearchPlayer player(tree.getRootPlayer());
+	std::vector<SearchNode*> history = tree.getHistory();
 	//選択
 	while (!node->isLeaf()) {
 		double CE = std::numeric_limits<double>::max();
@@ -79,7 +80,6 @@ void SearchAgent::simulate() {
 			break;
 		//case EQ は全て展開済みなので手生成不要
 		}
-		Evaluator::evaluate(gennodes, player);
 		if (node->children.empty()) {
 			auto from = node->move.from();
 			if (from == koma::Position::m_sFu || from == koma::Position::m_gFu) {
@@ -91,6 +91,7 @@ void SearchAgent::simulate() {
 			goto backup;
 		}
 		node->state = SearchNode::State::EQ;
+		Evaluator::evaluate(gennodes, player);
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
 	
 		//今展開したノードから静止探索
@@ -99,6 +100,7 @@ void SearchAgent::simulate() {
 			const double T_cq = tree.getTcQ();
 			while (!node->isQSTerminal() && node->mass < qsmassmax) {
 				SearchNode* qnode = node;
+				SearchPlayer qplayer = player;
 				//選択
 				while (!qnode->isNotExpanded()) {
 					double emin = std::numeric_limits<double>::max();
@@ -125,27 +127,46 @@ void SearchAgent::simulate() {
 				//展開
 				{
 					std::vector<SearchNode*> gennodes;
-				}
-				//評価
-				{
-
+					gennodes = MoveGenerator::genCapMove(qnode, qplayer.kyokumen);
+					if (gennodes.empty()) {
+						if (node->move.isOute()) {
+							const koma::Position from = node->move.from();
+							if (from == koma::Position::m_sFu || from == koma::Position::m_gFu) {
+								node->setUchiFuMate();
+							}
+							else {
+								node->setMate();
+							}
+						}
+						else {
+							node->state = SearchNode::State::LT;
+						}
+						goto qbackup;
+					}
+					node->state = SearchNode::State::LE;
+					//評価
+					Evaluator::evaluate(gennodes, qplayer);
 				}
 				//バックアップ
+				qbackup:
 				{
 				//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
+					double emin = std::numeric_limits<double>::max();
+					bool allmate = true;
+					bool allterminal = true;
 
 				}
 
-			}
-		}
-		//バックアップ
-		backup:
+			}//静止探索1ループここまで
+
+		}//静止探索ここまで
 
 		tree.excludeLeafNode(node);
-	}
+	}//展開評価ここまで
 
 
 	//バックアップ
+	backup:
 	{
 		/*
 			while (!node->isLeaf()) {
