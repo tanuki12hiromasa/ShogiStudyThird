@@ -11,9 +11,9 @@ using p_lock = std::lock_guard<std::shared_mutex>;
 class SearchNode {
 public:
 	enum class State : std::int8_t {
-		NotExpanded, LimitExpanded, LimitExpandedTerminal, ExpandedInQuiescence, Expanded, CheckMate, Declare, Repetitoin,
-		NE = NotExpanded, LE = LimitExpanded, LT = LimitExpandedTerminal, EQ = ExpandedInQuiescence,
-		EX = Expanded, CM = CheckMate, DC=Declare, RP = Repetitoin
+		NotExpanded, LimitExpanded, LimitExpandedTerminal, ExpandedInQuiescence, RVinQuiescence, Expanded, RepetitiveVariation, CheckMate, Declare, Repetition,
+		NE = NotExpanded, LE = LimitExpanded, LT = LimitExpandedTerminal, EQ = ExpandedInQuiescence, RQ = RVinQuiescence,
+		EX = Expanded, RV = RepetitiveVariation, CM = CheckMate, DC = Declare, RP = Repetition
 	};
 private:
 	static double repEval;
@@ -42,6 +42,7 @@ public:
 	bool isNotExpanded()const { return state == State::NE; }
 	bool isQSTerminal()const { return state == State::LT; }
 	bool isLeaf()const { return state == State::NE || state == State::LE || state == State::LT || state == State::EQ; }
+	bool isRepetition()const { return state == State::RP || state == State::RQ || state == State::RV; }
 
 	std::vector<SearchNode*> children;
 	Move move;
