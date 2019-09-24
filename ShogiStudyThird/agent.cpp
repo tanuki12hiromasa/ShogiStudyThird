@@ -27,6 +27,8 @@ void SearchAgent::simulate() {
 	const double T_c = tree.getTchoice();
 	const double T_e = tree.getTeval();
 	const double T_d = tree.getTdepth();
+	const double MateScore = tree.getMateScore();
+	const double MateScoreBound = tree.getMateScoreBound();
 	SearchNode* node = root = tree.getRoot();
 	SearchPlayer player(tree.getRootPlayer());
 	std::vector<SearchNode*> history = tree.getHistory();
@@ -100,7 +102,7 @@ void SearchAgent::simulate() {
 		{
 			const double qsmassmax = tree.getMQS();
 			const double T_cq = tree.getTcQ();
-			while (!node->isQSTerminal() && node->mass < qsmassmax) {
+			while (node->isLeaf() && node->mass < qsmassmax) {
 				SearchNode* qnode = node;
 				SearchPlayer qplayer = player;
 				std::vector<SearchNode*> qhistory = history;
@@ -192,8 +194,28 @@ void SearchAgent::simulate() {
 					qnode = *(++qnit);
 				//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
 					double emin = std::numeric_limits<double>::max();
+					SearchNode* repNode = nullptr;
 					std::vector<double> evals;
 					bool allterminal = true;
+					for (const auto child : qnode->children) {
+						const double eval = child->eval;
+						evals.push_back(eval);
+						if (eval < emin) {
+							emin = eval;
+						}
+						if (child->isRepetition()) {
+							repNode = child;
+						}
+					}
+					if (emin < -MateScoreBound) {
+
+					}
+					else if (emin > MateScoreBound) {
+
+					}
+					else {
+
+					}
 
 				} while (qnode != node);
 
@@ -209,37 +231,9 @@ void SearchAgent::simulate() {
 	backup:
 	{
 	/*千日手ノードの評価値をバックアップに含めて考慮するため、
-	evalsにはnode->evalを、CEにはnode->getChoiceEvaluation()を格納する
+	evalsにはnode->evalを、eminにはnode->getChoiceEvaluation()を格納する
 	(千日手評価値は最善であるときのみ反映されるため)*/
 	
-		/*
-			while (!node->isLeaf()) {
-		double CE = std::numeric_limits<double>::max();
-		std::vector<ChildN> evals;
-		{
-			s_lock(node->_mutex);
-			for (const auto& child : node->children) {
-				double eval = child->getEvaluation();
-				evals.push_back(ChildN(eval, child));
-				if (eval < CE)
-					CE = eval;
-			}
-		}
-		double Z = 0;
-		for (const auto& cn : evals) {
-			Z += std::exp(-(cn.first - CE) / T_c);
-		}
-		double pip = Z * random(engine);
-		node = evals.front().second;
-		for (const auto& cn : evals) {
-			pip -= std::exp(-(cn.first - CE) / T_c);
-			if (pip <= 0) {
-				node = cn.second;
-				break;
-			}
-		}
-
-	}
-		*/
+		
 	}
 }
