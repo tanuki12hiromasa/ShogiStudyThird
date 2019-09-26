@@ -194,7 +194,6 @@ void SearchAgent::simulate() {
 					qnode = *(++qnit);
 				//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
 					double emin = std::numeric_limits<double>::max();
-					SearchNode* repNode = nullptr;
 					std::vector<double> evals;
 					bool allterminal = true;
 					for (const auto child : qnode->children) {
@@ -203,18 +202,25 @@ void SearchAgent::simulate() {
 						if (eval < emin) {
 							emin = eval;
 						}
-						if (child->isRepetition()) {
-							repNode = child;
+						if (!qnode->isQSTerminal()) {
+							allterminal = false;
 						}
 					}
 					if (emin < -MateScoreBound) {
-
+						//eminは負の大きな値なので、正の値にして少し小さくする
+						const double score = -emin - tree.getMateOneScore();
+						qnode->setEvaluation(score);
+						qnode->state = SearchNode::State::MV;
 					}
 					else if (emin > MateScoreBound) {
-
+						//eminは正の大きな値なので、負の値にして少し大きくする
+						const double score = -emin + tree.getMateOneScore();
+						qnode->setEvaluation(score);
+						qnode->state = SearchNode::State::MV;
 					}
 					else {
-
+						double Z = 0;
+						
 					}
 
 				} while (qnode != node);
