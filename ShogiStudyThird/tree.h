@@ -31,6 +31,7 @@ public:
 	double getTdepth()const { return T_depth; }
 	double getMateScore()const { return mateScore; }
 	double getMateScoreBound()const { return mateScoreBound; }
+	double getMateOneScore()const { return mateOneScore; }
 	double getMQS()const { return MassMax_QS; }
 
 	bool resisterLeafNode(SearchNode* const node);
@@ -50,8 +51,9 @@ private:
 	double T_eval;
 	double T_depth;
 	
-	double mateScore = 32000.0;
-	double mateScoreBound = 31000.0;
+	double mateScore = 34000.0;
+	double mateScoreBound = 30000.0;
+	double mateOneScore = 20.0;
 	double MassMax_QS;
 
 	std::unordered_map<SearchNode*, unsigned> nmap;
