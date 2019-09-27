@@ -73,6 +73,15 @@ void SearchAgent::simulate() {
 			node->setDeclare();
 			goto backup;
 		}
+		if (false/*千日手である*/) {
+			if (false/*連続王手である*/) {
+				node->setRepetitiveCheck();
+			}
+			else {
+				node->setRepetition();
+			}
+			goto backup;
+		}
 		switch (node->state)
 		{
 		case SearchNode::State::NE:
@@ -154,7 +163,7 @@ void SearchAgent::simulate() {
 							}
 						}
 						else {
-							node->state = SearchNode::State::LT;
+							qnode->state = SearchNode::State::LT;
 						}
 						goto qbackup;
 					}
@@ -170,21 +179,23 @@ void SearchAgent::simulate() {
 								CE = child->getChoiceEvaluation();
 							}
 						}
-						double eZ = 0;
-						double dZ = 0;
+						double Z_e = 0;
+						double Z_d = 0;
 						for (const auto& eval : evals) {
-							eZ += std::exp(-(eval - CE) / T_e);
-							dZ += std::exp(-(eval - CE) / T_d);
+							Z_e += std::exp(-(eval - CE) / T_e);
+							Z_d += std::exp(-(eval - CE) / T_d);
 						}
 						double E = 0;
 						double M = 0;
 						auto cit = qnode->children.begin();
 						for (const auto& eval : evals) {
 							double mass = (*cit)->mass;
-							E -= eval * std::exp(-(eval - CE) / T_e) / eZ;
-							M += mass * std::exp(-(eval - CE) / T_d) / dZ;
+							E -= eval * std::exp(-(eval - CE) / T_e) / Z_e;
+							M += mass * std::exp(-(eval - CE) / T_d) / Z_d;
 							cit++;
 						}
+						qnode->setEvaluation(E);
+						qnode->setMass(M);
 					}
 				}
 				//バックアップ
@@ -206,21 +217,74 @@ void SearchAgent::simulate() {
 							allterminal = false;
 						}
 					}
-					if (emin < -MateScoreBound) {
-						//eminは負の大きな値なので、正の値にして少し小さくする
-						const double score = -emin - tree.getMateOneScore();
-						qnode->setEvaluation(score);
-						qnode->state = SearchNode::State::MV;
-					}
-					else if (emin > MateScoreBound) {
-						//eminは正の大きな値なので、負の値にして少し大きくする
-						const double score = -emin + tree.getMateOneScore();
-						qnode->setEvaluation(score);
-						qnode->state = SearchNode::State::MV;
+					if (std::abs(emin) > MateScoreBound) {
+						if (qnode->isLimitedExpanded()) {
+							if (emin < 0) {
+								//勝ちの詰みなので詰み確定 生成していない合法手は残っている可能性はあるが不要
+								const double score = -emin - tree.getMateOneScore();
+								qnode->setEvaluation(score);
+								qnode->state = SearchNode::State::MV;
+								//詰みの時の深さ期待値を考えておくこと
+							}
+							else {
+								//負けの詰みなので残りのノードの評価値も参照する
+								SearchPlayer tplayer = player;
+								//tplayerをqhistoryを使って現在局面までもってくる
+
+								std::vector<SearchNode*> gennodes;
+								gennodes = MoveGenerator::genNocapMove(qnode, tplayer.kyokumen);
+								Evaluator::evaluate(gennodes, tplayer);
+								if (!gennodes.empty()) {
+									double emin = std::numeric_limits<double>::max();
+									
+									qnode->state = SearchNode::State::EQ;
+								}
+								else {
+									const double score = -emin + tree.getMateOneScore();
+									qnode->setEvaluation(score);
+									qnode->state = SearchNode::State::MV;
+								}
+							}
+						}
+						else {
+							if (emin < 0) {
+								//eminは負の大きな値なので、正の値にして少し小さくする
+								const double score = -emin - tree.getMateOneScore();
+								qnode->setEvaluation(score);
+								qnode->state = SearchNode::State::MV;
+							}
+							else {
+								//eminは正の大きな値なので、負の値にして少し大きくする
+								const double score = -emin + tree.getMateOneScore();
+								qnode->setEvaluation(score);
+								qnode->state = SearchNode::State::MV;
+							}
+						}
 					}
 					else {
-						double Z = 0;
-						
+						double Z_e = 0;
+						double Z_d = 0;
+						for (const auto eval : evals) {
+							Z_e += std::exp(-(eval - emin) / T_e);
+							Z_d += std::exp(-(eval - emin) / T_d);
+						}
+						double E = 0;
+						double M = 0;
+						auto cit = qnode->children.begin();
+						for (const auto& eval : evals) {
+							double mass = (*cit)->mass;
+							E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
+							M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
+							cit++;
+						}
+						if (allterminal) {
+							if (qnode->state == SearchNode::State::LE) {
+								qnode->state = SearchNode::State::LT;
+							}
+							else if (qnode->state == SearchNode::State::EQ) {
+								qnode->state = SearchNode::State::ET;
+							}
+						}
 					}
 
 				} while (qnode != node);
@@ -232,14 +296,15 @@ void SearchAgent::simulate() {
 		tree.excludeLeafNode(node);
 	}//展開評価ここまで
 
-
 	//バックアップ
 	backup:
 	{
-	/*千日手ノードの評価値をバックアップに含めて考慮するため、
-	evalsにはnode->evalを、eminにはnode->getChoiceEvaluation()を格納する
-	(千日手評価値は最善であるときのみ反映されるため)*/
-	
+		auto nit = history.rbegin();
+		do {
+			node = *(++nit);
+
+
+		} while (node != root);
 		
 	}
 }
