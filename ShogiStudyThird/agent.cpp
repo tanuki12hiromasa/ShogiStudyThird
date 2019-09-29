@@ -27,8 +27,7 @@ void SearchAgent::simulate() {
 	const double T_c = tree.getTchoice();
 	const double T_e = tree.getTeval();
 	const double T_d = tree.getTdepth();
-	const double MateScore = tree.getMateScore();
-	const double MateScoreBound = tree.getMateScoreBound();
+	const double MateScoreBound = SearchNode::getMateScoreBound();
 	SearchNode* node = root = tree.getRoot();
 	SearchPlayer player(tree.getRootPlayer());
 	std::vector<SearchNode*> history = tree.getHistory();
@@ -37,7 +36,7 @@ void SearchAgent::simulate() {
 		double CE = std::numeric_limits<double>::max();
 		std::vector<double> evals;
 		for (const auto& child : node->children) {
-			double eval = child->getChoiceEvaluation();
+			double eval = child->getEvaluation();
 			evals.push_back(eval);
 			if (eval < CE)
 				CE = eval;
@@ -75,10 +74,10 @@ void SearchAgent::simulate() {
 		}
 		if (false/*千日手である*/) {
 			if (false/*連続王手である*/) {
-				node->setRepetitiveCheck();
+				node->setRepetitiveCheck(1);
 			}
 			else {
-				node->setRepetition();
+				node->setRepetition(1);
 			}
 			goto backup;
 		}
@@ -121,7 +120,7 @@ void SearchAgent::simulate() {
 					std::vector<ChildN> evals;
 					for (auto child : qnode->children) {
 						if (!qnode->isQSTerminal) {
-							const double eval = child->getChoiceEvaluation();
+							const double eval = child->getEvaluation();
 							evals.emplace_back(std::make_pair(eval, child));
 							if (eval < emin) {
 								emin = eval;
@@ -171,27 +170,28 @@ void SearchAgent::simulate() {
 					//評価,展開ノードの評価値バックアップ
 					Evaluator::evaluate(gennodes, qplayer);
 					{
-						double CE = std::numeric_limits<double>::max();
+						double emin = std::numeric_limits<double>::max();
 						std::vector<double> evals;
 						for (const auto& child : qnode->children) {
-							evals.push_back(child->eval);
-							if (child->getChoiceEvaluation() < CE) {
-								CE = child->getChoiceEvaluation();
+							const double eval = child->getEvaluation();
+							evals.push_back(eval);
+							if (eval < emin) {
+								emin = child->getEvaluation();
 							}
 						}
 						double Z_e = 0;
 						double Z_d = 0;
 						for (const auto& eval : evals) {
-							Z_e += std::exp(-(eval - CE) / T_e);
-							Z_d += std::exp(-(eval - CE) / T_d);
+							Z_e += std::exp(-(eval - emin) / T_e);
+							Z_d += std::exp(-(eval - emin) / T_d);
 						}
 						double E = 0;
 						double M = 0;
 						auto cit = qnode->children.begin();
 						for (const auto& eval : evals) {
 							double mass = (*cit)->mass;
-							E -= eval * std::exp(-(eval - CE) / T_e) / Z_e;
-							M += mass * std::exp(-(eval - CE) / T_d) / Z_d;
+							E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
+							M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
 							cit++;
 						}
 						qnode->setEvaluation(E);
@@ -221,10 +221,7 @@ void SearchAgent::simulate() {
 						if (qnode->isLimitedExpanded()) {
 							if (emin < 0) {
 								//勝ちの詰みなので詰み確定 生成していない合法手は残っている可能性はあるが不要
-								const double score = -emin - tree.getMateOneScore();
-								qnode->setEvaluation(score);
-								qnode->state = SearchNode::State::MV;
-								//詰みの時の深さ期待値を考えておくこと
+								qnode->setMateVariation(emin);
 							}
 							else {
 								//負けの詰みなので残りのノードの評価値も参照する
@@ -233,32 +230,43 @@ void SearchAgent::simulate() {
 
 								std::vector<SearchNode*> gennodes;
 								gennodes = MoveGenerator::genNocapMove(qnode, tplayer.kyokumen);
-								Evaluator::evaluate(gennodes, tplayer);
 								if (!gennodes.empty()) {
+									Evaluator::evaluate(gennodes, tplayer);
 									double emin = std::numeric_limits<double>::max();
-									
+									std::vector<double> evals;
+									for (const auto& child : qnode->children) {
+										const double eval = child->getEvaluation();
+										evals.push_back(eval);
+										if (eval < emin) {
+											emin = child->getEvaluation();
+										}
+									}
+									double Z_e = 0;
+									double Z_d = 0;
+									for (const auto& eval : evals) {
+										Z_e += std::exp(-(eval - emin) / T_e);
+										Z_d += std::exp(-(eval - emin) / T_d);
+									}
+									double E = 0;
+									double M = 0;
+									auto cit = qnode->children.begin();
+									for (const auto& eval : evals) {
+										double mass = (*cit)->mass;
+										E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
+										M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
+										cit++;
+									}
+									qnode->setEvaluation(E);
+									qnode->setMass(M);
 									qnode->state = SearchNode::State::EQ;
 								}
 								else {
-									const double score = -emin + tree.getMateOneScore();
-									qnode->setEvaluation(score);
-									qnode->state = SearchNode::State::MV;
+									qnode->setMateVariation(emin);
 								}
 							}
 						}
 						else {
-							if (emin < 0) {
-								//eminは負の大きな値なので、正の値にして少し小さくする
-								const double score = -emin - tree.getMateOneScore();
-								qnode->setEvaluation(score);
-								qnode->state = SearchNode::State::MV;
-							}
-							else {
-								//eminは正の大きな値なので、負の値にして少し大きくする
-								const double score = -emin + tree.getMateOneScore();
-								qnode->setEvaluation(score);
-								qnode->state = SearchNode::State::MV;
-							}
+							qnode->setMateVariation(emin);
 						}
 					}
 					else {
@@ -277,6 +285,8 @@ void SearchAgent::simulate() {
 							M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
 							cit++;
 						}
+						qnode->setEvaluation(E);
+						qnode->setMass(M);
 						if (allterminal) {
 							if (qnode->state == SearchNode::State::LE) {
 								qnode->state = SearchNode::State::LT;
@@ -302,7 +312,37 @@ void SearchAgent::simulate() {
 		auto nit = history.rbegin();
 		do {
 			node = *(++nit);
-
+			double emin = std::numeric_limits<double>::max();
+			std::vector<double> evals;
+			for (const auto& child : node->children) {
+				const double eval = child->eval;
+				evals.push_back(eval);
+				if (eval < emin) {
+					emin = eval;
+				}
+			}
+			if (std::abs(emin) > MateScoreBound) {
+				node->setMateVariation(emin);
+			}
+			else {
+				double Z_e = 0;
+				double Z_d = 0;
+				for (const auto& eval : evals) {
+					Z_e += std::exp(-(eval - emin) / T_e);
+					Z_d += std::exp(-(eval - emin) / T_d);
+				}
+				double E = 0;
+				double M = 0;
+				auto cit = node->children.begin();
+				for (const auto& eval : evals) {
+					double mass = (*cit)->mass;
+					E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
+					M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
+					cit++;
+				}
+				node->setEvaluation(E);
+				node->setMass(M);
+			}
 
 		} while (node != root);
 		
