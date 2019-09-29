@@ -10,7 +10,6 @@ public:
 	SearchTree();
 	void clear();
 	
-	void setT(double T_e, double T_d, std::vector<double> T_c);
 	void setTchoice(const std::vector<double>&);
 	void setTchoice_q(const double Tcq) { T_choice_quiescence = Tcq; }
 	void setTeval(const double Te) { T_eval = Te; }
@@ -21,10 +20,10 @@ public:
 	void proceed(SearchNode* node);
 	void addNodenum(int n) { nodenum += n; }
 
-	SearchNode* getRoot();
+	SearchNode* getRoot() const { return rootNode; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
 	const SearchPlayer& getRootPlayer()const { return rootPlayer; }
-	double getTchoice()const;
+	double getTchoice();
 	double getTcQ()const { return T_choice_quiescence; }
 	double getTeval()const { return T_eval; }
 	double getTdepth()const { return T_depth; }
@@ -42,7 +41,7 @@ private:
 	std::atomic_uint64_t nodenum;
 
 	std::array<double, 64> T_choice;
-	std::atomic_uint T_c_count;
+	std::atomic_uint64_t T_c_count;
 	double T_choice_quiescence;
 	double T_eval;
 	double T_depth;
