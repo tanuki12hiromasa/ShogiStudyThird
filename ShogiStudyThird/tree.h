@@ -15,9 +15,8 @@ public:
 	void setTchoice_q(const double Tcq) { T_choice_quiescence = Tcq; }
 	void setTeval(const double Te) { T_eval = Te; }
 	void setTdepth(const double Td) { T_depth = Td; }
-	void setMateScore(const double score) { mateScore = score; }
-	void setMateScoreBound(const double bound) { mateScoreBound = bound; }
 	void setMassmaxInQSearch(const double mmqs) { MassMax_QS = mmqs; }
+
 
 	void proceed(SearchNode* node);
 	void addNodenum(int n) { nodenum += n; }
@@ -29,9 +28,6 @@ public:
 	double getTcQ()const { return T_choice_quiescence; }
 	double getTeval()const { return T_eval; }
 	double getTdepth()const { return T_depth; }
-	double getMateScore()const { return mateScore; }
-	double getMateScoreBound()const { return mateScoreBound; }
-	double getMateOneScore()const { return mateOneScore; }
 	double getMQS()const { return MassMax_QS; }
 
 	bool resisterLeafNode(SearchNode* const node);
@@ -50,12 +46,9 @@ private:
 	double T_choice_quiescence;
 	double T_eval;
 	double T_depth;
-	
-	double mateScore = 34000.0;
-	double mateScoreBound = 30000.0;
-	double mateOneScore = 20.0;
 	double MassMax_QS;
 
 	std::unordered_map<SearchNode*, unsigned> nmap;
 	std::mutex lnmutex;
 };
+ 
