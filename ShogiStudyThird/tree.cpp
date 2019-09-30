@@ -2,16 +2,24 @@
 #include "tree.h"
 
 
-SearchTree::SearchTree() {
-
+SearchTree::SearchTree()
+	:rootPlayer(),
+	T_choice_quiescence(90),
+	T_eval(40),T_depth(90),
+	MassMax_QS(8)
+{
+	T_c_count = 0;
+	setTchoice({ 30,60,90,120 });
 }
 
-void SearchTree::clear() {
+void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& moves) {
 
 }
 
 void SearchTree::proceed(SearchNode* node) {
-
+	rootPlayer.proceed(node->move);
+	history.push_back(node);
+	rootNode = node;
 }
 
 void SearchTree::setTchoice(const std::vector<double>& T) {

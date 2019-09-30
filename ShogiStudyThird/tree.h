@@ -8,7 +8,7 @@
 class SearchTree {
 public:
 	SearchTree();
-	void clear();
+	void set(const Kyokumen& startpos,const std::vector<Move>& moves);
 	
 	void setTchoice(const std::vector<double>&);
 	void setTchoice_q(const double Tcq) { T_choice_quiescence = Tcq; }
@@ -49,5 +49,8 @@ private:
 
 	std::unordered_map<SearchNode*, unsigned> nmap;
 	std::mutex lnmutex;
+
+	std::vector<double> thread_newer;
+	std::atomic_bool search_enable;
 };
  
