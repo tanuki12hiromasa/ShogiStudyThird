@@ -38,6 +38,8 @@ public:
 	Bitboard pinMaskSente(const unsigned pos)const;//pos上の駒が敵駒にpinされていれば移動可能な直線範囲を返す pinされてなければAllOneが返る
 	Bitboard pinMaskGote(const unsigned pos)const;
 
+	bool operator==(const Kyokumen& rhs)const;
+	bool operator!=(const Kyokumen& rhs)const { return !operator==(rhs); }
 private:
 	void setKoma(size_t pos, koma::Koma k) { assert(0 <= pos && pos < 81); bammen[pos] = static_cast<std::uint8_t>(k); }
 	void reflectBitboard();

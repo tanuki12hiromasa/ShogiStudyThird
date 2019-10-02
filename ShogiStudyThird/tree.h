@@ -18,7 +18,6 @@ public:
 
 
 	void proceed(SearchNode* node);
-	void addNodenum(int n) { nodenum += n; }
 
 	SearchNode* getRoot() const { return rootNode; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
@@ -33,12 +32,14 @@ public:
 	void excludeLeafNode(SearchNode* const node);
 
 private:
+	void deleteTree(SearchNode* root);
+
+	std::vector<SearchNode*> history;
+	Kyokumen startKyokumen;
 	SearchNode* rootNode;
 	SearchNode* oldrootNode;
 	SearchPlayer rootPlayer;
-	std::vector<SearchNode*> history;
-	Kyokumen startKyokumen;
-	std::atomic_uint64_t nodenum;
+	std::atomic_uint64_t nodecount;
 
 	std::array<double, 64> T_choice;
 	std::atomic_uint64_t T_c_count;
