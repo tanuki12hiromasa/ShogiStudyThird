@@ -26,8 +26,7 @@ void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
 
 makenewtree:
 	{
-		std::thread th(&SearchTree::deleteTree, this, history.front());
-		th.detach();
+		deleteTreeParallel(history.front());
 		history.clear();
 		startKyokumen = startpos;
 		rootNode = new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false));
@@ -72,4 +71,35 @@ bool SearchTree::resisterLeafNode(SearchNode* const node) {
 void SearchTree::excludeLeafNode(SearchNode* const node) {
 	std::lock_guard<std::mutex> lock(lnmutex);
 	nmap.erase(node);
+}
+
+SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
+	std::lock_guard<std::mutex> lock(thmutex);
+	thread_latestRootFlags[threadNo] = true;
+	nodecount += increaseNodes;
+	if (search_enable && nodecount < nodesMaxCount) {
+		return rootNode;
+	}
+	else {
+		return nullptr;
+	}
+}
+
+void SearchTree::deleteTreeParallel(SearchNode* root) {
+	std::thread th([&]()
+		{
+			bool immigrated;
+			do {
+				std::this_thread::sleep_for(std::chrono::milliseconds(2));
+				immigrated = true;
+				for (bool flag : thread_latestRootFlags) {
+					if (!flag)
+						immigrated = false;
+				}
+			} while (!immigrated);
+			root->deleteTree();
+			delete(root);
+		}
+	);
+	th.detach();
 }

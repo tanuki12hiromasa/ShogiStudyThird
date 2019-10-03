@@ -12,6 +12,16 @@ SearchNode::SearchNode(const Move& move)
 	mass = 0;
 }
 
+void SearchNode::deleteTree() {
+	std::vector<SearchNode*> nodes = children;
+	while (!nodes.empty()) {
+		SearchNode* node = nodes.back();
+		nodes.pop_back();
+		nodes.insert(nodes.end(), node->children.begin(), node->children.end());
+		delete node;
+	}
+}
+
 SearchNode* SearchNode::addChild(const Move& move) {
 	SearchNode* child = new SearchNode(move);
 	children.push_back(child);

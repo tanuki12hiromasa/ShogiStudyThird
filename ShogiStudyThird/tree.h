@@ -31,8 +31,10 @@ public:
 	bool resisterLeafNode(SearchNode* const node);
 	void excludeLeafNode(SearchNode* const node);
 
+	SearchNode* getRoot(unsigned threadNo, size_t increaseNodes);
+
 private:
-	void deleteTree(SearchNode* root);
+	void deleteTreeParallel(SearchNode* root);
 
 	std::vector<SearchNode*> history;
 	Kyokumen startKyokumen;
@@ -40,6 +42,7 @@ private:
 	SearchNode* oldrootNode;
 	SearchPlayer rootPlayer;
 	std::atomic_uint64_t nodecount;
+	std::uint64_t nodesMaxCount;
 
 	std::array<double, 64> T_choice;
 	std::atomic_uint64_t T_c_count;
@@ -51,7 +54,8 @@ private:
 	std::unordered_map<SearchNode*, unsigned> nmap;
 	std::mutex lnmutex;
 
-	std::vector<double> thread_newer;
+	std::vector<bool> thread_latestRootFlags;
 	std::atomic_bool search_enable;
+	std::mutex thmutex;
 };
  
