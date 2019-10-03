@@ -3,32 +3,41 @@
 #include "move_gen.h"
 #include <algorithm>
 
-SearchAgent::SearchAgent(SearchTree& tree, int seed)
-	:tree(tree), engine(seed), root(nullptr)
-{}
+SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)
+	:tree(tree), ID(threadid),engine(seed)
+{
+	alive = true;
+}
 
 SearchAgent::SearchAgent(SearchAgent&& agent) noexcept
 	: tree(agent.tree),
-	enable(agent.enable.load()), alive(agent.alive.load()),
 	engine(std::move(agent.engine))
 {
-	root.store(agent.root);
+	alive = agent.alive.load();
 }
 
-
-bool SearchAgent::immigrated() {
-	return root.load() == tree.getRoot();
+void SearchAgent::loop() {
+	size_t newnodecount = 0;
+	while (alive) {
+		SearchNode* root = tree.getRoot(ID, newnodecount);
+		if (root != nullptr) {
+			newnodecount = simulate(root);
+		}
+		else {
+			newnodecount = 0;
+			std::this_thread::sleep_for(std::chrono::microseconds(200));
+		}
+	}
 }
 
-
-void SearchAgent::simulate() {
+size_t SearchAgent::simulate(SearchNode* const root) {
 	using ChildN = std::pair<double, SearchNode*>;
-	searchstart:
 	const double T_c = tree.getTchoice();
 	const double T_e = tree.getTeval();
 	const double T_d = tree.getTdepth();
 	const double MateScoreBound = SearchNode::getMateScoreBound();
-	SearchNode* node = root = tree.getRoot();
+	size_t newnodecount = 0;
+	SearchNode* node = root;
 	SearchPlayer player(tree.getRootPlayer());
 	std::vector<SearchNode*> history = tree.getHistory();
 	//選択
@@ -63,7 +72,7 @@ void SearchAgent::simulate() {
 	}
 	//末端ノードが他スレッドで展開中になっていないかチェック
 	if (!tree.resisterLeafNode(node)) {
-		goto searchstart;
+		return 0;
 	}
 	//展開・評価
 	{
@@ -102,6 +111,7 @@ void SearchAgent::simulate() {
 			}
 			goto backup;
 		}
+		newnodecount += gennodes.size();
 		node->state = SearchNode::State::EQ;
 		Evaluator::evaluate(gennodes, player);
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
@@ -151,6 +161,7 @@ void SearchAgent::simulate() {
 					}
 					std::vector<SearchNode*> gennodes;
 					gennodes = MoveGenerator::genCapMove(qnode, qplayer.kyokumen);
+					newnodecount += gennodes.size();
 					if (gennodes.empty()) {
 						if (node->move.isOute()) {
 							const koma::Position from = node->move.from();
@@ -230,6 +241,7 @@ void SearchAgent::simulate() {
 
 								std::vector<SearchNode*> gennodes;
 								gennodes = MoveGenerator::genNocapMove(qnode, tplayer.kyokumen);
+								newnodecount += gennodes.size();
 								if (!gennodes.empty()) {
 									Evaluator::evaluate(gennodes, tplayer);
 									double emin = std::numeric_limits<double>::max();
@@ -343,8 +355,8 @@ void SearchAgent::simulate() {
 				node->setEvaluation(E);
 				node->setMass(M);
 			}
-
 		} while (node != root);
-		
 	}
+
+	return newnodecount;
 }
