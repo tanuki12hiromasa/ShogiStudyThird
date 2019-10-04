@@ -16,14 +16,30 @@ SearchTree::SearchTree()
 }
 
 void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
-	if (startKyokumen != startpos)
-		goto makenewtree;
-	{
-		Kyokumen usihisKyokumen(startpos);
-
+	if (startKyokumen == startpos)	{
+		int i;
+		for (i = 0; i < history.size() - 1; i++) {
+			if (history[i+1]->move != usihis[i]) {
+				goto makenewtree;
+			}
+		}
+		for (; i < usihis.size(); i++) {
+			SearchNode* root = rootNode;
+			const Move nextmove = usihis[i];
+			SearchNode* nextNode = nullptr;
+			for (SearchNode* child : root->children) {
+				if (child->move == nextmove) {
+					nextNode = child;
+					break;
+				}
+			}
+			if (nextNode == nullptr) {
+				nextNode = new SearchNode(nextmove);
+			}
+			proceed(nextNode);
+		}
+		return;
 	}
-
-
 makenewtree:
 	{
 		deleteTreeParallel(history.front());
