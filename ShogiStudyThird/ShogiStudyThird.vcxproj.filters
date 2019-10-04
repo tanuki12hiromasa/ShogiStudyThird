@@ -75,6 +75,9 @@
     <ClCompile Include="tree.cpp">
       <Filter>ソース ファイル\search</Filter>
     </ClCompile>
+    <ClCompile Include="commander.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">

@@ -155,6 +155,7 @@
     <ClCompile Include="apery_feature.cpp" />
     <ClCompile Include="bb_kiki.cpp" />
     <ClCompile Include="bitboard.cpp" />
+    <ClCompile Include="commander.cpp" />
     <ClCompile Include="evaluated_nodes.cpp" />
     <ClCompile Include="koma.cpp" />
     <ClCompile Include="kyokumen.cpp" />
