@@ -19,7 +19,6 @@ public:
 
 	void proceed(SearchNode* node);
 
-	SearchNode* getRoot() const { return rootNode; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
 	const SearchPlayer& getRootPlayer()const { return rootPlayer; }
 	double getTchoice();
