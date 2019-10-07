@@ -7,12 +7,15 @@ public:
 private:
 	Commander();
 	~Commander();
+	static void coutOption();
+	void setOption(std::vector<std::string>& token);
 	void paramInit();
 	void gameInit();
 
 	void go();
 	void bestmove();
 	void info();
+	void sasu();
 
 	SearchTree tree;
 	std::vector<SearchAgent> agents;
