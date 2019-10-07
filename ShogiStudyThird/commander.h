@@ -6,20 +6,25 @@ public:
 	static void execute();
 private:
 	Commander();
-	void paramInit(std::string filepath);
+	~Commander();
+	void paramInit();
 	void gameInit();
 
 	void go();
-	void ponder();
+	void bestmove();
+	void info();
 
 	SearchTree tree;
 	std::vector<SearchAgent> agents;
-	bool permitPonder = false;
+	bool permitPonder;
+	std::string filepath;
 
 	std::vector<std::thread> agent_threads;
 	std::thread go_thread;
-	std::atomic_bool go_enable;
-	std::atomic_bool ponder_enable;
+	std::thread info_thread;
+	std::atomic_bool go_alive;
+	std::atomic_bool info_enable;
+	std::atomic_bool info_alive;
 
 	std::mutex coutmtx;
 };
