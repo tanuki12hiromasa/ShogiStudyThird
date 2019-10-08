@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "tree.h"
 
-
 SearchTree::SearchTree()
 	:rootPlayer(),startKyokumen(),
 	T_choice_quiescence(90),
@@ -13,6 +12,11 @@ SearchTree::SearchTree()
 	rootNode = new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false));
 	oldrootNode = rootNode;
 	nodecount = 0;
+}
+
+void SearchTree::set(const std::vector<std::string>& usitokens) {
+	const auto moves = Move::usiToMoves(usitokens);
+	set(Kyokumen(usitokens), moves);
 }
 
 void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {

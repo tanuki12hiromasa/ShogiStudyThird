@@ -9,7 +9,8 @@ class SearchTree {
 public:
 	SearchTree();
 	void set(const Kyokumen& startpos,const std::vector<Move>& moves);
-	
+	void set(const std::vector<std::string>& usitokens);
+
 	void setNodeMaxsize(const size_t s) { nodesMaxCount = s; }
 	void setTchoice(const std::vector<double>&);
 	void setTchoice_q(const double Tcq) { T_choice_quiescence = Tcq; }
@@ -19,6 +20,7 @@ public:
 
 	void permitSearch() { search_enable = true; }
 	void prohibitSearch() { search_enable = false; }
+	SearchNode* getBestMove()const;
 	void proceed(SearchNode* node);
 	void deleteBranchParallel(SearchNode* base, SearchNode* saved);//baseのsaved以下以外の探索木を子ノードを残して消去する
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "agent.h"
+#include "time_property.h"
 
 class Commander {
 public:
@@ -12,13 +13,13 @@ private:
 	void paramInit();
 	void gameInit();
 
-	void go();
-	void bestmove();
+	void go(std::vector<std::string>& tokens);
 	void info();
-	void sasu();
+	void chakushu();
 
 	SearchTree tree;
 	std::vector<SearchAgent> agents;
+	unsigned agentNum = 6;
 	bool permitPonder;
 	std::string filepath;
 

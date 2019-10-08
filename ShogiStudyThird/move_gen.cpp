@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "move_gen.h"
-#include "bb_kiki.h"
 
 class EvaluatedNodes {
 public:

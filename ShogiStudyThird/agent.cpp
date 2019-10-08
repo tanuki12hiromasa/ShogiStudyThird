@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "agent.h"
-#include "move_gen.h"
 #include <algorithm>
 
 SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)

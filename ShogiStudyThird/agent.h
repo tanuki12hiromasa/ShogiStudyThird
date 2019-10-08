@@ -1,5 +1,6 @@
 #pragma once
 #include "tree.h"
+#include "move_gen.h"
 #include <random>
 
 class SearchAgent {
