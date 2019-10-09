@@ -150,17 +150,27 @@ void Commander::go(std::vector<std::string>& tokens) {
 	tree.permitSearch();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
-	go_thread.join();
-	go_thread = std::thread([this,tp]() 
-		{
-			
-		}
-	);
+	if(go_thread.joinable()) go_thread.join();
+	go_thread = std::thread([this,tp]() {
+		
+	});
 	info_enable = true;
 }
 
 void Commander::info() {
+	if (!info_alive || !info_thread.joinable()) {
+		if(info_thread.joinable()) info_thread.join();
+		info_alive = true;
+		info_thread = std::thread([this]() {
+			while (info_alive) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(950));
+				if (info_enable) {
+					const auto PV = tree.getPV();
 
+				}
+			}
+		});
+	}
 }
 
 void Commander::chakushu() {
