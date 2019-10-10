@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "vec2.h"
 #include <vector>
 

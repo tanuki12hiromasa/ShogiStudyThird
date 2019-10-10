@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "koma.h"
 #include "bitboard.h"
 #include "move.h"

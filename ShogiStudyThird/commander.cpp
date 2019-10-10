@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "commander.h"
 #include "usi.h" 
 #include <iostream>
@@ -94,7 +94,7 @@ void Commander::coutOption() {
 
 void Commander::setOption(std::vector<std::string>& token) {
 	if (token[2] == "USI_Ponder") {
-		if (token.size <= 3 || token[4] == "false") {
+		if (token.size() <= 3 || token[4] == "false") {
 			permitPonder = false;
 			std::cout << "ponder : false" << std::endl;
 		}

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "move.h"
 #include <shared_mutex>
 #include <atomic>

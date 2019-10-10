@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "move_gen.h"
 
 class EvaluatedNodes {

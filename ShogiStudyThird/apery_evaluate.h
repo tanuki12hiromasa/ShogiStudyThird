@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "apery_feature.h"
 #include "evaluated_nodes.h"
 #include "player.h"

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "evaluator.h"
 
 class SearchPlayer {

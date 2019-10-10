@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "bitboard.h"
 #include "koma.h"
 #include <array>

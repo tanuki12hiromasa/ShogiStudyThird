@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "node.h"
 #include "kyokumen.h"
 #include "bb_kiki.h"

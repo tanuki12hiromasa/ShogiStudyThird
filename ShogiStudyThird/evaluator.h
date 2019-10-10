@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "apery_evaluate.h"
 
 //ここで使用する評価関数を指定する

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "evaluated_nodes.h"
 
 void EvaluatedNodes_diff::add(Move move) {

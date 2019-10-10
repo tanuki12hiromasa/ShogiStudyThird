@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "apery_param.h"
 
 namespace apery {

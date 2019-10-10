@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "time_property.h"
 
 TimeProperty::TimeProperty(bool teban, const std::vector<std::string>& tokens):

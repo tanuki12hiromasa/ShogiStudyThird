@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "node.h"
 #include <cmath>
 #include <algorithm>

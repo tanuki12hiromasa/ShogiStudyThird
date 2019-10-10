@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "bb_kiki.h"
 #include "koma_motion.h"
 #include "vec2.h"

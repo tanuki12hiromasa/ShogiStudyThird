@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "bitboard.h"
 #include <intrin.h>
 #include <algorithm>
