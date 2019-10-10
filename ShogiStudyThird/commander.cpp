@@ -44,7 +44,11 @@ void Commander::execute() {
 			commander.go(tokens);
 		}
 		else if (tokens[0] == "stop") {
-			commander.chakushu();
+			bool saseta = false;
+			while (!saseta) {
+				saseta = commander.chakushu();
+				if (!saseta)std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			}
 		}
 		else if (tokens[0] == "ponderhit") {
 			//先読みはするがponder機能は利用しない
@@ -152,7 +156,12 @@ void Commander::go(std::vector<std::string>& tokens) {
 	go_alive = false;
 	if(go_thread.joinable()) go_thread.join();
 	go_thread = std::thread([this,tp]() {
-		
+		std::this_thread::sleep_for(std::chrono::milliseconds(4500));
+		while (go_alive) {
+			bool saseta = chakushu();
+			if (saseta) return;
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}
 	});
 	info_enable = true;
 }
@@ -164,19 +173,47 @@ void Commander::info() {
 		info_thread = std::thread([this]() {
 			while (info_alive) {
 				std::this_thread::sleep_for(std::chrono::milliseconds(950));
+				std::lock_guard<std::mutex> lock(coutmtx);
 				if (info_enable) {
 					const auto PV = tree.getPV();
-
+					std::string pvstr;
+					if (!PV.empty()) {
+						for (int i = 1; i < 7 && i < PV.size(); i++) pvstr += PV[i]->move.toUSI()+' ';
+						const auto& root = PV[0];
+						std::cout << "info pv " << pvstr << "depth " << root->mass << " seldepth " << PV.size()
+							<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
+					}
 				}
 			}
 		});
 	}
 }
 
-void Commander::chakushu() {
+bool Commander::chakushu() {
 	std::lock_guard<std::mutex> lock(coutmtx);
 	tree.prohibitSearch();
 	info_enable = false;
-	SearchNode* bestchild = tree.getBestMove();
-	
+	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
+	if (kyokumen.isDeclarable()) {
+		std::cout << "bestmove win" << std::endl;
+		return true;
+	}
+	const SearchNode* const root = tree.rootNode;
+	if (root->eval < -33000) {
+		std::cout << "bestmove resign" << std::endl;
+		return true;
+	}
+	const auto bestchild = tree.getBestMove();
+	if (bestchild == nullptr) {
+		tree.permitSearch();
+		return false;
+	}
+	std::cout << "info pv " << bestchild->move.toUSI() << " depth " << bestchild->mass <<
+		"score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
+	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
+	tree.proceed(bestchild);
+	if (permitPonder) {
+		tree.permitSearch();
+	}
+	return true;
 }

@@ -15,7 +15,7 @@ private:
 
 	void go(std::vector<std::string>& tokens);
 	void info();
-	void chakushu();
+	bool chakushu();
 
 	SearchTree tree;
 	std::vector<SearchAgent> agents;
