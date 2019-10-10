@@ -112,14 +112,14 @@ namespace apery {
 	void apery_feat::proceed(const Kyokumen& before, const Move& move) {
 #define Replace(before,after,list) {int i=0;for(;i<EvalList::EvalListSize;i++){if(list[i]==before){list[i]=after;break;}}assert(i<38);}
 		using namespace ::koma;
-		if (!isInside(move.from)) { //駒台から
-			Mochigoma m = MposToMochi(move.from);
-			Koma k = MposToKoma(move.from);
+		if (!isInside(move.from())) { //駒台から
+			Mochigoma m = MposToMochi(move.from());
+			Koma k = MposToKoma(move.from());
 			int mNum = before.getMochigomaNum(before.teban(), m);
 			EvalIndex bIndex0 = mochiToIndex(m, before.teban()) + mNum;
 			EvalIndex bIndex1 = mochiToIndex(m, !before.teban()) + mNum;
-			EvalIndex aIndex0 = komaToIndex(k) + move.to;
-			EvalIndex aIndex1 = komaToIndex(sgInv(k)) + inverse(move.to);
+			EvalIndex aIndex0 = komaToIndex(k) + move.to();
+			EvalIndex aIndex1 = komaToIndex(sgInv(k)) + inverse(move.to());
 
 			const unsigned skpos = before.sOuPos();
 			const unsigned gkpos = before.gOuPos();
@@ -149,8 +149,8 @@ namespace apery {
 			}
 		}
 		else {
-			Koma k = before.getKoma(move.from);
-			Koma cap = before.getKoma(move.to);
+			Koma k = before.getKoma(move.from());
+			Koma cap = before.getKoma(move.to());
 			if (k == Koma::s_Ou) {//先手玉が動いた場合
 				const unsigned gkpos = before.gOuPos();
 				if (cap != Koma::None) {
@@ -158,8 +158,8 @@ namespace apery {
 					//gKPPを差分計算 sKPP,KKPはあとで全計算する
 					Mochigoma m_cap = KomaToMochi(cap);
 					int mNum = before.getMochigomaNum(before.teban(), m_cap) + 1;
-					EvalIndex bcIndex0 = komaToIndex(cap) + move.to;
-					EvalIndex bcIndex1 = komaToIndex(sgInv(cap)) + inverse(move.to);
+					EvalIndex bcIndex0 = komaToIndex(cap) + move.to();
+					EvalIndex bcIndex1 = komaToIndex(sgInv(cap)) + inverse(move.to());
 					EvalIndex acIndex0 = mochiToIndex(m_cap, before.teban()) + mNum;
 					EvalIndex acIndex1 = mochiToIndex(m_cap, !before.teban()) + mNum;
 					{
@@ -183,7 +183,7 @@ namespace apery {
 				//玉はリストにないのでリストは更新されない
 				sum.p[0][0] = 0; sum.p[0][1] = 0;
 				sum.p[2][0] = idlist.material * FVScale; sum.p[2][1] = 0;
-				const unsigned skpos = move.to;
+				const unsigned skpos = move.to();
 				const auto* ppskpp = KPP[skpos];
 				const auto* pkkp = KKP[skpos][gkpos];
 				for (int i = 0; i < EvalList::EvalListSize; i++) {
@@ -202,8 +202,8 @@ namespace apery {
 					//sKPPを差分計算
 					Mochigoma m_cap = KomaToMochi(cap);
 					int mNum = before.getMochigomaNum(before.teban(), m_cap) + 1;
-					EvalIndex bcIndex0 = komaToIndex(cap) + move.to;
-					EvalIndex bcIndex1 = komaToIndex(sgInv(cap)) + inverse(move.to);
+					EvalIndex bcIndex0 = komaToIndex(cap) + move.to();
+					EvalIndex bcIndex1 = komaToIndex(sgInv(cap)) + inverse(move.to());
 					EvalIndex acIndex0 = mochiToIndex(m_cap, before.teban()) + mNum;
 					EvalIndex acIndex1 = mochiToIndex(m_cap, !before.teban()) + mNum;
 					{
@@ -228,7 +228,7 @@ namespace apery {
 				//gKPP,KKP全体を再計算
 				sum.p[1][0] = 0; sum.p[1][1] = 0;
 				sum.p[2][0] = idlist.material * FVScale; sum.p[2][1] = 0;
-				const unsigned gkpos = move.to;
+				const unsigned gkpos = move.to();
 				const auto* ppgkpp = KPP[inverse(gkpos)];
 				const auto* pkkpi = KKP[skpos][gkpos];
 				for (int i = 0; i < EvalList::EvalListSize; i++) {
@@ -242,23 +242,23 @@ namespace apery {
 				}
 			}
 			else if (cap != Koma::None) {//駒をとっていた場合
-				Koma k = before.getKoma(move.from);
-				EvalIndex bIndex0 = komaToIndex(k) + move.from;
-				EvalIndex bIndex1 = komaToIndex(sgInv(k)) + inverse(move.from);
-				if (move.promote) {
+				Koma k = before.getKoma(move.from());
+				EvalIndex bIndex0 = komaToIndex(k) + move.from();
+				EvalIndex bIndex1 = komaToIndex(sgInv(k)) + inverse(move.from());
+				if (move.promote()) {
 					int material_diff = -PieceScore(k);
 					k = promote(k);
 					material_diff += PieceScore(k);
 					idlist.material += material_diff;
 					sum.p[2][0] += material_diff * FVScale;
 				}
-				EvalIndex aIndex0 = komaToIndex(k) + move.to;
-				EvalIndex aIndex1 = komaToIndex(sgInv(k)) + inverse(move.to);
+				EvalIndex aIndex0 = komaToIndex(k) + move.to();
+				EvalIndex aIndex1 = komaToIndex(sgInv(k)) + inverse(move.to());
 
 				Mochigoma m_cap = KomaToMochi(cap);
 				int mNum = before.getMochigomaNum(before.teban(), m_cap) + 1;
-				EvalIndex bcIndex0 = komaToIndex(cap) + move.to;
-				EvalIndex bcIndex1 = komaToIndex(sgInv(cap)) + inverse(move.to);
+				EvalIndex bcIndex0 = komaToIndex(cap) + move.to();
+				EvalIndex bcIndex1 = komaToIndex(sgInv(cap)) + inverse(move.to());
 				EvalIndex acIndex0 = mochiToIndex(m_cap, before.teban()) + mNum;
 				EvalIndex acIndex1 = mochiToIndex(m_cap, !before.teban()) + mNum;
 
@@ -307,18 +307,18 @@ namespace apery {
 				}
 			}
 			else {//玉以外の駒が何も取らずに動いたとき
-				Koma k = before.getKoma(move.from);
-				EvalIndex bIndex0 = komaToIndex(k) + move.from;
-				EvalIndex bIndex1 = komaToIndex(sgInv(k)) + inverse(move.from);
-				if (move.promote) {
+				Koma k = before.getKoma(move.from());
+				EvalIndex bIndex0 = komaToIndex(k) + move.from();
+				EvalIndex bIndex1 = komaToIndex(sgInv(k)) + inverse(move.from());
+				if (move.promote()) {
 					int material_diff = -PieceScore(k);
 					k = promote(k);
 					material_diff += PieceScore(k);
 					idlist.material += material_diff;
 					sum.p[2][0] += material_diff * FVScale;
 				}
-				EvalIndex aIndex0 = komaToIndex(k) + move.to;
-				EvalIndex aIndex1 = komaToIndex(sgInv(k)) + inverse(move.to);
+				EvalIndex aIndex0 = komaToIndex(k) + move.to();
+				EvalIndex aIndex1 = komaToIndex(sgInv(k)) + inverse(move.to());
 
 				const unsigned skpos = before.sOuPos();
 				const unsigned gkpos = before.gOuPos();

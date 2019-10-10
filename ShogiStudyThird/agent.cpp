@@ -128,7 +128,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					double emin = std::numeric_limits<double>::max();
 					std::vector<ChildN> evals;
 					for (auto child : qnode->children) {
-						if (!qnode->isQSTerminal) {
+						if (!qnode->isQSTerminal()) {
 							const double eval = child->getEvaluation();
 							evals.emplace_back(std::make_pair(eval, child));
 							if (eval < emin) {

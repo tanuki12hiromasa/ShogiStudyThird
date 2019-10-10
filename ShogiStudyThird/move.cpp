@@ -1,9 +1,28 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "move.h"
 #include "usi.h"
 
 std::vector<Move> Move::usiToMoves(const std::vector<std::string>& tokens) {
-
+	std::vector<Move> moves;
+	auto token = tokens.begin();
+	auto tend = tokens.end();
+	assert(*token == "position");
+	token++;
+	if (*token == "startpos") {
+		token += 1;
+	}
+	else {
+		assert(*token == "sfen");
+		token += 5;
+	}
+	if (token != tend) {
+		++token;
+		for (bool sengo = true; token != tend; ++token) {
+			moves.emplace_back(Move(*token, sengo));
+			sengo = !sengo;
+		}
+	}
+	return moves;
 }
 
 std::string Move::toUSI() const {
