@@ -131,9 +131,6 @@
     <ClInclude Include="vec2.h">
       <Filter>ヘッダー ファイル\kiso</Filter>
     </ClInclude>
-    <ClInclude Include="history.h">
-      <Filter>ヘッダー ファイル\search</Filter>
-    </ClInclude>
     <ClInclude Include="apery_feature.h">
       <Filter>apery</Filter>
     </ClInclude>
