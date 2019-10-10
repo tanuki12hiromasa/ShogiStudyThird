@@ -20,11 +20,12 @@ public:
 
 	void permitSearch() { search_enable = true; }
 	void prohibitSearch() { search_enable = false; }
-	SearchNode* getBestMove()const;
-	const std::vector<SearchNode*> getPV()const;
+	SearchNode* getBestMove()const;//最もevalの高いrootのchildを返す
+	const std::vector<SearchNode*> getPV()const;//rootからのpvの連なりを返す
 	void proceed(SearchNode* node);
 	void deleteBranchParallel(SearchNode* base, SearchNode* saved);//baseのsaved以下以外の探索木を子ノードを残して消去する
 
+	const uint64_t getNodeCount() const { return nodecount; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
 	const SearchPlayer& getRootPlayer()const { return rootPlayer; }
 	double getTchoice();
@@ -62,5 +63,7 @@ private:
 	std::vector<bool> thread_latestRootFlags;
 	std::atomic_bool search_enable;
 	std::mutex thmutex;
+
+	friend class Commander;
 };
  

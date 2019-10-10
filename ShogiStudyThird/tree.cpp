@@ -62,6 +62,7 @@ makenewtree:
 void SearchTree::proceed(SearchNode* node) {
 	rootPlayer.proceed(node->move);
 	history.push_back(node);
+	deleteBranchParallel(rootNode, node);
 	rootNode = node;
 }
 
