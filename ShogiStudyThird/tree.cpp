@@ -59,6 +59,37 @@ makenewtree:
 	}
 }
 
+SearchNode* SearchTree::getBestMove()const {
+	SearchNode* best = nullptr;
+	double min = std::numeric_limits<double>::max();
+	for (const auto child : rootNode->children) {
+		const double eval = child->eval;
+		if (eval <= min) {
+			best = child;
+			min = eval;
+		}
+	}
+	return best;
+}
+
+std::vector<SearchNode*> SearchTree::getPV()const {
+	std::vector<SearchNode*> pv;
+	SearchNode* node = rootNode;
+	while (!node->children.empty()) {
+		SearchNode* best = nullptr;
+		double min = std::numeric_limits<double>::max();
+		for (const auto child : node->children) {
+			const double eval = child->eval;
+			if (eval <= min) {
+				best = child;
+				min = eval;
+			}
+		}
+		node = best;
+	}
+	return pv;
+}
+
 void SearchTree::proceed(SearchNode* node) {
 	rootPlayer.proceed(node->move);
 	history.push_back(node);
@@ -98,7 +129,7 @@ SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
 	std::lock_guard<std::mutex> lock(thmutex);
 	thread_latestRootFlags[threadNo] = true;
 	nodecount += increaseNodes;
-	if (search_enable && nodecount < nodesMaxCount) {
+	if (search_enable/* && nodecount < nodesMaxCount*/) {//nodecountを減らす処理が書けてないので一時的に無効化している
 		return rootNode;
 	}
 	else {
