@@ -182,6 +182,7 @@
     <ClInclude Include="commander.h" />
     <ClInclude Include="evaluated_nodes.h" />
     <ClInclude Include="evaluator.h" />
+    <ClInclude Include="feature.h" />
     <ClInclude Include="koma.h" />
     <ClInclude Include="koma_motion.h" />
     <ClInclude Include="kyokumen.h" />

@@ -1,14 +1,14 @@
-#pragma once
-#include "evaluator.h"
+﻿#pragma once
+#include "feature.h"
 
 class SearchPlayer {
 public:
+	Kyokumen kyokumen;
+	Feature feature;
+
 	SearchPlayer():kyokumen() { feature.set(kyokumen); }
 	SearchPlayer(const Kyokumen& _kyokumen) :kyokumen(_kyokumen) { feature.set(kyokumen); }
 	SearchPlayer(const Kyokumen& k, const Feature& f):kyokumen(k),feature(f){}
-
-	Kyokumen kyokumen;
-	Feature feature;
 
 	void proceed(Move m) {
 		feature.proceed(kyokumen,m);

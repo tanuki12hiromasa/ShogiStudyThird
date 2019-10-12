@@ -10,6 +10,7 @@ static void evaluate(EvaluatedNodes_full& en);EvaluatedNodes_fullを受け取り
 
 差分計算ありの場合 (evaluated_node.hで #define EVAL_DIFF_ONLY とすること)
 EvaluatorとFeatureを用意する
+Featureはfeature.hで
 Evaluatorはinit,evaluateを持つ
 static void init();
 static void evaluate(EvaluatedNodes_diff& en, const Feature& feat);
@@ -23,8 +24,6 @@ void proceed(const Kyokumen& before, const Move& move);
 
 //newEval -芝浦将棋softmax
 //using Evaluator = sss::sss_eval;
-//using Feature = sss::sss_feat;
 
 //apery
 using Evaluator = apery::apery_evaluator;
-using Feature = apery::apery_feat;
