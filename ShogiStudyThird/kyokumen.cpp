@@ -30,9 +30,15 @@ Kyokumen::Kyokumen():
 Kyokumen::Kyokumen(const std::array<koma::Koma, 81>& ban, const std::array<unsigned, 7>& smochi, const std::array<unsigned, 7>& gmochi,bool teban)
 	: bammen({0}), isSente(teban)
 {
-	std::copy(ban.begin(), ban.end(), bammen.begin());
-	std::copy(smochi.begin(), smochi.end(), bammen.begin() + 81);
-	std::copy(gmochi.begin(), gmochi.end(), bammen.begin() + 88);
+	for (size_t i = 0; i < ban.size(); i++) {
+		bammen[i] = static_cast<uint8_t>(ban[i]);
+	}
+	for (size_t i = 0; i < smochi.size(); i++) {
+		bammen[i + 81ull] = static_cast<uint8_t>(smochi[i]);
+	}
+	for (size_t i = 0; i < gmochi.size(); i++) {
+		bammen[i + 88ull] = static_cast<uint8_t>(gmochi[i]);
+	}
 	reflectBitboard();
 }
 
@@ -109,7 +115,7 @@ std::string Kyokumen::toSfen()const {
 	for (int y = 0; y < 9; y++) {
 		int nonecount = 0;
 		for (int x = 8; x >= 0; x--) {
-			if (bammen[x * 9 + y] != static_cast<std::uint8_t>(Koma::None)) {
+			if (bammen[x * 9ull + y] != static_cast<std::uint8_t>(Koma::None)) {
 				if (nonecount != 0) {
 					usi += std::to_string(nonecount);
 					nonecount = 0;
@@ -422,8 +428,8 @@ Bitboard Kyokumen::pinMaskSente(const unsigned pos)const {
 			}
 			return result;
 		}
-		return bbmask::AllOne;
 	}
+	return bbmask::AllOne;
 }
 
 Bitboard Kyokumen::pinMaskGote(const unsigned pos)const {
@@ -441,8 +447,15 @@ Bitboard Kyokumen::pinMaskGote(const unsigned pos)const {
 			}
 			return result;
 		}
-		return bbmask::AllOne;
 	}
+	return bbmask::AllOne;
+}
+
+bool Kyokumen::operator==(const Kyokumen& rhs) const {
+	if (senteKomaBB == rhs.senteKomaBB && goteKomaBB == rhs.goteKomaBB && bammen == rhs.bammen)
+		return true;
+	else 
+		return false;
 }
 
 void Kyokumen::reflectBitboard() {

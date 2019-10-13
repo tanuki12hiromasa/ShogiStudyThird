@@ -39,13 +39,13 @@ namespace koma {
 	extern Koma dispromote(Koma koma);
 
 	//遠距離移動できる駒かどうか
-	bool isDashableS(Koma koma) {
+	inline bool isDashableS(Koma koma) {
 		return  koma == Koma::s_Hi || koma == Koma::s_Kaku || koma == Koma::s_nHi || koma == Koma::s_nKaku || koma == Koma::s_Kyou;
 	}
-	bool isDashableG(Koma koma) {
+	inline bool isDashableG(Koma koma) {
 		return  koma == Koma::g_Hi || koma == Koma::g_Kaku || koma == Koma::g_nHi || koma == Koma::g_nKaku || koma == Koma::g_Kyou;
 	}
-	bool isDashable(Koma koma) {
+	inline bool isDashable(Koma koma) {
 		return isDashableS(koma) || isDashableG(koma);
 	}
 
@@ -81,17 +81,7 @@ namespace koma {
 	enum Dan : int {
 		Dan1 = 0, Dan2, Dan3, Dan4, Dan5, Dan6, Dan7, Dan8, Dan9
 	};
-	static const std::array<int, 81> SQDan = {
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-	};
+	extern const std::array<int, 81> SQDan;
 	//座標を段に変換する関数
 	inline int PosToDan(const int pos) {
 		return SQDan[pos];
@@ -100,17 +90,7 @@ namespace koma {
 	enum Suji :int {
 		Suji1 = 0, Suji2, Suji3, Suji4, Suji5, Suji6, Suji7, Suji8, Suji9
 	};
-	static const std::array<int, 81> SQSuji = {
-		Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,
-		Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,
-		Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,
-		Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,
-		Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,
-		Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,
-		Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,
-		Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,
-		Suji9,Suji9,Suji9,Suji9,Suji9,Suji9,Suji9,Suji9,Suji9
-	};
+	extern const std::array<int, 81> SQSuji;
 	//座標を筋に変換する関数
 	inline int PosToSuji(const int pos) {
 		return SQSuji[pos];

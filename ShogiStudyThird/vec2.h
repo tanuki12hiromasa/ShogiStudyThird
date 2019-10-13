@@ -7,39 +7,31 @@ namespace koma {
 		int x;
 		int y;
 
-		Vector2();
-		Vector2(int x, int y);
-		Vector2(int pos);
+		Vector2() :x(0), y(0){}
+		Vector2(int x, int y) : x(x), y(y) {}
+		Vector2(int pos) : x(pos / 9), y(pos % 9) {}
 
-		bool isDivisible(const Vector2& v);
-		int toi();
-		unsigned tou();
-		operator int();
-		bool isInside();
+		inline bool isDivisible(const Vector2& v);
+		inline int toi();
+		inline unsigned tou();
+		inline operator int();
+		inline bool isInside();
 
-		bool operator==(const Vector2& v);
-		bool operator!=(const Vector2& v);
-		Vector2& operator+=(const Vector2& v);
-		Vector2& operator-=(const Vector2& v);
-		Vector2& operator*=(const int c);
-		Vector2 operator+(const Vector2& v)const;
-		Vector2 operator-(const Vector2& v)const;
-		Vector2 operator*(const int c)const;
+		inline bool operator==(const Vector2& v);
+		inline bool operator!=(const Vector2& v);
+		inline Vector2& operator+=(const Vector2& v);
+		inline Vector2& operator-=(const Vector2& v);
+		inline Vector2& operator*=(const int c);
+		inline Vector2 operator+(const Vector2& v)const;
+		inline Vector2 operator-(const Vector2& v)const;
+		inline Vector2 operator*(const int c)const;
 		friend Vector2 operator*(const int c, Vector2 v);
-		int operator/(const Vector2& v);
-		Vector2 operator/(const int c);
-		Vector2& operator/=(const int c);
-		Vector2 operator-() const;
+		inline int operator/(const Vector2& v);
+		inline Vector2 operator/(const int c);
+		inline Vector2& operator/=(const int c);
+		inline Vector2 operator-() const;
 	};
 
-	Vector2::Vector2()
-		:x(0), y(0)
-	{}
-	Vector2::Vector2(int x, int y) : x(x), y(y) {}
-	Vector2::Vector2(int pos) : x(pos / 9), y(pos % 9) {}
-	inline bool Vector2::isDivisible(const Vector2& v) {
-		return (x * v.y - y * v.x) == 0 && x * v.x >= 0 && y * v.y >= 0;
-	}
 	inline int Vector2::toi() {
 		return x * 9 + y;
 	}

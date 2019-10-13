@@ -58,35 +58,6 @@ private:
 	static void genStepTable();
 };
 
-BBkiki::LBarray81 BBkiki::sFu;
-BBkiki::LBarray81 BBkiki::sKei;
-BBkiki::LBarray81 BBkiki::sGin;
-BBkiki::LBarray81 BBkiki::sKin;
-BBkiki::LBarray81 BBkiki::gFu;
-BBkiki::LBarray81 BBkiki::gKei;
-BBkiki::LBarray81 BBkiki::gGin;
-BBkiki::LBarray81 BBkiki::gKin;
-BBkiki::LBarray81 BBkiki::UmaStep;
-BBkiki::LBarray81 BBkiki::RyuStep;
-BBkiki::LBarray81 BBkiki::Ou;
-std::array<std::uint64_t, 81> BBkiki::KakuPositiveInclinationMask;
-std::array<std::uint64_t, 81> BBkiki::KakuNegativeInclinationMask;
-std::array<std::uint64_t, 9> BBkiki::HiVerticalMask;
-std::array<std::uint64_t, 9> BBkiki::HiHorizontalMask;
-std::array<std::uint64_t, 9> BBkiki::sKyouMask;
-std::array<std::uint64_t, 9> BBkiki::gKyouMask;
-std::array<unsigned, 81> BBkiki::KPIndex;
-std::array<unsigned, 81> BBkiki::KNIndex;
-std::array<unsigned, 9> BBkiki::HIndex;
-std::array<unsigned, 9> BBkiki::sKIndex;
-std::array<unsigned, 9> BBkiki::gKIndex;
-std::array<LittleBitboard, 1856> BBkiki::KakuDashPositive;
-std::array<LittleBitboard, 1856> BBkiki::KakuDashNegative;
-std::array<std::uint64_t, 704> BBkiki::HiDashVertical;
-std::array<LittleBitboard, 704> BBkiki::HiDashHorizontal;
-std::array<std::uint64_t, 256> BBkiki::sKyouDash;
-std::array<std::uint64_t, 256> BBkiki::gKyouDash;
-
 
 inline const Bitboard BBkiki::getStepKiki(const koma::Koma fromkoma, const unsigned komapos) {
 	using namespace koma;

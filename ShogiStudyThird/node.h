@@ -59,9 +59,3 @@ public:
 	std::atomic<double> eval;
 	std::atomic<double> mass;
 };
-
-double SearchNode::mateMass = 1;
-double SearchNode::mateScore = 34000.0;
-double SearchNode::mateScoreBound = 30000.0;
-double SearchNode::mateOneScore = 20.0;
-double SearchNode::repetitionScore = -100;
