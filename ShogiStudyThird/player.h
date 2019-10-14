@@ -6,7 +6,7 @@ public:
 	Kyokumen kyokumen;
 	Feature feature;
 
-	SearchPlayer():kyokumen() { feature.set(kyokumen); }
+	SearchPlayer():kyokumen(),feature() {}
 	SearchPlayer(const Kyokumen& _kyokumen) :kyokumen(_kyokumen) { feature.set(kyokumen); }
 	SearchPlayer(const Kyokumen& k, const Feature& f):kyokumen(k),feature(f){}
 

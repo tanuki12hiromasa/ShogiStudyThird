@@ -9,7 +9,7 @@ SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)
 }
 
 SearchAgent::SearchAgent(SearchAgent&& agent) noexcept
-	: tree(agent.tree),
+	: tree(agent.tree), ID(agent.ID),
 	engine(std::move(agent.engine))
 {
 	alive = agent.alive.load();

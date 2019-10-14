@@ -20,10 +20,10 @@ void SearchTree::set(const std::vector<std::string>& usitokens) {
 }
 
 void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
-	if (startKyokumen == startpos)	{
+	if (!history.empty() && startKyokumen == startpos)	{
 		int i;
 		for (i = 0; i < history.size() - 1; i++) {
-			if (history[i+1]->move != usihis[i]) {
+			if (history[i+1ull]->move != usihis[i]) {
 				goto makenewtree;
 			}
 		}
@@ -46,7 +46,7 @@ void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
 	}
 makenewtree:
 	{
-		deleteTreeParallel(history.front());
+		if(!history.empty()) deleteTreeParallel(history.front());
 		history.clear();
 		startKyokumen = startpos;
 		rootNode = new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false));
@@ -75,7 +75,7 @@ SearchNode* SearchTree::getBestMove()const {
 std::vector<SearchNode*> SearchTree::getPV()const {
 	std::vector<SearchNode*> pv;
 	SearchNode* node = rootNode;
-	while (!node->children.empty()) {
+	while (node && !node->children.empty()) {
 		SearchNode* best = nullptr;
 		double min = std::numeric_limits<double>::max();
 		for (const auto child : node->children) {
@@ -91,10 +91,12 @@ std::vector<SearchNode*> SearchTree::getPV()const {
 }
 
 void SearchTree::proceed(SearchNode* node) {
-	rootPlayer.proceed(node->move);
+	rootPlayer.kyokumen.proceed(node->move);
+	rootPlayer.feature.set(rootPlayer.kyokumen);
 	history.push_back(node);
 	deleteBranchParallel(rootNode, node);
 	rootNode = node;
+	thread_latestRootFlags.assign(thread_latestRootFlags.size(), false);
 }
 
 void SearchTree::setTchoice(const std::vector<double>& T) {

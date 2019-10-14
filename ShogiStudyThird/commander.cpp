@@ -124,6 +124,7 @@ void Commander::gameInit() {
 	if (agents.empty()) {
 		BBkiki::init();
 		Evaluator::init();
+		tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
 	}
 	else {
 		for (auto& ag : agents) {
@@ -135,6 +136,7 @@ void Commander::gameInit() {
 		agents.clear();
 		agent_threads.clear();
 	}
+	tree.thread_latestRootFlags.assign(agentNum, false);
 	for (unsigned i = 0; i < agentNum; i++) {
 		agents.emplace_back(SearchAgent(tree, i));
 	}
