@@ -7,7 +7,7 @@ public:
 	static std::vector<Move> usiToMoves(const std::vector<std::string>& tokens);
 
 	Move(unsigned from, unsigned to, bool promote) 
-		: u(from & 0x7Fu | (to & 0x7Fu << 7) | (promote << 14))
+		: u((from & 0x7Fu) | ((to & 0x7Fu) << 7) | (promote << 14))
 	{}
 	Move(koma::Position from,koma::Position to, bool promote)
 		:Move(static_cast<unsigned>(from), static_cast<unsigned>(to),promote)
