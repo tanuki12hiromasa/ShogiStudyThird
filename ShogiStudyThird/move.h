@@ -6,6 +6,8 @@ class Move {
 public:
 	static std::vector<Move> usiToMoves(const std::vector<std::string>& tokens);
 
+	Move() :Move(Position::NullMove, Position::NullMove, false) {}
+
 	Move(unsigned from, unsigned to, bool promote) 
 		: u((from & 0x7Fu) | ((to & 0x7Fu) << 7) | (promote << 14))
 	{}

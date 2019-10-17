@@ -89,7 +89,7 @@ Commander::~Commander() {
 }
 
 void Commander::coutOption() {
-
+	std::cout << "option name UseBook type check default true" << std::endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {
@@ -158,11 +158,12 @@ void Commander::go(std::vector<std::string>& tokens) {
 	go_alive = false;
 	if(go_thread.joinable()) go_thread.join();
 	go_thread = std::thread([this,tp]() {
-		std::this_thread::sleep_for(std::chrono::milliseconds(4500));
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(4.5s);
 		while (go_alive) {
 			bool saseta = chakushu();
 			if (saseta) return;
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			std::this_thread::sleep_for(100ms);
 		}
 	});
 	info_enable = true;
@@ -174,7 +175,8 @@ void Commander::info() {
 		info_alive = true;
 		info_thread = std::thread([this]() {
 			while (info_alive) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(950));
+				using namespace std::chrono_literals;
+				std::this_thread::sleep_for(950ms);
 				std::lock_guard<std::mutex> lock(coutmtx);
 				if (info_enable) {
 					const auto PV = tree.getPV();
