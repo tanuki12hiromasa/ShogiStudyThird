@@ -38,7 +38,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	size_t newnodecount = 0;
 	SearchNode* node = root;
 	SearchPlayer player(tree.getRootPlayer());
-	std::vector<SearchNode*> history = tree.getHistory();
+	std::vector<SearchNode*> history = { node };
 	//選択
 	while (!node->isLeaf()) {
 		double CE = std::numeric_limits<double>::max();
@@ -122,7 +122,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			while (node->isLeaf() && node->mass < qsmassmax) {
 				SearchNode* qnode = node;
 				SearchPlayer qplayer = player;
-				std::vector<SearchNode*> qhistory = history;
+				std::vector<SearchNode*> qhistory = { qnode };
 				//選択
 				while (!qnode->isNotExpanded()) {
 					double emin = std::numeric_limits<double>::max();
@@ -210,9 +210,8 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				}
 				//バックアップ
 			qbackup:
-				auto qnit = qhistory.rbegin();
-				do{
-					qnode = *(++qnit);
+				for (int i = qhistory.size() - 1; i >=0 ;i--) {
+					qnode = qhistory[i];
 				//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
 					double emin = std::numeric_limits<double>::max();
 					std::vector<double> evals;
@@ -236,6 +235,9 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 							else {
 								//負けの詰みなので残りのノードの評価値も参照する
 								SearchPlayer tplayer = player;
+								for (int j = 1; j <= i; j++) {
+									tplayer.proceed(qhistory[j]->move);
+								}
 								//tplayerをqhistoryを使って現在局面までもってくる
 
 								std::vector<SearchNode*> gennodes;
@@ -308,7 +310,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 						}
 					}
 
-				} while (qnode != node);
+				}
 
 			}//静止探索1ループここまで
 
@@ -320,9 +322,8 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	//バックアップ
 	backup:
 	{
-		auto nit = history.rbegin();
-		do {
-			node = *(++nit);
+	for (int i = history.size() - 1; i >= 0; i--) {
+			node = history[i];
 			double emin = std::numeric_limits<double>::max();
 			std::vector<double> evals;
 			for (const auto& child : node->children) {
@@ -354,7 +355,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				node->setEvaluation(E);
 				node->setMass(M);
 			}
-		} while (node != root);
+		}
 	}
 
 	return newnodecount;
