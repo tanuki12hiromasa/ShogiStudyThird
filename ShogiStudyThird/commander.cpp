@@ -81,10 +81,10 @@ Commander::~Commander() {
 	for (auto& ag : agents) {
 		ag.terminate();
 	}
-	go_thread.join();
-	info_thread.join();
+	if(go_thread.joinable()) go_thread.join();
+	if(info_thread.joinable())info_thread.join();
 	for (auto& th : agent_threads) {
-		th.join();
+		if(th.joinable())th.join();
 	}
 }
 
