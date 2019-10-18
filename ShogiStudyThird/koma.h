@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <cassert>
 #include <cstdint>
 #include <cmath>
@@ -39,9 +39,15 @@ namespace koma {
 	extern Koma dispromote(Koma koma);
 
 	//遠距離移動できる駒かどうか
-	extern bool isDashableS(Koma koma);
-	extern bool isDashableG(Koma koma);
-	extern bool isDashable(Koma koma);
+	inline bool isDashableS(Koma koma) {
+		return  koma == Koma::s_Hi || koma == Koma::s_Kaku || koma == Koma::s_nHi || koma == Koma::s_nKaku || koma == Koma::s_Kyou;
+	}
+	inline bool isDashableG(Koma koma) {
+		return  koma == Koma::g_Hi || koma == Koma::g_Kaku || koma == Koma::g_nHi || koma == Koma::g_nKaku || koma == Koma::g_Kyou;
+	}
+	inline bool isDashable(Koma koma) {
+		return isDashableS(koma) || isDashableG(koma);
+	}
 
 	//持ち駒を表すenum 
 	enum class Mochigoma : std::uint8_t {
@@ -62,27 +68,20 @@ namespace koma {
 		SQ71, SQ72, SQ73, SQ74, SQ75, SQ76, SQ77, SQ78, SQ79,
 		SQ81, SQ82, SQ83, SQ84, SQ85, SQ86, SQ87, SQ88, SQ89,
 		SQ91, SQ92, SQ93, SQ94, SQ95, SQ96, SQ97, SQ98, SQ99,
-		SQNum,
+
 		m_sFu, m_sKyou, m_sKei, m_sGin, m_sKaku, m_sHi, m_sKin,
 		m_gFu, m_gKyou, m_gKei, m_gGin, m_gKaku, m_gHi, m_gKin,
 
 		SQMin = SQ11, SQMax = SQ99,
-		SQm_Min = m_sFu, SQm_Max = m_gKin
+		SQNum = SQMax + 1,
+		SQm_Min = m_sFu, SQm_Max = m_gKin,
+		SQm_Num = SQm_Max + 1,
+		NullMove
 	};
 	enum Dan : int {
 		Dan1 = 0, Dan2, Dan3, Dan4, Dan5, Dan6, Dan7, Dan8, Dan9
 	};
-	static const std::array<int, 81> SQDan = {
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
-	};
+	extern const std::array<int, 81> SQDan;
 	//座標を段に変換する関数
 	inline int PosToDan(const int pos) {
 		return SQDan[pos];
@@ -91,25 +90,15 @@ namespace koma {
 	enum Suji :int {
 		Suji1 = 0, Suji2, Suji3, Suji4, Suji5, Suji6, Suji7, Suji8, Suji9
 	};
-	static const std::array<int, 81> SQSuji = {
-		Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,
-		Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,
-		Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,
-		Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,
-		Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,
-		Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,
-		Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,
-		Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,
-		Suji9,Suji9,Suji9,Suji9,Suji9,Suji9,Suji9,Suji9,Suji9
-	};
+	extern const std::array<int, 81> SQSuji;
 	//座標を筋に変換する関数
 	inline int PosToSuji(const int pos) {
 		return SQSuji[pos];
 	}
 
 	//x,yはそれぞれ[0,8]
-	inline Position XYtoPos(const unsigned x, const unsigned y) {
-		return static_cast<Position> (x * 9 + y);
+	inline unsigned XYtoPos(const unsigned x, const unsigned y) {
+		return x * 9 + y;
 	}
 	inline int XYtoPos(const int x, const int y) {
 		assert(0 <= x && x < 9 && 0 <= y && y < 9);

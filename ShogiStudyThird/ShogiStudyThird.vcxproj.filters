@@ -13,6 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="apery">
+      <UniqueIdentifier>{c012aa1c-ed2c-4694-8455-86b4c121fb6b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\search">
+      <UniqueIdentifier>{0a4e1673-0949-4d87-955d-133a8eab6d35}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\kiso">
+      <UniqueIdentifier>{0b04ecb9-b413-4578-b4ec-ac7c35988145}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\kiso">
+      <UniqueIdentifier>{c03513a8-dfa1-4085-8110-f2d9fcbc8da7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\search">
+      <UniqueIdentifier>{c0952bac-5067-4cb4-830b-bb91a213ddaf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -21,10 +36,49 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="koma.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="bb_kiki.cpp">
+      <Filter>ソース ファイル\kiso</Filter>
     </ClCompile>
     <ClCompile Include="bitboard.cpp">
+      <Filter>ソース ファイル\kiso</Filter>
+    </ClCompile>
+    <ClCompile Include="koma.cpp">
+      <Filter>ソース ファイル\kiso</Filter>
+    </ClCompile>
+    <ClCompile Include="kyokumen.cpp">
+      <Filter>ソース ファイル\kiso</Filter>
+    </ClCompile>
+    <ClCompile Include="usi.cpp">
+      <Filter>ソース ファイル\kiso</Filter>
+    </ClCompile>
+    <ClCompile Include="move.cpp">
+      <Filter>ソース ファイル\kiso</Filter>
+    </ClCompile>
+    <ClCompile Include="apery_feature.cpp">
+      <Filter>apery</Filter>
+    </ClCompile>
+    <ClCompile Include="node.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
+    <ClCompile Include="apery_evaluate.cpp">
+      <Filter>apery</Filter>
+    </ClCompile>
+    <ClCompile Include="move_gen.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
+    <ClCompile Include="evaluated_nodes.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
+    <ClCompile Include="agent.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
+    <ClCompile Include="tree.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
+    <ClCompile Include="commander.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="time_property.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,13 +86,67 @@
     <ClInclude Include="stdafx.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="koma.h">
+    <ClInclude Include="evaluator.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="kyokumen.h">
+    <ClInclude Include="commander.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="agent.h">
+      <Filter>ヘッダー ファイル\search</Filter>
+    </ClInclude>
+    <ClInclude Include="node.h">
+      <Filter>ヘッダー ファイル\search</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
+      <Filter>ヘッダー ファイル\search</Filter>
+    </ClInclude>
+    <ClInclude Include="tree.h">
+      <Filter>ヘッダー ファイル\search</Filter>
+    </ClInclude>
+    <ClInclude Include="evaluated_nodes.h">
+      <Filter>ヘッダー ファイル\search</Filter>
+    </ClInclude>
+    <ClInclude Include="bb_kiki.h">
+      <Filter>ヘッダー ファイル\kiso</Filter>
     </ClInclude>
     <ClInclude Include="bitboard.h">
+      <Filter>ヘッダー ファイル\kiso</Filter>
+    </ClInclude>
+    <ClInclude Include="koma.h">
+      <Filter>ヘッダー ファイル\kiso</Filter>
+    </ClInclude>
+    <ClInclude Include="koma_motion.h">
+      <Filter>ヘッダー ファイル\kiso</Filter>
+    </ClInclude>
+    <ClInclude Include="kyokumen.h">
+      <Filter>ヘッダー ファイル\kiso</Filter>
+    </ClInclude>
+    <ClInclude Include="move.h">
+      <Filter>ヘッダー ファイル\kiso</Filter>
+    </ClInclude>
+    <ClInclude Include="usi.h">
+      <Filter>ヘッダー ファイル\kiso</Filter>
+    </ClInclude>
+    <ClInclude Include="vec2.h">
+      <Filter>ヘッダー ファイル\kiso</Filter>
+    </ClInclude>
+    <ClInclude Include="apery_feature.h">
+      <Filter>apery</Filter>
+    </ClInclude>
+    <ClInclude Include="apery_param.h">
+      <Filter>apery</Filter>
+    </ClInclude>
+    <ClInclude Include="apery_evaluate.h">
+      <Filter>apery</Filter>
+    </ClInclude>
+    <ClInclude Include="move_gen.h">
+      <Filter>ヘッダー ファイル\search</Filter>
+    </ClInclude>
+    <ClInclude Include="time_property.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="feature.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "bitboard.h"
 #include <intrin.h>
 #include <algorithm>
@@ -9,16 +9,6 @@ Bitboard::Bitboard(const std::string& bits)
 		std::stoull(bits.substr(9, 63), nullptr, 2),
 		std::stoul(bits.substr(72,9),nullptr,2) })
 {}
-
-Bitboard::Bitboard(std::uint64_t rside, std::uint64_t center, std::uint64_t lside)
-	: _p({ rside & 0x01FFULL, center & 0x7FFFFFFFFFFFFFFFULL, lside & 0x01FFULL })
-{} //不使用ビットが1にならないようにマスクする
-
-Bitboard::Bitboard(std::array<std::uint64_t, 3> && val)
-	: _p(std::move(val))
-{
-	_p[0] &= 0x1FFULL; _p[1] &= 0x7FFFFFFFFFFFFFFFULL; _p[2] &= 0x1FFULL;
-}
 
 Bitboard::Bitboard(const LittleBitboard& lb)
 	: _p({ lb.side[0],lb.center,lb.side[1] })
@@ -74,6 +64,22 @@ unsigned Bitboard::find_first() const {
 unsigned Bitboard::find_next(const unsigned first) const {
 	//自身のfistまでを0でマスクしたBBのfind_firstを返している
 	return operator&(~fillOne(first + 1u)).find_first();
+}
+
+unsigned Bitboard::find_last()const {
+	unsigned long index;
+	if (_BitScanReverse64(&index, _p[2])) {
+		return index;
+	}
+	else if (_BitScanReverse64(&index, _p[1])) {
+		return index;
+	}
+	else if (_BitScanReverse64(&index, _p[0])) {
+		return index;
+	}
+	else {
+		return size();
+	}
 }
 
 unsigned Bitboard::popcount()const {
@@ -147,6 +153,22 @@ Bitboard Bitboard::getLineOR() const {
 	return lines;
 }
 
+Bitboard Bitboard::getNoFuLines()const {
+	Bitboard lines(bbmask::AllOne);
+	if (_p[0] != 0) {
+		lines._p[0] = 0x0ULL;
+	}
+	for (unsigned i = 0; i < 7; i++) {
+		if ((_p[1] & (0x1FFULL << (i * 9u))) != 0u) {
+			lines._p[1] &= ~(0x1FFULL << (i * 9u));
+		}
+	}
+	if (_p[2] != 0) {
+		lines._p[2] = 0x0ULL;
+	}
+	return lines;
+}
+
 Bitboard Bitboard::fillOne(unsigned index) {
 	std::array<std::uint64_t, 3> p = { 0,0,0 };
 	p[0] = (1ULL << std::min(index, 9u)) - 1u;
@@ -157,31 +179,4 @@ Bitboard Bitboard::fillOne(unsigned index) {
 		p[2] = (1ULL << std::min(index - 72u, 9u)) - 1u;
 	}
 	return Bitboard(std::move(p));
-}
-
-bool Bitboard::operator==(const Bitboard& rhs) const {
-	return _p == rhs._p;
-}
-
-Bitboard Bitboard::operator&(const Bitboard& rhs) const {
-	return Bitboard(_p[0] & rhs._p[0], _p[1] & rhs._p[1], _p[2] & rhs._p[2]);
-}
-
-Bitboard Bitboard::operator|(const Bitboard& rhs) const {
-	return Bitboard(_p[0] | rhs._p[0], _p[1] | rhs._p[1], _p[2] | rhs._p[2]);
-}
-
-Bitboard& Bitboard::operator&=(const Bitboard& rhs) {
-	_p[0] &= rhs._p[0]; _p[1] &= rhs._p[1]; _p[2] &= rhs._p[2];
-	return *this;
-}
-
-Bitboard& Bitboard::operator|=(const Bitboard& rhs) {
-	_p[0] |= rhs._p[0]; _p[1] |= rhs._p[1]; _p[2] |= rhs._p[2];
-	return *this;
-}
-
-Bitboard Bitboard::operator~()const {
-	//そのまま反転させると不使用ビットが1になってしまうが、コンストラクタ内でマスクして0になるので大丈夫
-	return Bitboard(~_p[0], ~_p[1], ~_p[2]);
 }

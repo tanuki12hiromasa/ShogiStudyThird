@@ -1,7 +1,31 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "koma.h"
 
 namespace koma {
+	const std::array<int, 81> SQDan = {
+		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
+		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
+		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
+		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
+		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
+		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
+		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
+		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
+		Dan1,Dan2,Dan3,Dan4,Dan5,Dan6,Dan7,Dan8,Dan9,
+	};
+
+	const std::array<int, 81> SQSuji = {
+		Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,Suji1,
+		Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,Suji2,
+		Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,Suji3,
+		Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,Suji4,
+		Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,Suji5,
+		Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,Suji6,
+		Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,Suji7,
+		Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,Suji8,
+		Suji9,Suji9,Suji9,Suji9,Suji9,Suji9,Suji9,Suji9,Suji9
+	};
+
 	bool isSenteKoma(Koma koma) {
 		return static_cast<std::uint8_t>(koma) >= static_cast<std::uint8_t>(Koma::s_Min) &&
 			static_cast<std::uint8_t>(koma) <= static_cast<std::uint8_t>(Koma::s_Max);
@@ -37,15 +61,6 @@ namespace koma {
 			return static_cast<Koma>(static_cast<std::uint8_t>(koma) - static_cast<std::uint8_t>(Koma::Nari));
 		}
 		else return koma;
-	}
-	bool isDashableS(Koma koma) {
-		return  koma == Koma::s_Hi || koma == Koma::s_Kaku || koma == Koma::s_nHi || koma == Koma::s_nKaku || koma == Koma::s_Kyou;
-	}
-	bool isDashableG(Koma koma) {
-		return  koma == Koma::g_Hi || koma == Koma::g_Kaku || koma == Koma::g_nHi || koma == Koma::g_nKaku || koma == Koma::g_Kyou;
-	}
-	bool isDashable(Koma koma) {
-		return isDashableS(koma) || isDashableG(koma);
 	}
 
 	Mochigoma KomaToMochi(const Koma koma) {
@@ -86,8 +101,8 @@ namespace koma {
 	Koma MposToKoma(const Position pos) {
 		assert(pos >= Position::SQm_Min && pos <= Position::SQm_Max);
 		return (pos < Position::m_gFu) ?
-			static_cast<Koma>(pos - m_sFu + static_cast<int>(Koma::s_Fu)) :
-			static_cast<Koma>(pos - m_gFu + static_cast<int>(Koma::g_Fu));
+			static_cast<Koma>(static_cast<std::uint8_t>(pos) - static_cast<std::uint8_t>(m_sFu) + static_cast<std::uint8_t>(Koma::s_Fu)) :
+			static_cast<Koma>(static_cast<std::uint8_t>(pos) - static_cast<std::uint8_t>(m_gFu) + static_cast<std::uint8_t>(Koma::g_Fu));
 	}
 	
 	Mochigoma MposToMochi(const Position pos) {
@@ -100,15 +115,15 @@ namespace koma {
 	Position KomaToMpos(Koma koma) {
 		if (isPromoted(koma)) { koma = dispromote(koma); }
 		return (static_cast<int>(koma) < static_cast<int>(Koma::g_Min)) ?
-			static_cast<Position>(static_cast<int>(koma) - static_cast<int>(Koma::s_Fu) + Position::m_gFu) :
-			static_cast<Position>(static_cast<int>(koma) - static_cast<int>(Koma::g_Fu) + Position::m_sFu);
+			static_cast<Position>(static_cast<std::uint8_t>(koma) - static_cast<std::uint8_t>(Koma::s_Fu) + static_cast<std::uint8_t>(Position::m_gFu)) :
+			static_cast<Position>(static_cast<std::uint8_t>(koma) - static_cast<std::uint8_t>(Koma::g_Fu) + static_cast<std::uint8_t>(Position::m_sFu));
 	}
 	Position MochiToMpos(Mochigoma koma, bool sente) {
 		if (sente) {
-			return static_cast<Position>(static_cast<int>(koma) + Position::m_sFu);
+			return static_cast<Position>(static_cast<std::uint8_t>(koma) + static_cast<std::uint8_t>(Position::m_sFu));
 		}
 		else {
-			return static_cast<Position>(static_cast<int>(koma) + Position::m_gFu);
+			return static_cast<Position>(static_cast<std::uint8_t>(koma) + static_cast<std::uint8_t>(Position::m_gFu));
 		}
 	}
 
