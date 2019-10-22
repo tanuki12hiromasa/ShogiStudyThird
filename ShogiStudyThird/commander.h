@@ -31,4 +31,6 @@ private:
 	std::atomic_bool info_alive;
 
 	std::mutex coutmtx;
+
+	friend class ShogiTest;
 };

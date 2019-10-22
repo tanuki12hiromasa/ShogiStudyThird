@@ -73,9 +73,9 @@ SearchNode* SearchTree::getBestMove()const {
 }
 
 std::vector<SearchNode*> SearchTree::getPV()const {
-	std::vector<SearchNode*> pv;
 	SearchNode* node = rootNode;
-	while (node && !node->children.empty()) {
+	std::vector<SearchNode*> pv = { node };
+	while (node != nullptr && !node->children.empty()) {
 		SearchNode* best = nullptr;
 		double min = std::numeric_limits<double>::max();
 		for (const auto child : node->children) {
@@ -86,6 +86,7 @@ std::vector<SearchNode*> SearchTree::getPV()const {
 			}
 		}
 		node = best;
+		pv.push_back(best);
 	}
 	return pv;
 }

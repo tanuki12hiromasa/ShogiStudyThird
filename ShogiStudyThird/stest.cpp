@@ -1,4 +1,5 @@
 ﻿#include "stest.h"
+#include "commander.h"
 #include "usi.h"
 #include <iostream>
 
@@ -50,17 +51,21 @@ bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 	strv cmsv; for (const auto& m : cmoves)cmsv.push_back(m->move.toUSI());
 	const auto nmoves = MoveGenerator::genNocapMove(new SearchNode(Move()), k);
 	strv nmsv; for (const auto& m : nmoves)nmsv.push_back(m->move.toUSI());
-	for (const auto& s : msv)std::cout << s << ' ';
-	std::cout << std::endl;
-	for (const auto& s : cmsv)std::cout << s << ' ';
-	std::cout << std::endl;
-	for (const auto& s : nmsv)std::cout << s << ' ';
-	std::cout << std::endl;
+
 	if (checkStringsUnion(msv, cmsv, nmsv)) { 
 		std::cout << "gencapmove test ok" << std::endl;
 		return true; 
 	}
 	else {
+		std::cout << "genfull: ";
+		for (const auto& s : msv)std::cout << s << ' ';
+		std::cout << std::endl;
+		std::cout << "gencap: ";
+		for (const auto& s : cmsv)std::cout << s << ' ';
+		std::cout << std::endl;
+		std::cout << "gennocap: ";
+		for (const auto& s : nmsv)std::cout << s << ' ';
+		std::cout << std::endl;
 		assert(0);
 		return false;
 	}
@@ -88,5 +93,33 @@ void ShogiTest::test() {
 		ShogiTest::genMoveCheck(str2, moves2);
 		ShogiTest::genCapMoveCheck(str2);
 	}
+	{
+		Commander com;
+		std::cout << "initializing now..." << std::endl;
+		com.paramInit();
+		BBkiki::init();
+		Evaluator::init();
+		SearchTree& tree = com.tree;
+		tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
+		{
+			std::cout << "tree: resisterNode" << std::endl;
+			SearchNode* n1 = new SearchNode(Move(8, 7, false));
+			SearchNode* n2 = new SearchNode(Move(80, 79, false));
+			bool b1 = tree.resisterLeafNode(n1);
+			bool b2 = tree.resisterLeafNode(n1);
+			bool b3 = tree.resisterLeafNode(n2);
+			tree.excludeLeafNode(n1);
+			bool b4 = tree.resisterLeafNode(n1);
+			std::cout << "1:" << b1 << " 2:" << b2 << " 3:" << b3 << " 4:" << b4 << std::endl;
+			assert(b1 && !b2 && b3 && b4);
+			std::cout << "rn test: ok" << std::endl;
+			tree.excludeLeafNode(n2);
+			delete n1; delete n2;
+		}
+		SearchAgent ag(tree, 0);
+		tree.thread_latestRootFlags.assign(false, 5);
 
+		ag.simulate(tree.rootNode);
+
+	}
 }

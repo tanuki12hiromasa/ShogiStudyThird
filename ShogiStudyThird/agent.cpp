@@ -119,6 +119,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		{
 			const double qsmassmax = tree.getMQS();
 			const double T_cq = tree.getTcQ();
+
 			while (node->isLeaf() && node->mass < qsmassmax) {
 				SearchNode* qnode = node;
 				SearchPlayer qplayer = player;
@@ -162,13 +163,13 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					gennodes = MoveGenerator::genCapMove(qnode, qplayer.kyokumen);
 					newnodecount += gennodes.size();
 					if (gennodes.empty()) {
-						if (node->move.isOute()) {
-							const koma::Position from = node->move.from();
+						if (qnode->move.isOute()) {
+							const koma::Position from = qnode->move.from();
 							if (from == koma::Position::m_sFu || from == koma::Position::m_gFu) {
-								node->setUchiFuMate();
+								qnode->setUchiFuMate();
 							}
 							else {
-								node->setMate();
+								qnode->setMate();
 							}
 						}
 						else {
@@ -176,7 +177,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 						}
 						goto qbackup;
 					}
-					node->state = SearchNode::State::LE;
+					qnode->state = SearchNode::State::LE;
 					//評価,展開ノードの評価値バックアップ
 					Evaluator::evaluate(gennodes, qplayer);
 					{

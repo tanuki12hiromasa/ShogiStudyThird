@@ -157,6 +157,7 @@ void Commander::go(std::vector<std::string>& tokens) {
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
 	if(go_thread.joinable()) go_thread.join();
+	go_alive = true;
 	go_thread = std::thread([this,tp]() {
 		using namespace std::chrono_literals;
 		std::this_thread::sleep_for(4.5s);
@@ -179,13 +180,17 @@ void Commander::info() {
 				std::this_thread::sleep_for(950ms);
 				std::lock_guard<std::mutex> lock(coutmtx);
 				if (info_enable) {
+					std::cout << "info string info" << std::endl;
 					const auto PV = tree.getPV();
 					std::string pvstr;
 					if (!PV.empty()) {
-						for (int i = 1; i < 7 && i < PV.size(); i++) pvstr += PV[i]->move.toUSI()+' ';
+						for (int i = 1; i < 7 && i < PV.size() && PV[i] != nullptr; i++) pvstr += PV[i]->move.toUSI()+' ';
 						const auto& root = PV[0];
 						std::cout << "info pv " << pvstr << "depth " << root->mass << " seldepth " << PV.size()
 							<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
+					}
+					else {
+						std::cout << "info string failed to get pv" << std::endl;
 					}
 				}
 			}
