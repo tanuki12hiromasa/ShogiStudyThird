@@ -8,11 +8,11 @@ public:
 
 	Move() :Move(koma::Position::NullMove, koma::Position::NullMove, false) {}
 
-	Move(unsigned from, unsigned to, bool promote) 
+	Move(std::uint8_t from, std::uint8_t to, bool promote)
 		: u((from & 0x7Fu) | ((to & 0x7Fu) << 7) | (promote << 14))
 	{}
 	Move(koma::Position from,koma::Position to, bool promote)
-		:Move(static_cast<unsigned>(from), static_cast<unsigned>(to),promote)
+		:Move(static_cast<std::uint8_t>(from), static_cast<std::uint8_t>(to),promote)
 	{}
 	Move(const std::string& usi, bool teban)
 		:Move(usiToFrom(usi,teban),usiToTo(usi),usiToPromote(usi))

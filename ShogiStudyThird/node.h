@@ -49,7 +49,7 @@ public:
 	double getEvaluation()const { return eval.load(); }
 	bool isNotExpanded()const { return state == State::NE; }
 	bool isLimitedExpanded()const { return state == State::LE || state == State::LT; }
-	bool isQSTerminal()const { return !isNotExpanded() && state != State::LE && state != State::EQ; }
+	bool isQSTerminal()const { return state != State::NE && state != State::LE && state != State::EQ; }
 	bool isLeaf()const { return state == State::NE || state == State::LE || state == State::LT || state == State::EQ || state==State::ET; }
 	bool isRepetition()const { return state == State::RP || state == State::RC; }
 

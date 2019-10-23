@@ -141,7 +141,7 @@ SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
 }
 
 void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved) {
-	std::thread th([&]() 
+	std::thread th([this,base,saved]() 
 		{
 			bool immigrated;
 			do {

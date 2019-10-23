@@ -217,8 +217,8 @@ bool Commander::chakushu() {
 		tree.permitSearch();
 		return false;
 	}
-	std::cout << "info pv " << bestchild->move.toUSI() << " depth " << bestchild->mass <<
-		"score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
+	std::cout << "info pv " << bestchild->move.toUSI() << " depth " << bestchild->mass.load() <<
+		" score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
 	if (permitPonder) {

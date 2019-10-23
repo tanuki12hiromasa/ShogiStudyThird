@@ -119,8 +119,9 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		{
 			const double qsmassmax = tree.getMQS();
 			const double T_cq = tree.getTcQ();
-
-			while (node->isLeaf() && node->mass < qsmassmax) {
+			const unsigned failmax = 5u;
+			unsigned failnum = 0;
+			while (failnum < failmax && node->isLeaf() && node->mass < qsmassmax) {
 				SearchNode* qnode = node;
 				SearchPlayer qplayer = player;
 				std::vector<SearchNode*> qhistory = { qnode };
@@ -174,6 +175,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 						}
 						else {
 							qnode->state = SearchNode::State::LT;
+							failnum++;
 						}
 						goto qbackup;
 					}
@@ -197,7 +199,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 							Z_d += std::exp(-(eval - emin) / T_d);
 						}
 						double E = 0;
-						double M = 0;
+						double M = 1;
 						auto cit = qnode->children.begin();
 						for (const auto& eval : evals) {
 							double mass = (*cit)->mass;
