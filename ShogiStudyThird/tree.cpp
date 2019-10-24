@@ -154,7 +154,8 @@ void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved) {
 			} while (!immigrated);
 			for (auto node : base->children) {
 				if (node != saved) {
-					node->deleteTree();
+					const size_t delnum = node->deleteTree();
+					nodecount -= delnum;
 				}
 			}
 		}
@@ -163,7 +164,7 @@ void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved) {
 }
 
 void SearchTree::deleteTreeParallel(SearchNode* root) {
-	std::thread th([&]()
+	std::thread th([this,root]()
 		{
 			bool immigrated;
 			do {
@@ -174,8 +175,10 @@ void SearchTree::deleteTreeParallel(SearchNode* root) {
 						immigrated = false;
 				}
 			} while (!immigrated);
-			root->deleteTree();
+			const size_t delnum = root->deleteTree();
+			nodecount -= delnum;
 			delete(root);
+			nodecount--;
 		}
 	);
 	th.detach();

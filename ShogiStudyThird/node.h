@@ -33,7 +33,7 @@ public:
 	SearchNode(const SearchNode&) = delete;
 	SearchNode(SearchNode&&) = delete;
 
-	void deleteTree();//子孫ノードをすべて消す 自身は消さない
+	size_t deleteTree();//子孫ノードをすべて消す 自身は消さない
 	SearchNode* addChild(const Move& move);
 
 	void setEvaluation(const double evaluation) { eval = evaluation; }
