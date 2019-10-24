@@ -117,7 +117,7 @@ void ShogiTest::test() {
 			delete n1; delete n2;
 		}
 		SearchAgent ag(tree, 0);
-		tree.thread_latestRootFlags.assign(false, 5);
+		tree.thread_latestRootFlags.assign(5, false);
 
 		ag.simulate(tree.rootNode);
 
