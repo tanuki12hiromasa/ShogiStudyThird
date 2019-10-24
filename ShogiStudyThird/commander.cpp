@@ -180,7 +180,7 @@ void Commander::info() {
 				std::this_thread::sleep_for(950ms);
 				std::lock_guard<std::mutex> lock(coutmtx);
 				if (info_enable) {
-					std::cout << "info string info" << std::endl;
+					//std::cout << "info string info" << std::endl;
 					const auto PV = tree.getPV();
 					std::string pvstr;
 					if (!PV.empty()) {
