@@ -28,6 +28,9 @@
     <Filter Include="ソース ファイル\search">
       <UniqueIdentifier>{c0952bac-5067-4cb4-830b-bb91a213ddaf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="debug">
+      <UniqueIdentifier>{abaaf2e8-17c3-4249-8ff3-8d19cc2af1ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -80,6 +83,9 @@
     </ClCompile>
     <ClCompile Include="time_property.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="stest.cpp">
+      <Filter>debug</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -148,6 +154,9 @@
     </ClInclude>
     <ClInclude Include="feature.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="stest.h">
+      <Filter>debug</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

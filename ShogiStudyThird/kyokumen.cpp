@@ -89,6 +89,9 @@ Kyokumen::Kyokumen(const std::vector<std::string>& tokens) {
 		//手番
 		isSente = (tokens[3] == "b");
 		//持ち駒
+		for (size_t t = static_cast<size_t>(Position::SQm_Min); t <= static_cast<size_t>(Position::SQm_Max); t++) {
+			bammen[t] = 0;
+		}
 		auto mStr = tokens[4];
 		if (mStr.front() != '-') {
 			for (auto c = mStr.begin(), end = mStr.end(); c != end; ++c) {

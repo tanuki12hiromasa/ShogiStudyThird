@@ -2,11 +2,15 @@
 //
 #include "stdafx.h"
 #include "commander.h"
+#include "usi.h"
+#include "stest.h"
 #include <iostream>
+
 
 int main()
 {
-	Commander::execute();
+	//Commander::execute();
+	ShogiTest::test();
 }
 
 // プログラムの実行: Ctrl + F5 または [デバッグ] > [デバッグなしで開始] メニュー

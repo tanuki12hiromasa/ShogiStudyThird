@@ -109,6 +109,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>
+      </OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -168,6 +170,7 @@
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="stest.cpp" />
     <ClCompile Include="time_property.cpp" />
     <ClCompile Include="tree.cpp" />
     <ClCompile Include="usi.cpp" />
@@ -191,6 +194,7 @@
     <ClInclude Include="node.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="stest.h" />
     <ClInclude Include="time_property.h" />
     <ClInclude Include="tree.h" />
     <ClInclude Include="usi.h" />

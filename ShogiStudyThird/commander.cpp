@@ -81,15 +81,15 @@ Commander::~Commander() {
 	for (auto& ag : agents) {
 		ag.terminate();
 	}
-	go_thread.join();
-	info_thread.join();
+	if(go_thread.joinable()) go_thread.join();
+	if(info_thread.joinable())info_thread.join();
 	for (auto& th : agent_threads) {
-		th.join();
+		if(th.joinable())th.join();
 	}
 }
 
 void Commander::coutOption() {
-
+	std::cout << "option name UseBook type check default true" << std::endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {
@@ -157,12 +157,14 @@ void Commander::go(std::vector<std::string>& tokens) {
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
 	if(go_thread.joinable()) go_thread.join();
+	go_alive = true;
 	go_thread = std::thread([this,tp]() {
-		std::this_thread::sleep_for(std::chrono::milliseconds(4500));
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(4.5s);
 		while (go_alive) {
 			bool saseta = chakushu();
 			if (saseta) return;
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			std::this_thread::sleep_for(100ms);
 		}
 	});
 	info_enable = true;
@@ -174,16 +176,21 @@ void Commander::info() {
 		info_alive = true;
 		info_thread = std::thread([this]() {
 			while (info_alive) {
-				std::this_thread::sleep_for(std::chrono::milliseconds(950));
+				using namespace std::chrono_literals;
+				std::this_thread::sleep_for(950ms);
 				std::lock_guard<std::mutex> lock(coutmtx);
 				if (info_enable) {
+					//std::cout << "info string info" << std::endl;
 					const auto PV = tree.getPV();
 					std::string pvstr;
 					if (!PV.empty()) {
-						for (int i = 1; i < 7 && i < PV.size(); i++) pvstr += PV[i]->move.toUSI()+' ';
+						for (int i = 1; i < 7 && i < PV.size() && PV[i] != nullptr; i++) pvstr += PV[i]->move.toUSI()+' ';
 						const auto& root = PV[0];
 						std::cout << "info pv " << pvstr << "depth " << root->mass << " seldepth " << PV.size()
 							<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
+					}
+					else {
+						std::cout << "info string failed to get pv" << std::endl;
 					}
 				}
 			}
@@ -210,8 +217,8 @@ bool Commander::chakushu() {
 		tree.permitSearch();
 		return false;
 	}
-	std::cout << "info pv " << bestchild->move.toUSI() << " depth " << bestchild->mass <<
-		"score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
+	std::cout << "info pv " << bestchild->move.toUSI() << " depth " << bestchild->mass.load() <<
+		" score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
 	if (permitPonder) {

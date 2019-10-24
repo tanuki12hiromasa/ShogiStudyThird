@@ -73,9 +73,9 @@ SearchNode* SearchTree::getBestMove()const {
 }
 
 std::vector<SearchNode*> SearchTree::getPV()const {
-	std::vector<SearchNode*> pv;
 	SearchNode* node = rootNode;
-	while (node && !node->children.empty()) {
+	std::vector<SearchNode*> pv = { node };
+	while (node != nullptr && !node->children.empty()) {
 		SearchNode* best = nullptr;
 		double min = std::numeric_limits<double>::max();
 		for (const auto child : node->children) {
@@ -86,6 +86,7 @@ std::vector<SearchNode*> SearchTree::getPV()const {
 			}
 		}
 		node = best;
+		pv.push_back(best);
 	}
 	return pv;
 }
@@ -140,7 +141,7 @@ SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
 }
 
 void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved) {
-	std::thread th([&]() 
+	std::thread th([this,base,saved]() 
 		{
 			bool immigrated;
 			do {
@@ -153,7 +154,8 @@ void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved) {
 			} while (!immigrated);
 			for (auto node : base->children) {
 				if (node != saved) {
-					node->deleteTree();
+					const size_t delnum = node->deleteTree();
+					nodecount -= delnum;
 				}
 			}
 		}
@@ -162,7 +164,7 @@ void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved) {
 }
 
 void SearchTree::deleteTreeParallel(SearchNode* root) {
-	std::thread th([&]()
+	std::thread th([this,root]()
 		{
 			bool immigrated;
 			do {
@@ -173,8 +175,10 @@ void SearchTree::deleteTreeParallel(SearchNode* root) {
 						immigrated = false;
 				}
 			} while (!immigrated);
-			root->deleteTree();
+			const size_t delnum = root->deleteTree();
+			nodecount -= delnum;
 			delete(root);
+			nodecount--;
 		}
 	);
 	th.detach();

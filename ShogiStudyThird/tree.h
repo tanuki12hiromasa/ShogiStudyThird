@@ -38,7 +38,7 @@ public:
 	void excludeLeafNode(SearchNode* const node);
 
 	SearchNode* getRoot(unsigned threadNo, size_t increaseNodes);
-
+	SearchNode* getRoot() const { return history.back(); }
 private:
 	void deleteTreeParallel(SearchNode* root);//rootを含め子孫を全消去する
 
@@ -65,5 +65,6 @@ private:
 	std::mutex thmutex;
 
 	friend class Commander;
+	friend class ShogiTest;
 };
  

@@ -6,17 +6,19 @@ class Move {
 public:
 	static std::vector<Move> usiToMoves(const std::vector<std::string>& tokens);
 
-	Move(unsigned from, unsigned to, bool promote) 
-		: u(from & 0x7Fu | (to & 0x7Fu << 7) | (promote << 14))
+	Move() :Move(koma::Position::NullMove, koma::Position::NullMove, false) {}
+
+	Move(std::uint8_t from, std::uint8_t to, bool promote)
+		: u((from & 0x7Fu) | ((to & 0x7Fu) << 7) | (promote << 14))
 	{}
 	Move(koma::Position from,koma::Position to, bool promote)
-		:Move(static_cast<unsigned>(from), static_cast<unsigned>(to),promote)
+		:Move(static_cast<std::uint8_t>(from), static_cast<std::uint8_t>(to),promote)
 	{}
 	Move(const std::string& usi, bool teban)
 		:Move(usiToFrom(usi,teban),usiToTo(usi),usiToPromote(usi))
 	{}
 
-	void setOute(bool isOute) { u |= (isOute << 15); }
+	void setOute(bool isOute) { u = (u & 0x7FFFu) | (isOute << 15); }
 
 	koma::Position from()const { return static_cast<koma::Position>(u & 0x7Fu); }
 	koma::Position to()const { return static_cast<koma::Position>((u >> 7) & 0x7Fu); }
