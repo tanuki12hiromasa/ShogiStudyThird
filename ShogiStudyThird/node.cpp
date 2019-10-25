@@ -24,7 +24,7 @@ size_t SearchNode::deleteTree() {
 	while (!nodes.empty()) {
 		SearchNode* node = nodes.back();
 		nodes.pop_back();
-		delnum += nodes.size();
+		delnum += node->children.size();
 		nodes.insert(nodes.end(), node->children.begin(), node->children.end());
 		delete node;
 	}

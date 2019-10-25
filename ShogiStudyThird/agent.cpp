@@ -138,6 +138,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 							}
 						}
 					}
+
 					double Z = 0;
 					for (const auto& dn : evals) {
 						Z += std::exp(-(dn.first - emin) / T_cq);
@@ -314,11 +315,11 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					}
 
 				}
-
+			qslooptail:;
 			}//静止探索1ループここまで
 
 		}//静止探索ここまで
-
+		node->state = SearchNode::State::EX;
 		tree.excludeLeafNode(node);
 	}//展開評価ここまで
 
