@@ -45,7 +45,6 @@ private:
 	std::vector<SearchNode*> history;
 	Kyokumen startKyokumen;
 	SearchNode* rootNode;
-	SearchNode* oldrootNode;
 	SearchPlayer rootPlayer;
 	std::atomic_uint64_t nodecount;
 	std::uint64_t nodesMaxCount;

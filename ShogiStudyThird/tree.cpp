@@ -10,7 +10,6 @@ SearchTree::SearchTree()
 	T_c_count = 0;
 	setTchoice({ 30,60,90,120 });
 	rootNode = new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false));
-	oldrootNode = rootNode;
 	nodecount = 0;
 }
 

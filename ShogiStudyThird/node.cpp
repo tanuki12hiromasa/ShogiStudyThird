@@ -13,7 +13,7 @@ double SearchNode::repetitionScore = -100;
 SearchNode::SearchNode(const Move& move)
 	:move(move)
 {
-	state = State::NE;
+	state = State::N;
 	eval = 0;
 	mass = 0;
 }
@@ -48,35 +48,34 @@ void SearchNode::setMateVariation(const double childmin) {
 		const double moves = (mateScore + childmin) / mateOneScore;
 		mass = mateMass = moves;
 	}
-	state = State::MV;
 }
 
 void SearchNode::setMate() {
 	eval = -mateScore;
 	mass = mateMass;
-	state = State::CM;
+	state = State::T;
 }
 
 void SearchNode::setUchiFuMate() {
 	eval = mateScore;
 	mass = mateMass;
-	state = State::CM;
+	state = State::T;
 }
 
 void SearchNode::setDeclare() {
 	eval = mateScore;
 	mass = mateMass;
-	state = State::CM;
+	state = State::T;
 }
 
 void SearchNode::setRepetition(const double m) {
 	eval = repetitionScore;
 	mass = m;
-	state = State::RP;
+	state = State::T;
 }
 
 void SearchNode::setRepetitiveCheck(const double m) {
 	eval = mateScore;
 	mass = m;
-	state = State::RC;
+	state = State::T;
 }
