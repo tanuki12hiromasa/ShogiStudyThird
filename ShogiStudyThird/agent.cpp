@@ -196,7 +196,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					}
 				}
 				//バックアップ
-			qbackup:
 				for (int i = qhistory.size() - 1; i >= 0; i--) {
 					qnode = qhistory[i];
 					//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
@@ -237,11 +236,11 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 
 		}//静止探索ここまで
 		node->state = SearchNode::State::E;
-		tree.excludeLeafNode(node);
 	}//展開評価ここまで
 
 	//バックアップ
 	backup:
+	tree.excludeLeafNode(node);
 	{
 	for (int i = history.size() - 1; i >= 0; i--) {
 			node = history[i];

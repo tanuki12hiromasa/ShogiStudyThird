@@ -9,7 +9,7 @@ SearchTree::SearchTree()
 {
 	T_c_count = 0;
 	setTchoice({ 30,60,90,120 });
-	rootNode = new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false));
+	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
 	nodecount = 0;
 }
 
@@ -27,7 +27,7 @@ void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
 			}
 		}
 		for (; i < usihis.size(); i++) {
-			SearchNode* root = rootNode;
+			SearchNode* root = getRoot();
 			const Move nextmove = usihis[i];
 			SearchNode* nextNode = nullptr;
 			for (SearchNode* child : root->children) {
@@ -45,10 +45,10 @@ void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
 	}
 makenewtree:
 	{
-		if(!history.empty()) deleteTreeParallel(history.front());
+		if (!history.empty()) deleteTreeParallel(history.front(), history.size() - 1);
 		history.clear();
 		startKyokumen = startpos;
-		rootNode = new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false));
+		SearchNode* rootNode = new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false));
 		history.push_back(rootNode);
 		rootPlayer = SearchPlayer(startKyokumen);
 		for (auto& usimove : usihis) {
@@ -59,6 +59,7 @@ makenewtree:
 }
 
 SearchNode* SearchTree::getBestMove()const {
+	SearchNode* const rootNode = getRoot();
 	SearchNode* best = nullptr;
 	double min = std::numeric_limits<double>::max();
 	for (const auto child : rootNode->children) {
@@ -72,7 +73,7 @@ SearchNode* SearchTree::getBestMove()const {
 }
 
 std::vector<SearchNode*> SearchTree::getPV()const {
-	SearchNode* node = rootNode;
+	SearchNode* node = getRoot();
 	std::vector<SearchNode*> pv = { node };
 	while (node != nullptr && !node->children.empty()) {
 		SearchNode* best = nullptr;
@@ -93,10 +94,8 @@ std::vector<SearchNode*> SearchTree::getPV()const {
 void SearchTree::proceed(SearchNode* node) {
 	rootPlayer.kyokumen.proceed(node->move);
 	rootPlayer.feature.set(rootPlayer.kyokumen);
+	deleteBranchParallel(getRoot(), node, history.size() - 1);
 	history.push_back(node);
-	deleteBranchParallel(rootNode, node);
-	rootNode = node;
-	thread_latestRootFlags.assign(thread_latestRootFlags.size(), false);
 }
 
 void SearchTree::setTchoice(const std::vector<double>& T) {
@@ -129,25 +128,26 @@ void SearchTree::excludeLeafNode(SearchNode* const node) {
 
 SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
 	std::lock_guard<std::mutex> lock(thmutex);
-	thread_latestRootFlags[threadNo] = true;
+	lastRefRootByThread[threadNo] = history.size() - 1;
 	nodecount += increaseNodes;
 	if (search_enable/* && nodecount < nodesMaxCount*/) {//nodecountを減らす処理が書けてないので一時的に無効化している
-		return rootNode;
+		return getRoot();
 	}
 	else {
 		return nullptr;
 	}
 }
 
-void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved) {
-	std::thread th([this,base,saved]() 
+void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved, uint8_t oldhisnum) {
+	std::thread th([this,base,saved,oldhisnum]() 
 		{
 			bool immigrated;
 			do {
-				std::this_thread::sleep_for(std::chrono::milliseconds(2));
+				std::this_thread::sleep_for(std::chrono::milliseconds(200));
 				immigrated = true;
-				for (bool flag : thread_latestRootFlags) {
-					if (!flag)
+				std::lock_guard<std::mutex> lock(thmutex);
+				for (uint8_t hnum : lastRefRootByThread) {
+					if (hnum <= oldhisnum)
 						immigrated = false;
 				}
 			} while (!immigrated);
@@ -162,15 +162,16 @@ void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved) {
 	th.detach();
 }
 
-void SearchTree::deleteTreeParallel(SearchNode* root) {
-	std::thread th([this,root]()
+void SearchTree::deleteTreeParallel(SearchNode* root,uint8_t oldhisnum) {
+	std::thread th([this,root,oldhisnum]()
 		{
 			bool immigrated;
 			do {
-				std::this_thread::sleep_for(std::chrono::milliseconds(2));
+				std::this_thread::sleep_for(std::chrono::milliseconds(200));
 				immigrated = true;
-				for (bool flag : thread_latestRootFlags) {
-					if (!flag)
+				std::lock_guard<std::mutex> lock(thmutex);
+				for (uint8_t hnum : lastRefRootByThread) {
+					if (hnum == oldhisnum)
 						immigrated = false;
 				}
 			} while (!immigrated);

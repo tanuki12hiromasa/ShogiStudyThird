@@ -97,7 +97,6 @@ void ShogiTest::test() {
 		Commander com;
 		std::cout << "initializing now..." << std::endl;
 		com.paramInit();
-		BBkiki::init();
 		Evaluator::init();
 		SearchTree& tree = com.tree;
 		tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
@@ -117,9 +116,12 @@ void ShogiTest::test() {
 			delete n1; delete n2;
 		}
 		SearchAgent ag(tree, 0);
-		tree.thread_latestRootFlags.assign(5, false);
 
-		ag.simulate(tree.rootNode);
+		tree.lastRefRootByThread.assign(5, 0);
 
+		ag.simulate(tree.getRoot());
+
+		ag.simulate(tree.getRoot());
+		
 	}
 }

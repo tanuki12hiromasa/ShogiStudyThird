@@ -136,7 +136,7 @@ void Commander::gameInit() {
 		agents.clear();
 		agent_threads.clear();
 	}
-	tree.thread_latestRootFlags.assign(agentNum, false);
+	tree.lastRefRootByThread.assign(agentNum, 0);
 	for (unsigned i = 0; i < agentNum; i++) {
 		agents.emplace_back(SearchAgent(tree, i));
 	}
@@ -207,7 +207,7 @@ bool Commander::chakushu() {
 		std::cout << "bestmove win" << std::endl;
 		return true;
 	}
-	const SearchNode* const root = tree.rootNode;
+	const SearchNode* const root = tree.getRoot();
 	if (root->eval < -33000) {
 		std::cout << "bestmove resign" << std::endl;
 		return true;
