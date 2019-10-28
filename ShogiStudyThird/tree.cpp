@@ -192,7 +192,7 @@ void SearchTree::foutTree()const {
 	fs << rootPlayer.kyokumen.toSfen() << "\n";
 	nq.push(history.front());
 	size_t index = 0;
-	size_t c_index = 0;
+	size_t c_index = 1;
 	while (!nq.empty()) {
 		const SearchNode* const node = nq.front();
 		nq.pop();
