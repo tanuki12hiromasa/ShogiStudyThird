@@ -158,5 +158,8 @@
     <ClInclude Include="stest.h">
       <Filter>debug</Filter>
     </ClInclude>
+    <ClInclude Include="logger.h">
+      <Filter>debug</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
