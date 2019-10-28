@@ -316,7 +316,9 @@ std::vector<Bitboard> Kyokumen::getSenteOuCheck(const Move m)const {
 	//toに移動した駒が玉に効いているか調べる
 	const Koma movedKoma = getKoma(to);
 	if (isDashable(movedKoma)) {
-		Bitboard kiki = BBkiki::getDashKiki(allKomaBB, movedKoma, to);
+		Bitboard allBBexOu = allKomaBB; //敵の空き王手の考慮を王で防がれないようにするためのBB
+		allBBexOu.reset(ouPos);
+		Bitboard kiki = BBkiki::getDashKiki(allBBexOu, movedKoma, to);
 		kiki.set(to);
 		kiki &= BBkiki::getDashKiki(allKomaBB, sgInv(movedKoma), ouPos);
 		if (kiki.any()) {
@@ -353,7 +355,9 @@ std::vector<Bitboard> Kyokumen::getGoteOuCheck(const Move m)const {
 	//toに移動した駒が玉に効いているか調べる
 	const Koma movedKoma = getKoma(to);
 	if (isDashable(movedKoma)) {
-		Bitboard kiki = BBkiki::getDashKiki(allKomaBB, movedKoma, to);
+		Bitboard allBBexOu = allKomaBB; //敵の空き王手の考慮を王で防がれないようにするためのBB
+		allBBexOu.reset(ouPos);
+		Bitboard kiki = BBkiki::getDashKiki(allBBexOu, movedKoma, to);
 		kiki.set(to);
 		kiki &= BBkiki::getDashKiki(allKomaBB, sgInv(movedKoma), ouPos);
 		if (kiki.any()) {
@@ -384,8 +388,10 @@ std::vector<Bitboard> Kyokumen::getSenteOuCheck()const {
 		Bitboard kikiBB = BBkiki::getDashKiki(allKomaBB, sgInv(koma), ouPos);
 		Bitboard eBB = kikiBB & getEachBB(koma);
 		if (eBB.any()) {
+			Bitboard allBBexOu = allKomaBB; //敵の空き王手の考慮を王で防がれないようにするためのBB
+			allBBexOu.reset(ouPos);
 			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
-				Bitboard kusemonoBB = BBkiki::getDashKiki(allKomaBB, koma, i) & kikiBB;
+				Bitboard kusemonoBB = BBkiki::getDashKiki(allBBexOu, koma, i) & kikiBB;
 				kusemonoBB.set(i);
 				kusemono.push_back(kusemonoBB);
 			}
@@ -408,6 +414,8 @@ std::vector<Bitboard> Kyokumen::getGoteOuCheck()const {
 		Bitboard kikiBB = BBkiki::getDashKiki(allKomaBB, sgInv(koma), ouPos);
 		Bitboard eBB = kikiBB & getEachBB(koma);
 		if (eBB.any()) {
+			Bitboard allBBexOu = allKomaBB; //敵の空き王手の考慮を王で防がれないようにするためのBB
+			allBBexOu.reset(ouPos);
 			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
 				Bitboard kusemonoBB = BBkiki::getDashKiki(allKomaBB, koma, i) & kikiBB;
 				kusemonoBB.set(i);
