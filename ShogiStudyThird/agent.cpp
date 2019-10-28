@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "agent.h"
 #include <algorithm>
+#include <iostream>
 
 SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)
 	:tree(tree), ID(threadid),engine(seed)
@@ -70,10 +71,14 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		player.proceed(node->move);
 		history.push_back(node);
 	}
+	std::cout << "kudari: ";
+	for (auto h : history)std::cout << h->move.toUSI() << " ";
 	//末端ノードが他スレッドで展開中になっていないかチェック
 	if (!tree.resisterLeafNode(node)) {
+		std::cout << "\nresister failed" << std::endl;
 		return 0;
 	}
+	std::cout << "\nexpand" << std::endl;
 	//展開・評価
 	{
 		std::vector<SearchNode*> gennodes;
@@ -124,6 +129,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			const unsigned failmax = 10u;
 			unsigned failnum = 0;
 			while (failnum < failmax && !node->isQSTerminal() && node->mass < qsmassmax) {
+				std::cout << "qs" << std::endl;
 				SearchNode* qnode = node;
 				SearchPlayer qplayer = player;
 				std::vector<SearchNode*> qhistory = { qnode };
@@ -132,7 +138,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					double emin = std::numeric_limits<double>::max();
 					std::vector<ChildN> evals;
 					for (auto child : qnode->children) {
-						if (!qnode->isQSTerminal()) {
+						if (!child->isQSTerminal()) {
 							const double eval = child->getEvaluation();
 							evals.emplace_back(std::make_pair(eval, child));
 							if (eval < emin) {
@@ -160,6 +166,9 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					qplayer.proceed(qnode->move);
 					qhistory.push_back(qnode);
 				}
+				std::cout << "qkudari: ";
+				for (auto h : qhistory)std::cout << h->move.toUSI() << " ";
+				std::cout << std::endl;
 				//展開
 				{
 					std::vector<SearchNode*> gennodes;
@@ -173,6 +182,9 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					qnode->state = SearchNode::State::QE;
 					//評価,展開ノードの評価値バックアップ
 					Evaluator::evaluate(gennodes, qplayer);
+					std::cout << "qexpand: ";
+					for (auto h : qnode->children)std::cout << h->move.toUSI() << " ";
+					std::cout << std::endl;
 					{
 						double emin = std::numeric_limits<double>::max();
 						std::vector<double> evals;
@@ -180,7 +192,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 							const double eval = child->getEvaluation();
 							evals.push_back(eval);
 							if (eval < emin) {
-								emin = child->getEvaluation();
+								emin = eval;
 							}
 						}
 						double Z_e = 0;
@@ -196,21 +208,17 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					}
 				}
 				//バックアップ
-				for (int i = qhistory.size() - 1; i >= 0; i--) {
+				for (int i = qhistory.size() - 2; i >= 0; i--) {
 					qnode = qhistory[i];
 					//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
 					double emin = std::numeric_limits<double>::max();
 					std::vector<dd> emvec;
-					bool allterminal = true;
 					for (const auto child : qnode->children) {
 						const double eval = child->eval;
 						const double mass = child->mass;
 						emvec.push_back(std::make_pair(eval, mass));
 						if (eval < emin) {
 							emin = eval;
-						}
-						if (!qnode->isQSTerminal()) {
-							allterminal = false;
 						}
 					}
 					double Z_e = 0;
@@ -227,9 +235,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					}
 					qnode->setEvaluation(E);
 					qnode->setMass(M);
-					if (allterminal) {
-						qnode->state = SearchNode::State::QT;
-					}
 				}
 			qslooptail:;
 			}//静止探索1ループここまで
@@ -237,12 +242,12 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}//静止探索ここまで
 		node->state = SearchNode::State::E;
 	}//展開評価ここまで
-
+	std::cout << "ex end" << std::endl;
 	//バックアップ
 	backup:
 	tree.excludeLeafNode(node);
 	{
-	for (int i = history.size() - 1; i >= 0; i--) {
+	for (int i = history.size() - 2; i >= 0; i--) {
 			node = history[i];
 			double emin = std::numeric_limits<double>::max();
 			std::vector<double> evals;
