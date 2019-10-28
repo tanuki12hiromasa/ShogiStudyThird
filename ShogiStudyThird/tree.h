@@ -39,6 +39,8 @@ public:
 
 	SearchNode* getRoot(unsigned threadNo, size_t increaseNodes);
 	SearchNode* getRoot() const { return history.back(); }
+
+	void foutTree()const;
 private:
 	void deleteTreeParallel(SearchNode* root,uint8_t oldhisnum);//rootを含め子孫を全消去する
 

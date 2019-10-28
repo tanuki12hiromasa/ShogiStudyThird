@@ -268,3 +268,5 @@ ShogiStudySecond/data/
 ShogiStudySecond/depthlog/
 
 *.bin
+
+ShogiStudyThird/treelog.txt

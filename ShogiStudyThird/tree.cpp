@@ -1,5 +1,7 @@
 ﻿#include "stdafx.h"
 #include "tree.h"
+#include <queue>
+#include <fstream>
 
 SearchTree::SearchTree()
 	:rootPlayer(),startKyokumen(),
@@ -182,4 +184,27 @@ void SearchTree::deleteTreeParallel(SearchNode* root,uint8_t oldhisnum) {
 		}
 	);
 	th.detach();
+}
+
+void SearchTree::foutTree()const {
+	std::ofstream fs("treelog.txt");
+	std::queue<SearchNode*> nq;
+	fs << rootPlayer.kyokumen.toSfen() << "\n";
+	nq.push(history.front());
+	size_t index = 0;
+	size_t c_index = 0;
+	while (!nq.empty()) {
+		const SearchNode* const node = nq.front();
+		nq.pop();
+		int st = static_cast<int>(node->state.load());
+		fs << index << ", " << st << ", " << node->move.toUSI() << ", " << node->eval << ", " << node->mass << ", [";
+		for (const auto c : node->children) {
+			nq.push(c);
+			fs << c_index << ",";
+			c_index++;
+		}
+		fs << "]\n";
+		index++;
+	}
+	fs.close();
 }
