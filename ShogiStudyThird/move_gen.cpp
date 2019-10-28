@@ -36,28 +36,30 @@ inline void genGoteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, ko
 
 inline void genSenteOuMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& mask) {
 	using namespace koma;
+	const unsigned oupos = kyokumen.sOuPos();
 	Bitboard enemykikibb;
 	Bitboard goteBB = kyokumen.getGoteBB();
-	const Bitboard& allBB = kyokumen.getAllBB();
+	Bitboard allBB = kyokumen.getAllBB();
+	allBB.reset(oupos);
 	for (unsigned pos = goteBB.pop_first(); pos < goteBB.size(); pos = goteBB.pop_first()) {
 		Koma k = kyokumen.getKoma(pos);
 		enemykikibb |= BBkiki::getKiki(allBB, k, pos);
 	}
-	const unsigned oupos = kyokumen.sOuPos();
 	Bitboard kikibb = BBkiki::getStepKiki(Koma::s_Ou, oupos) & ~enemykikibb & mask;
 	addByBitboard(en, oupos, kikibb, false);
 }
 
 inline void genGoteOuMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& mask) {
 	using namespace koma;
+	const unsigned oupos = kyokumen.gOuPos();
 	Bitboard enemykikibb;
 	Bitboard senteBB = kyokumen.getSenteBB();
-	const Bitboard& allBB = kyokumen.getAllBB();
+	Bitboard allBB = kyokumen.getAllBB();
+	allBB.reset(oupos);
 	for (unsigned pos = senteBB.pop_first(); pos < senteBB.size(); pos = senteBB.pop_first()) {
 		Koma k = kyokumen.getKoma(pos);
 		enemykikibb |= BBkiki::getKiki(allBB, k, pos);
 	}
-	const unsigned oupos = kyokumen.gOuPos();
 	Bitboard  kikibb = BBkiki::getStepKiki(Koma::g_Ou, oupos) & ~enemykikibb & mask;
 	addByBitboard(en, oupos, kikibb, false);
 }

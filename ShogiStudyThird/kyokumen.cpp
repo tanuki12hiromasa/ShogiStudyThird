@@ -19,9 +19,9 @@ const std::array<std::uint8_t, 95> prime_bammen = {
 	0u,0u,0u,0u,0u,0u,0u
 };
 
-const std::array<Koma, 9> sStepKomas = { Koma::s_Fu, Koma::s_Kei, Koma::s_Gin, Koma::s_Kin, Koma::s_Ou, Koma::s_nFu, Koma::s_nKyou, Koma::s_nKei, Koma::s_nGin };
+const std::array<Koma, 11> sStepKomas = { Koma::s_Fu, Koma::s_Kei, Koma::s_Gin, Koma::s_Kin, Koma::s_Ou, Koma::s_nFu, Koma::s_nKyou, Koma::s_nKei, Koma::s_nGin, Koma::s_nKaku, Koma::s_nHi };
 const std::array<Koma, 5> sDashKomas = { Koma::s_Kyou, Koma::s_Kaku, Koma::s_Hi, Koma::s_nKaku, Koma::s_nHi };
-const std::array<Koma, 9> gStepKomas = { Koma::g_Fu, Koma::g_Kei, Koma::g_Gin, Koma::g_Kin, Koma::g_Ou, Koma::g_nFu, Koma::g_nKyou, Koma::g_nKei, Koma::g_nGin };
+const std::array<Koma, 11> gStepKomas = { Koma::g_Fu, Koma::g_Kei, Koma::g_Gin, Koma::g_Kin, Koma::g_Ou, Koma::g_nFu, Koma::g_nKyou, Koma::g_nKei, Koma::g_nGin, Koma::g_nKaku, Koma::g_nHi };
 const std::array<Koma, 5> gDashKomas = { Koma::g_Kyou, Koma::g_Kaku, Koma::g_Hi, Koma::g_nKaku, Koma::g_nHi };
 
 Kyokumen::Kyokumen():
@@ -316,16 +316,14 @@ std::vector<Bitboard> Kyokumen::getSenteOuCheck(const Move m)const {
 	//toに移動した駒が玉に効いているか調べる
 	const Koma movedKoma = getKoma(to);
 	if (isDashable(movedKoma)) {
-		Bitboard allBBexOu = allKomaBB; //敵の空き王手の考慮を王で防がれないようにするためのBB
-		allBBexOu.reset(ouPos);
-		Bitboard kiki = BBkiki::getDashKiki(allBBexOu, movedKoma, to);
+		Bitboard kiki = BBkiki::getDashKiki(allKomaBB, movedKoma, to);
 		kiki.set(to);
 		kiki &= BBkiki::getDashKiki(allKomaBB, sgInv(movedKoma), ouPos);
 		if (kiki.any()) {
 			kusemono.push_back(kiki);
 		}
 	}
-	else {
+	if(isSteppable(movedKoma)) {
 		Bitboard tpBB = Bitboard(to);
 		tpBB &= BBkiki::getStepKiki(sgInv(movedKoma), ouPos);
 		if (tpBB.any()) {
@@ -355,16 +353,14 @@ std::vector<Bitboard> Kyokumen::getGoteOuCheck(const Move m)const {
 	//toに移動した駒が玉に効いているか調べる
 	const Koma movedKoma = getKoma(to);
 	if (isDashable(movedKoma)) {
-		Bitboard allBBexOu = allKomaBB; //敵の空き王手の考慮を王で防がれないようにするためのBB
-		allBBexOu.reset(ouPos);
-		Bitboard kiki = BBkiki::getDashKiki(allBBexOu, movedKoma, to);
+		Bitboard kiki = BBkiki::getDashKiki(allKomaBB, movedKoma, to);
 		kiki.set(to);
 		kiki &= BBkiki::getDashKiki(allKomaBB, sgInv(movedKoma), ouPos);
 		if (kiki.any()) {
 			kusemono.push_back(kiki);
 		}
 	}
-	else {
+	if(isSteppable(movedKoma)) {
 		Bitboard tpBB = Bitboard(to);
 		tpBB &= BBkiki::getStepKiki(sgInv(movedKoma), ouPos);
 		if (tpBB.any()) {
@@ -388,10 +384,8 @@ std::vector<Bitboard> Kyokumen::getSenteOuCheck()const {
 		Bitboard kikiBB = BBkiki::getDashKiki(allKomaBB, sgInv(koma), ouPos);
 		Bitboard eBB = kikiBB & getEachBB(koma);
 		if (eBB.any()) {
-			Bitboard allBBexOu = allKomaBB; //敵の空き王手の考慮を王で防がれないようにするためのBB
-			allBBexOu.reset(ouPos);
 			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
-				Bitboard kusemonoBB = BBkiki::getDashKiki(allBBexOu, koma, i) & kikiBB;
+				Bitboard kusemonoBB = BBkiki::getDashKiki(allKomaBB, koma, i) & kikiBB;
 				kusemonoBB.set(i);
 				kusemono.push_back(kusemonoBB);
 			}
@@ -414,8 +408,6 @@ std::vector<Bitboard> Kyokumen::getGoteOuCheck()const {
 		Bitboard kikiBB = BBkiki::getDashKiki(allKomaBB, sgInv(koma), ouPos);
 		Bitboard eBB = kikiBB & getEachBB(koma);
 		if (eBB.any()) {
-			Bitboard allBBexOu = allKomaBB; //敵の空き王手の考慮を王で防がれないようにするためのBB
-			allBBexOu.reset(ouPos);
 			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
 				Bitboard kusemonoBB = BBkiki::getDashKiki(allKomaBB, koma, i) & kikiBB;
 				kusemonoBB.set(i);

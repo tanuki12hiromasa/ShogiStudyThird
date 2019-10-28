@@ -111,16 +111,14 @@ inline const Bitboard BBkiki::getDashKiki(const Bitboard& allBB, const koma::Kom
 		return getGKyouDashKiki(allBB, komapos);
 	case Koma::s_Hi:
 	case Koma::g_Hi:
-		return getHiDashKiki(allBB, komapos);
 	case Koma::s_nHi:
 	case Koma::g_nHi:
-		return getHiDashKiki(allBB, komapos) | Bitboard(RyuStep[komapos]);
+		return getHiDashKiki(allBB, komapos);
 	case Koma::s_Kaku:
 	case Koma::g_Kaku:
-		return getKakuDashKiki(allBB, komapos);
 	case Koma::s_nKaku:
 	case Koma::g_nKaku:
-		return getKakuDashKiki(allBB, komapos) | Bitboard(UmaStep[komapos]);
+		return getKakuDashKiki(allBB, komapos);
 	default:
 		assert(0);
 		return bbmask::AllZero;
