@@ -74,6 +74,7 @@ bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 void ShogiTest::test() {
 	using namespace std;
 	BBkiki::init();
+#if 0
 	{
 		std::string sfen = "position sfen 4k4/5+p3/5P3/9/9/9/9/9/4K4 b 2r2b4g4s4n4l16p 1";
 		Kyokumen k(usi::split(sfen, ' '));
@@ -82,7 +83,15 @@ void ShogiTest::test() {
 		auto r = k.getGoteOuCheck();
 		assert(!r.empty());
 	}
+#endif;
 	{
+		string str4 = "position sfen lnsgkgsnl/1r7/pppppp1pp/6p2/9/7P1/PPbPPPP1P/1B1K3R1/LNSG1GSNL b p 1";
+		string moves4 = "8i7g 8h7g 6h5h 6h7g 6h7h";
+		ShogiTest::genMoveCheck(str4, moves4);
+		string str3 = "position sfen lnsgkgsnl/1r7/pppppp1pp/6p2/9/7P1/PP+bPPPP1P/1B1K3R1/LNSG1GSNL b p 1";
+		string moves3 = "8i7g 8h7g 6h5h 6h7g";
+		ShogiTest::genMoveCheck(str3, moves3);
+		ShogiTest::genCapMoveCheck(str3);
 		ShogiTest::genMoveCheck("position sfen 4k4/5+p3/5P3/9/9/9/9/9/4K4 b 2r2b4g4s4n4l16p 1", "4c4b 4c4b+ 5i4h 5i4i 5i5h 5i6h 5i6i");
 		ShogiTest::genCapMoveCheck("position sfen 4k4/5+p3/5P3/9/9/9/9/9/4K4 b 2r2b4g4s4n4l16p 1");
 		string str1 = "position sfen l3k2nl/2g3gb1/3psppp1/prp5p/9/2P1R3P/PP1PPPP2/2G3S2/L1S1KG1NL b S2Pb2np 1";
@@ -93,6 +102,7 @@ void ShogiTest::test() {
 		ShogiTest::genMoveCheck(str2, moves2);
 		ShogiTest::genCapMoveCheck(str2);
 	}
+#if 0
 	{
 		Commander com;
 		std::cout << "initializing now..." << std::endl;
@@ -117,11 +127,14 @@ void ShogiTest::test() {
 		}
 		SearchAgent ag(tree, 0);
 
-		tree.lastRefRootByThread.assign(5, 0);
-
-		ag.simulate(tree.getRoot());
-
-		ag.simulate(tree.getRoot());
-		
+		tree.lastRefRootByThread.assign(1, 0);
+		tree.permitSearch();
+		std::thread th(&SearchAgent::loop, &ag);
+		std::this_thread::sleep_for(500ms);
+		tree.prohibitSearch();
+		ag.alive = false;
+		th.join();
+		tree.foutTree();
 	}
+#endif
 }
