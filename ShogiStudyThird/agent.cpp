@@ -1,7 +1,6 @@
 ﻿#include "stdafx.h"
 #include "agent.h"
 #include <algorithm>
-#include <iostream>
 
 SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)
 	:tree(tree), ID(threadid),engine(seed)
@@ -71,14 +70,10 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		player.proceed(node->move);
 		history.push_back(node);
 	}
-	std::cout << "kudari: ";
-	for (auto h : history)std::cout << h->move.toUSI() << " ";
 	//末端ノードが他スレッドで展開中になっていないかチェック
 	if (!tree.resisterLeafNode(node)) {
-		std::cout << "\nresister failed" << std::endl;
 		return 0;
 	}
-	std::cout << "\nexpand" << std::endl;
 	//展開・評価
 	{
 		std::vector<SearchNode*> gennodes;
@@ -129,7 +124,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			const unsigned failmax = 10u;
 			unsigned failnum = 0;
 			while (failnum < failmax && !node->isQSTerminal() && node->mass < qsmassmax) {
-				std::cout << "qs" << std::endl;
 				SearchNode* qnode = node;
 				SearchPlayer qplayer = player;
 				std::vector<SearchNode*> qhistory = { qnode };
@@ -166,9 +160,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					qplayer.proceed(qnode->move);
 					qhistory.push_back(qnode);
 				}
-				std::cout << "qkudari: ";
-				for (auto h : qhistory)std::cout << h->move.toUSI() << " ";
-				std::cout << std::endl;
 				//展開
 				{
 					std::vector<SearchNode*> gennodes;
@@ -182,9 +173,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					qnode->state = SearchNode::State::QE;
 					//評価,展開ノードの評価値バックアップ
 					Evaluator::evaluate(gennodes, qplayer);
-					std::cout << "qexpand: ";
-					for (auto h : qnode->children)std::cout << h->move.toUSI() << " ";
-					std::cout << std::endl;
 					{
 						double emin = std::numeric_limits<double>::max();
 						std::vector<double> evals;
@@ -242,7 +230,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}//静止探索ここまで
 		node->state = SearchNode::State::E;
 	}//展開評価ここまで
-	std::cout << "ex end" << std::endl;
+
 	//バックアップ
 	backup:
 	tree.excludeLeafNode(node);

@@ -308,10 +308,12 @@ std::vector<Bitboard> Kyokumen::getSenteOuCheck(const Move m)const {
 		return getSenteOuCheck();
 	}
 	//fromでどいたところから空き王手がないか調べる
-	Bitboard fpBB = pinMaskSente(from);
-	if (fpBB != bbmask::AllOne) {
-		fpBB.set(from);
-		kusemono.push_back(fpBB);
+	if (isInside(from)) {
+		Bitboard fpBB = pinMaskSente(from);
+		if (fpBB != bbmask::AllOne) {
+			fpBB.set(from);
+			kusemono.push_back(fpBB);
+		}
 	}
 	//toに移動した駒が玉に効いているか調べる
 	const Koma movedKoma = getKoma(to);

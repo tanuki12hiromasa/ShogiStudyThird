@@ -102,7 +102,7 @@ void ShogiTest::test() {
 		ShogiTest::genMoveCheck(str2, moves2);
 		ShogiTest::genCapMoveCheck(str2);
 	}
-#if 0
+#if 1
 	{
 		Commander com;
 		std::cout << "initializing now..." << std::endl;
