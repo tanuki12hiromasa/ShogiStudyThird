@@ -319,9 +319,9 @@ std::vector<Bitboard> Kyokumen::getSenteOuCheck(const Move m)const {
 	const Koma movedKoma = getKoma(to);
 	if (isDashable(movedKoma)) {
 		Bitboard kiki = BBkiki::getDashKiki(allKomaBB, movedKoma, to);
-		kiki.set(to);
-		kiki &= BBkiki::getDashKiki(allKomaBB, sgInv(movedKoma), ouPos);
-		if (kiki.any()) {
+		if ((kiki & getEachBB(Koma::s_Ou)).any()) {
+			kiki.set(to);
+			kiki &= BBkiki::getDashKiki(allKomaBB, sgInv(movedKoma), ouPos);
 			kusemono.push_back(kiki);
 		}
 	}
@@ -356,9 +356,9 @@ std::vector<Bitboard> Kyokumen::getGoteOuCheck(const Move m)const {
 	const Koma movedKoma = getKoma(to);
 	if (isDashable(movedKoma)) {
 		Bitboard kiki = BBkiki::getDashKiki(allKomaBB, movedKoma, to);
-		kiki.set(to);
-		kiki &= BBkiki::getDashKiki(allKomaBB, sgInv(movedKoma), ouPos);
-		if (kiki.any()) {
+		if ((kiki & getEachBB(Koma::g_Ou)).any()) {
+			kiki.set(to);
+			kiki &= BBkiki::getDashKiki(allKomaBB, sgInv(movedKoma), ouPos);
 			kusemono.push_back(kiki);
 		}
 	}
