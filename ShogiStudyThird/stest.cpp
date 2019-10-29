@@ -3,6 +3,21 @@
 #include "usi.h"
 #include <iostream>
 
+bool ShogiTest::checkKyokumenProceed(std::string sfen, Move m, std::string correct) {
+	Kyokumen k(usi::split(sfen, ' '));
+	k.proceed(m);
+	Kyokumen c(usi::split(correct, ' '));
+	if (k != c) {
+		std::cout << "error:proceed" << std::endl;
+		std::cout << "correct : " << c.toSfen() << std::endl;
+		std::cout << "kyokumen: " << k.toSfen() << std::endl;
+		assert(0);
+		return false;
+	}
+	std::cout << "test: proceed ok" << std::endl;
+	return true;
+}
+
 bool ShogiTest::checkStrings(strv a, strv b) { //a=b
 	for (auto& str : b) {
 		auto result = std::find(a.begin(), a.end(), str);
@@ -43,6 +58,20 @@ bool ShogiTest::genMoveCheck(std::string parent_sfen, std::string child_moves) {
 	} 
 }
 
+bool ShogiTest::genMoveCheck(std::string parent_sfen, Move pmove, std::string child_moves) {
+	strv ans = usi::split(child_moves, ' ');
+	Kyokumen k(usi::split(parent_sfen, ' '));
+	const auto moves = MoveGenerator::genMove(new SearchNode(pmove), k);
+	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
+	if (checkStrings(ans, msv)) return true;
+	else {
+		for (const auto& s : msv)std::cout << s << ' ';
+		std::cout << std::endl;
+		assert(0);
+		return false;
+	}
+}
+
 bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 	Kyokumen k(usi::split(parent_sfen, ' '));
 	const auto moves = MoveGenerator::genMove(new SearchNode(Move()), k);
@@ -74,7 +103,7 @@ bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 void ShogiTest::test() {
 	using namespace std;
 	BBkiki::init();
-#if 0
+#if 1
 	{
 		std::string sfen = "position sfen 4k4/5+p3/5P3/9/9/9/9/9/4K4 b 2r2b4g4s4n4l16p 1";
 		Kyokumen k(usi::split(sfen, ' '));
@@ -82,9 +111,20 @@ void ShogiTest::test() {
 		k.proceed(m);
 		auto r = k.getGoteOuCheck();
 		assert(!r.empty());
+		string sfen2 = "position sfen lnsgkg1nl/1r3s1b1/ppppppppp/9/9/2P6/PP1PPPPPP/1B5R1/LNSGKGSNL b - 1";
+		Move m2(70, 20, false);
+		string ans = "position sfen lnsgkg1nl/1r3s1b1/ppppppBpp/9/9/2P6/PP1PPPPPP/7R1/LNSGKGSNL w P 1";
+		checkKyokumenProceed(sfen2, m2, ans);
+		string sfen3 = "position sfen lnsgkgsnl/1r5b1/ppppppppp/9/9/2P6/PP1PPPPPP/1B5R1/LNSGKGSNL w - 1";
+		Move m3(18, 28, false);
+		checkKyokumenProceed(sfen3, m3, sfen2);
 	}
 #endif;
 	{
+		string str5 = "position sfen lnsgkg1nl/1r3s1b1/ppppppBpp/9/9/2P6/PP1PPPPPP/7R1/LNSGKGSNL w P 1";
+		string moves5 = "1c1d 2c2d 4c4d 5c5d 6c6d 7c7d 8c8d 9c9d 2a3c 4b3c 7a6b 7a7b 4a3a 4a3b 4a5b 6a5b 6a6b 6a7b 5a5b 5a6b 1a1b 9a9b 2b3a 2b3c 8b5b 8b6b 8b7b 8b9b";
+		ShogiTest::genMoveCheck(str5, Move(70,20,false), moves5);
+		ShogiTest::genCapMoveCheck(str5);
 		string str4 = "position sfen lnsgkgsnl/1r7/pppppp1pp/6p2/9/7P1/PPbPPPP1P/1B1K3R1/LNSG1GSNL b p 1";
 		string moves4 = "8i7g 8h7g 6h5h 6h7g 6h7h";
 		ShogiTest::genMoveCheck(str4, moves4);
