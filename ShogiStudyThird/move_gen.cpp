@@ -187,19 +187,20 @@ void genSenteEvationMove(EvaluatedNodes& en, const Kyokumen& kyokumen, std::vect
 
 		//持ち駒で合駒(開き王手の場合のみ)
 		if (target.popcount() > 1) {
+			Bitboard utarget = target & ~kyokumen.getAllBB();
 			if (kyokumen.getMochigomaNum(Position::m_sFu) > 0) {
-				Bitboard UchiFuBB = kyokumen.getEachBB(Koma::s_Fu).getNoFuLines() & target & bbmask::Dan2to9;
+				Bitboard UchiFuBB = kyokumen.getEachBB(Koma::s_Fu).getNoFuLines() & utarget & bbmask::Dan2to9;
 				addByBitboard(en, Position::m_sFu, UchiFuBB, false);
 			}
 			if (kyokumen.getMochigomaNum(Position::m_sKyou) > 0) {
-				addByBitboard(en, Position::m_sKyou, target & bbmask::Dan2to9, false);
+				addByBitboard(en, Position::m_sKyou, utarget & bbmask::Dan2to9, false);
 			}
 			if (kyokumen.getMochigomaNum(Position::m_sKei) > 0) {
-				addByBitboard(en, Position::m_sKei, target & bbmask::Dan3to9, false);
+				addByBitboard(en, Position::m_sKei, utarget & bbmask::Dan3to9, false);
 			}
 			for (Position mpos : {Position::m_sGin, Position::m_sKin, Position::m_sKaku, Position::m_sHi}) {
 				if (kyokumen.getMochigomaNum(mpos) > 0) {
-					addByBitboard(en, mpos, target, false);
+					addByBitboard(en, mpos, utarget, false);
 				}
 			}
 		}
@@ -236,19 +237,20 @@ void genGoteEvationMove(EvaluatedNodes& en, const Kyokumen& kyokumen, std::vecto
 
 		//持ち駒で合駒(開き王手の場合のみ)
 		if (target.popcount() > 1) {
+			Bitboard utarget = target & ~kyokumen.getAllBB();
 			if (kyokumen.getMochigomaNum(Position::m_gFu) > 0) {
-				Bitboard UchiFuBB = kyokumen.getEachBB(Koma::g_Fu).getNoFuLines() & target & bbmask::Dan1to8;
+				Bitboard UchiFuBB = kyokumen.getEachBB(Koma::g_Fu).getNoFuLines() & utarget & bbmask::Dan1to8;
 				addByBitboard(en, Position::m_gFu, UchiFuBB, false);
 			}
 			if (kyokumen.getMochigomaNum(Position::m_gKyou) > 0) {
-				addByBitboard(en, Position::m_gKyou, target & bbmask::Dan1to8, false);
+				addByBitboard(en, Position::m_gKyou, utarget & bbmask::Dan1to8, false);
 			}
 			if (kyokumen.getMochigomaNum(Position::m_gKei) > 0) {
-				addByBitboard(en, Position::m_gKei, target & bbmask::Dan1to7, false);
+				addByBitboard(en, Position::m_gKei, utarget & bbmask::Dan1to7, false);
 			}
 			for (Position mpos : {Position::m_gGin, Position::m_gKin, Position::m_gKaku, Position::m_gHi}) {
 				if (kyokumen.getMochigomaNum(mpos) > 0) {
-					addByBitboard(en, mpos, target, false);
+					addByBitboard(en, mpos, utarget, false);
 				}
 			}
 		}

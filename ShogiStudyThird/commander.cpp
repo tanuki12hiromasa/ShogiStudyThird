@@ -89,7 +89,7 @@ Commander::~Commander() {
 }
 
 void Commander::coutOption() {
-	std::cout << "option name UseBook type check default true" << std::endl;
+	std::cout << "option name USI_Ponder type check default true" << std::endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {
@@ -160,7 +160,7 @@ void Commander::go(std::vector<std::string>& tokens) {
 	go_alive = true;
 	go_thread = std::thread([this,tp]() {
 		using namespace std::chrono_literals;
-		std::this_thread::sleep_for(4.5s);
+		std::this_thread::sleep_for(6s);
 		while (go_alive) {
 			bool saseta = chakushu();
 			if (saseta) return;
