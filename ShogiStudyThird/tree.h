@@ -23,7 +23,7 @@ public:
 	SearchNode* getBestMove()const;//最もevalの高いrootのchildを返す
 	std::vector<SearchNode*> getPV()const;//rootからのpvの連なりを返す
 	void proceed(SearchNode* node);
-	void deleteBranchParallel(SearchNode* base, SearchNode* saved);//baseのsaved以下以外の探索木を子ノードを残して消去する
+	void deleteBranchParallel(SearchNode* base, SearchNode* saved, uint8_t oldhisnum);//baseのsaved以下以外の探索木を子ノードを残して消去する
 
 	const uint64_t getNodeCount() const { return nodecount; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
@@ -39,13 +39,13 @@ public:
 
 	SearchNode* getRoot(unsigned threadNo, size_t increaseNodes);
 	SearchNode* getRoot() const { return history.back(); }
+
+	void foutTree()const;
 private:
-	void deleteTreeParallel(SearchNode* root);//rootを含め子孫を全消去する
+	void deleteTreeParallel(SearchNode* root,uint8_t oldhisnum);//rootを含め子孫を全消去する
 
 	std::vector<SearchNode*> history;
 	Kyokumen startKyokumen;
-	SearchNode* rootNode;
-	SearchNode* oldrootNode;
 	SearchPlayer rootPlayer;
 	std::atomic_uint64_t nodecount;
 	std::uint64_t nodesMaxCount;
@@ -60,7 +60,8 @@ private:
 	std::unordered_map<SearchNode*, unsigned> nmap;
 	std::mutex lnmutex;
 
-	std::vector<bool> thread_latestRootFlags;
+	std::atomic_bool leave_branchNode;
+	std::vector<std::uint8_t> lastRefRootByThread;
 	std::atomic_bool search_enable;
 	std::mutex thmutex;
 

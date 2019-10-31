@@ -39,14 +39,38 @@ namespace koma {
 	extern Koma dispromote(Koma koma);
 
 	//遠距離移動できる駒かどうか
-	inline bool isDashableS(Koma koma) {
-		return  koma == Koma::s_Hi || koma == Koma::s_Kaku || koma == Koma::s_nHi || koma == Koma::s_nKaku || koma == Koma::s_Kyou;
-	}
-	inline bool isDashableG(Koma koma) {
-		return  koma == Koma::g_Hi || koma == Koma::g_Kaku || koma == Koma::g_nHi || koma == Koma::g_nKaku || koma == Koma::g_Kyou;
-	}
 	inline bool isDashable(Koma koma) {
-		return isDashableS(koma) || isDashableG(koma);
+		switch (koma)
+		{
+		case Koma::s_Kyou:
+		case Koma::s_Kaku:
+		case Koma::s_Hi:
+		case Koma::s_nHi:
+		case Koma::s_nKaku:
+		case Koma::g_Kyou:
+		case Koma::g_Kaku:
+		case Koma::g_Hi:
+		case Koma::g_nKaku:
+		case Koma::g_nHi:
+			return true;
+		default:
+			return false;
+		}
+	}
+	//1マス移動できる駒かどうか(桂もこの部類に入る)
+	inline bool isSteppable(Koma koma) {
+		switch (koma)
+		{
+		case Koma::s_Kyou:
+		case Koma::s_Kaku:
+		case Koma::s_Hi:
+		case Koma::g_Kyou:
+		case Koma::g_Kaku:
+		case Koma::g_Hi:
+			return false;
+		default:
+			return true;
+		}
 	}
 
 	//持ち駒を表すenum 

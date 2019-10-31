@@ -11,10 +11,8 @@ using p_lock = std::lock_guard<std::shared_mutex>;
 class SearchNode {
 public:
 	enum class State : std::int8_t {
-		NotExpanded, LimitExpanded, LimitExpandedTerminal, ExpandedInQuiescence, EQTerminal, 
-		Expanded, MateVariation, CheckMate, RepetitiveCheck, Repetition,
-		NE = NotExpanded, LE = LimitExpanded, LT = LimitExpandedTerminal, EQ = ExpandedInQuiescence, ET = EQTerminal, 
-		EX = Expanded, MV = MateVariation, CM = CheckMate, RC = RepetitiveCheck, RP = Repetition
+		NotExpanded, QuiescenceExpanded, QuiescenceTerminal, Expanded, Terminal,
+		N = NotExpanded, QE = QuiescenceExpanded, QT = QuiescenceTerminal, E = Expanded, T = Terminal
 	};
 private:
 	static double mateMass;
@@ -47,11 +45,11 @@ public:
 	void setRepetitiveCheck(const double m);
 
 	double getEvaluation()const { return eval.load(); }
-	bool isNotExpanded()const { return state == State::NE; }
-	bool isLimitedExpanded()const { return state == State::LE || state == State::LT; }
-	bool isQSTerminal()const { return state != State::NE && state != State::LE && state != State::EQ; }
-	bool isLeaf()const { return state == State::NE || state == State::LE || state == State::LT || state == State::EQ || state==State::ET; }
-	bool isRepetition()const { return state == State::RP || state == State::RC; }
+	bool isNotExpanded()const { return state == State::N; }
+	bool isLimitedExpanded()const { return state == State::QE || state == State::QT; }
+	bool isQSTerminal()const { return state != State::N && state != State::QE; }
+	bool isLeaf()const { return state == State::N || state == State::QE || state == State::QT; }
+	bool isTerminal()const { return state == State::T; }
 
 	std::vector<SearchNode*> children;
 	Move move;

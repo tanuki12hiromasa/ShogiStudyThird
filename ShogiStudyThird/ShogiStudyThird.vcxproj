@@ -189,6 +189,7 @@
     <ClInclude Include="koma.h" />
     <ClInclude Include="koma_motion.h" />
     <ClInclude Include="kyokumen.h" />
+    <ClInclude Include="logger.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_gen.h" />
     <ClInclude Include="node.h" />
