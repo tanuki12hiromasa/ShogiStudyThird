@@ -121,6 +121,10 @@ void ShogiTest::test() {
 	}
 #endif;
 	{
+		string str7 = "position sfen lnsgk1snl/1r4gb1/ppppppBpp/9/9/2P6/PP1PPPPPP/7R1/LNSGKGSNL w P 1";
+		string moves7 = "2a3c 3a4b 3b3c 3b4b 2b3c 8b4b 5a4a 5a5b 5a6b";
+		ShogiTest::genMoveCheck(str7, moves7);
+		ShogiTest::genMoveCheck(str7, Move(70, 20, false), moves7);
 		string str6 = "position sfen lnsg1g1nl/1r2k2s1/1ppppp1pp/p8/9/2P6/PPbPPPPPP/1R7/LNSGKGSNL b BP 1";
 		string moves6 = "8i7g 7i6h 6i6h 8h6h B*6h 5i4h 5i5h";
 		ShogiTest::genMoveCheck(str6, Move(92, 60, false), moves6);

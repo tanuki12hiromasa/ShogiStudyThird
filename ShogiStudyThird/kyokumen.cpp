@@ -427,7 +427,7 @@ Bitboard Kyokumen::pinMaskSente(const unsigned pos)const {
 	for (Koma ek : gDashKomas) {
 		Bitboard kikiBB = BBkiki::getDashKiki(dpBB, sgInv(ek), ouPos);
 		Bitboard eBB = kikiBB & getEachBB(ek);
-		if (eBB.any()) {
+		if (eBB.any() && kikiBB.test(pos)) {
 			Bitboard result;
 			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
 				result |= kikiBB & BBkiki::getDashKiki(dpBB, ek, i);
@@ -446,7 +446,7 @@ Bitboard Kyokumen::pinMaskGote(const unsigned pos)const {
 	for (Koma ek : sDashKomas) {
 		Bitboard kikiBB = BBkiki::getDashKiki(dpBB, sgInv(ek), ouPos);
 		Bitboard eBB = kikiBB & getEachBB(ek);
-		if (eBB.any()) {
+		if (eBB.any() && kikiBB.test(pos)) {
 			Bitboard result;
 			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
 				result |= kikiBB & BBkiki::getDashKiki(dpBB, ek, i);
