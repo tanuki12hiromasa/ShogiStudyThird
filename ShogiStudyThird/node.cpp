@@ -28,6 +28,7 @@ size_t SearchNode::deleteTree() {
 		nodes.insert(nodes.end(), node->children.begin(), node->children.end());
 		delete node;
 	}
+	state = State::N;
 	return delnum;
 }
 
