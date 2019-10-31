@@ -60,6 +60,7 @@ private:
 	std::unordered_map<SearchNode*, unsigned> nmap;
 	std::mutex lnmutex;
 
+	std::atomic_bool leave_branchNode;
 	std::vector<std::uint8_t> lastRefRootByThread;
 	std::atomic_bool search_enable;
 	std::mutex thmutex;

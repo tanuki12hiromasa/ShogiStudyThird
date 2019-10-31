@@ -50,6 +50,10 @@ void Commander::execute() {
 				if (!saseta)std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
 		}
+		else if (tokens[0] == "fouttree") {
+			commander.tree.foutTree();
+			std::cout << "fouttree: done" << std::endl;
+		}
 		else if (tokens[0] == "ponderhit") {
 			//先読みはするがponder機能は利用しない
 		}
@@ -89,18 +93,30 @@ Commander::~Commander() {
 }
 
 void Commander::coutOption() {
-	std::cout << "option name USI_Ponder type check default true" << std::endl;
+	std::cout << "option name leave_branchNode type check default true" << std::endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {
-	if (token[2] == "USI_Ponder") {
-		if (token.size() <= 3 || token[4] == "false") {
-			permitPonder = false;
-			std::cout << "ponder : false" << std::endl;
+	if (token.size() > 2) {
+		if (token[2] == "USI_Ponder") {
+			if (token.size() <= 3 || token[4] == "false") {
+				permitPonder = false;
+				std::cout << "ponder : false" << std::endl;
+			}
+			else {
+				permitPonder = true;
+				std::cout << "ponder : true" << std::endl;
+			}
 		}
-		else {
-			permitPonder = true;
-			std::cout << "ponder : true" << std::endl;
+		else if (token[2] == "leave_branchNode") {
+			if (token.size() <= 3 || token[4] == "false") {
+				tree.leave_branchNode = false;
+				std::cout << "leaveNode : false" << std::endl;
+			}
+			else {
+				tree.leave_branchNode = true;
+				std::cout << "leaveNode : true" << std::endl;
+			}
 		}
 	}
 }
@@ -160,7 +176,13 @@ void Commander::go(std::vector<std::string>& tokens) {
 	go_alive = true;
 	go_thread = std::thread([this,tp]() {
 		using namespace std::chrono_literals;
-		std::this_thread::sleep_for(6s);
+		if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
+			auto t = tp.added - 150ms;
+			std::this_thread::sleep_for(t);
+		}
+		else {
+			std::this_thread::sleep_for(5s);
+		}
 		while (go_alive) {
 			bool saseta = chakushu();
 			if (saseta) return;

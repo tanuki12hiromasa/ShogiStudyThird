@@ -9,6 +9,7 @@ SearchTree::SearchTree()
 	T_eval(40),T_depth(90),
 	MassMax_QS(8)
 {
+	leave_branchNode = false;
 	T_c_count = 0;
 	setTchoice({ 30,60,90,120 });
 	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
@@ -39,7 +40,7 @@ void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
 				}
 			}
 			if (nextNode == nullptr) {
-				nextNode = new SearchNode(nextmove);
+				nextNode = root->addChild(nextmove);
 			}
 			proceed(nextNode);
 		}
@@ -141,6 +142,7 @@ SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
 }
 
 void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved, uint8_t oldhisnum) {
+	if (leave_branchNode) return;
 	std::thread th([this,base,saved,oldhisnum]() 
 		{
 			bool immigrated;
