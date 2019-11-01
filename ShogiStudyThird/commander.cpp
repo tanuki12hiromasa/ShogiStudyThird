@@ -93,7 +93,7 @@ Commander::~Commander() {
 }
 
 void Commander::coutOption() {
-	std::cout << "option name leave_branchNode type check default true" << std::endl;
+	std::cout << "option name leave_branchNode type check default false" << std::endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {

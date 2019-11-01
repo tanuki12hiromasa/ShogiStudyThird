@@ -20,6 +20,7 @@ SearchNode::SearchNode(const Move& move)
 
 size_t SearchNode::deleteTree() {
 	std::vector<SearchNode*> nodes = children;
+	children.clear();
 	size_t delnum = nodes.size();
 	while (!nodes.empty()) {
 		SearchNode* node = nodes.back();
