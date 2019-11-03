@@ -49,7 +49,7 @@ public:
 	bool isLimitedExpanded()const { return state == State::QE || state == State::QT; }
 	bool isQSTerminal()const { return state != State::N && state != State::QE; }
 	bool isLeaf()const { return state == State::N || state == State::QE || state == State::QT; }
-	bool isTerminal()const { return state == State::T; }
+	bool isSearchable()const { return state != State::T; }
 
 	std::vector<SearchNode*> children;
 	Move move;
