@@ -9,7 +9,10 @@ void Commander::execute() {
 		std::string usiin;
 		std::getline(std::cin, usiin);
 		auto tokens = usi::split(usiin, ' ');
-		if (tokens[0] == "usi") {
+		if (tokens.empty()) {
+			std::cout << "command ready" << std::endl;
+		}
+		else if (tokens[0] == "usi") {
 #ifdef _DEBUG
 			std::cout << "id name ShibauraSoftmaxThird_debug" << std::endl;
 #else
