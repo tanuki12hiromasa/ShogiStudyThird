@@ -30,7 +30,7 @@ void SearchAgent::loop() {
 }
 
 size_t SearchAgent::simulate(SearchNode* const root) {
-	using ChildN = std::pair<double, SearchNode*>;
+	using dn = std::pair<double, SearchNode*>;
 	using dd = std::pair<double, double>;
 	const double T_c = tree.getTchoice();
 	const double T_e = tree.getTeval();
@@ -43,28 +43,32 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	//選択
 	while (!node->isLeaf()) {
 		double CE = std::numeric_limits<double>::max();
-		std::vector<double> evals;
+		std::vector<dn> evals;
 		for (const auto& child : node->children) {
-			double eval = child->getEvaluation();
-			evals.push_back(eval);
-			if (eval < CE)
-				CE = eval;
+			if (child->isSearchable()) {
+				double eval = child->getEvaluation();
+				evals.push_back(std::make_pair(eval,child));
+				if (eval < CE) {
+					CE = eval;
+				}
+			}
+		}
+		if (evals.empty()) {
+			node->state = SearchNode::State::Terminal;
+			return 0;
 		}
 		double Z = 0;
 		for (const auto& eval : evals) {
-			Z += std::exp(-(eval - CE) / T_c);
+			Z += std::exp(-(eval.first - CE) / T_c);
 		}
 		double pip = Z * random(engine);
-		const auto& children = node->children;
-		node = children.front();
-		auto child = children.begin();
+		node = evals.front().second;
 		for (const auto& eval : evals) {
-			pip -= std::exp(-(eval - CE) / T_c);
+			pip -= std::exp(-(eval.first - CE) / T_c);
 			if (pip <= 0) {
-				node = *child;
+				node = eval.second;
 				break;
 			}
-			child++;
 		}
 		//局面を進める
 		player.proceed(node->move);
@@ -130,7 +134,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				//選択
 				while (!qnode->isNotExpanded()) {
 					double emin = std::numeric_limits<double>::max();
-					std::vector<ChildN> evals;
+					std::vector<dn> evals;
 					for (auto child : qnode->children) {
 						if (!child->isQSTerminal()) {
 							const double eval = child->getEvaluation();

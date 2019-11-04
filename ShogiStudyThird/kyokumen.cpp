@@ -427,13 +427,14 @@ Bitboard Kyokumen::pinMaskSente(const unsigned pos)const {
 	for (Koma ek : gDashKomas) {
 		Bitboard kikiBB = BBkiki::getDashKiki(dpBB, sgInv(ek), ouPos);
 		Bitboard eBB = kikiBB & getEachBB(ek);
-		if (eBB.any() && kikiBB.test(pos)) {
-			Bitboard result;
+		if (eBB.any()) {
 			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
-				result |= kikiBB & BBkiki::getDashKiki(dpBB, ek, i);
+				Bitboard result = kikiBB & BBkiki::getDashKiki(dpBB, ek, i);
 				result.set(i);
+				if (result.test(pos)) {
+					return result;
+				}
 			}
-			return result;
 		}
 	}
 	return bbmask::AllOne;
@@ -446,13 +447,14 @@ Bitboard Kyokumen::pinMaskGote(const unsigned pos)const {
 	for (Koma ek : sDashKomas) {
 		Bitboard kikiBB = BBkiki::getDashKiki(dpBB, sgInv(ek), ouPos);
 		Bitboard eBB = kikiBB & getEachBB(ek);
-		if (eBB.any() && kikiBB.test(pos)) {
-			Bitboard result;
+		if (eBB.any()) {
 			for (unsigned i = eBB.pop_first(); i != eBB.size(); i = eBB.pop_first()) {
-				result |= kikiBB & BBkiki::getDashKiki(dpBB, ek, i);
+				Bitboard result = kikiBB & BBkiki::getDashKiki(dpBB, ek, i);
 				result.set(i);
+				if (result.test(pos)) {
+					return result;
+				}
 			}
-			return result;
 		}
 	}
 	return bbmask::AllOne;

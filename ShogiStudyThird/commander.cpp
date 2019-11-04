@@ -9,7 +9,10 @@ void Commander::execute() {
 		std::string usiin;
 		std::getline(std::cin, usiin);
 		auto tokens = usi::split(usiin, ' ');
-		if (tokens[0] == "usi") {
+		if (tokens.empty()) {
+			std::cout << "command ready" << std::endl;
+		}
+		else if (tokens[0] == "usi") {
 #ifdef _DEBUG
 			std::cout << "id name ShibauraSoftmaxThird_debug" << std::endl;
 #else
@@ -21,7 +24,6 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "setoption") {
 			commander.setOption(tokens);
-			commander.paramInit();
 		}
 		else if (tokens[0] == "isready") {
 			commander.gameInit();
@@ -75,6 +77,7 @@ Commander::Commander():
 	go_alive = false;
 	info_enable = false;
 	info_alive = false;
+	paramInit();
 }
 
 Commander::~Commander() {
@@ -93,7 +96,8 @@ Commander::~Commander() {
 }
 
 void Commander::coutOption() {
-	std::cout << "option name leave_branchNode type check default true" << std::endl;
+	std::cout << "option name leave_branchNode type check default false" << std::endl;
+	std::cout << "option name setting_filepath type string default ./setting.txt" << std::endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {
@@ -118,12 +122,17 @@ void Commander::setOption(std::vector<std::string>& token) {
 				std::cout << "leaveNode : true" << std::endl;
 			}
 		}
+		else if (token[2] == "setting_filepath") {
+			filepath = token[4];
+			std::cout << "filepath : " << filepath << std::endl;
+			paramInit();
+		}
 	}
 }
 
 void Commander::paramInit() {
 	//filepathから設定ファイルを読み込む
-	tree.setTchoice({ 10,40,90,120 });
+	tree.setTchoice({ 60 });
 	tree.setTchoice_q(90);
 	tree.setTdepth(90);
 	tree.setTeval(20);
