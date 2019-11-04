@@ -132,7 +132,7 @@ void Commander::setOption(std::vector<std::string>& token) {
 
 void Commander::paramInit() {
 	//filepathから設定ファイルを読み込む
-	tree.setTchoice({ 10,40,90,120 });
+	tree.setTchoice({ 60 });
 	tree.setTchoice_q(90);
 	tree.setTdepth(90);
 	tree.setTeval(20);
