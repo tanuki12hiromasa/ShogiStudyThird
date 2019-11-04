@@ -24,7 +24,6 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "setoption") {
 			commander.setOption(tokens);
-			commander.paramInit();
 		}
 		else if (tokens[0] == "isready") {
 			commander.gameInit();
@@ -78,6 +77,7 @@ Commander::Commander():
 	go_alive = false;
 	info_enable = false;
 	info_alive = false;
+	paramInit();
 }
 
 Commander::~Commander() {
@@ -97,6 +97,7 @@ Commander::~Commander() {
 
 void Commander::coutOption() {
 	std::cout << "option name leave_branchNode type check default false" << std::endl;
+	std::cout << "option name setting_filepath type string default ./setting.txt" << std::endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {
@@ -120,6 +121,11 @@ void Commander::setOption(std::vector<std::string>& token) {
 				tree.leave_branchNode = true;
 				std::cout << "leaveNode : true" << std::endl;
 			}
+		}
+		else if (token[2] == "setting_filepath") {
+			filepath = token[4];
+			std::cout << "filepath : " << filepath << std::endl;
+			paramInit();
 		}
 	}
 }
