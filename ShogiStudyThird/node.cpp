@@ -48,7 +48,7 @@ void SearchNode::setMateVariation(const double childmin) {
 	else {
 		eval = -childmin - mateOneScore;
 		const double moves = (mateScore + childmin) / mateOneScore;
-		mass = mateMass = moves;
+		mass = mateMass + moves;
 	}
 }
 
