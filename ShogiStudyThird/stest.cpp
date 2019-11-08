@@ -44,6 +44,25 @@ bool ShogiTest::checkStringsUnion(strv u, strv a, strv b) { // u=a∪b ∧ a∩b
 	else return false;
 }
 
+void ShogiTest::coutStringsDiff(const strv& cor,const strv& s) {
+	strv cc = cor;
+	strv sc = s;
+	for (auto& str : cor) {
+		auto result = std::find(sc.begin(), sc.end(), str);
+		if(result!=sc.end())sc.erase(result);
+	}
+	std::cout<<"yobun : ";
+	for (const auto& s : sc)std::cout << s << ' ';
+	std::cout << std::endl;
+	for (auto& str : s) {
+		auto result = std::find(cc.begin(), cc.end(), str);
+		if (result != cc.end())cc.erase(result);
+	}
+	std::cout << "fusoku : ";
+	for (const auto& s : cc)std::cout << s << ' ';
+	std::cout << std::endl;
+}
+
 bool ShogiTest::genMoveCheck(std::string parent_sfen, std::string child_moves) {
 	strv ans = usi::split(child_moves, ' ');
 	Kyokumen k(usi::split(parent_sfen, ' '));
@@ -51,8 +70,7 @@ bool ShogiTest::genMoveCheck(std::string parent_sfen, std::string child_moves) {
 	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
 	if (checkStrings(ans, msv)) return true;
 	else {
-		for (const auto& s : msv)std::cout << s << ' ';
-		std::cout << std::endl;
+		coutStringsDiff(ans, msv);
 		assert(0);
 		return false;
 	} 
@@ -65,8 +83,7 @@ bool ShogiTest::genMoveCheck(std::string parent_sfen, Move pmove, std::string ch
 	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
 	if (checkStrings(ans, msv)) return true;
 	else {
-		for (const auto& s : msv)std::cout << s << ' ';
-		std::cout << std::endl;
+		coutStringsDiff(ans, msv);
 		assert(0);
 		return false;
 	}
@@ -121,6 +138,11 @@ void ShogiTest::test() {
 	}
 #endif;
 	{
+		string str13 = "position sfen 1n1g1kgnl/l1s4p1/p1p1BppRp/9/9/2P6/P2PPPP1P/1P3K3/1NG2GSNL b RS3Pbslp 1";
+		string moves13 = "P*2d P*2e P*2f P*2g P*2h S*1b S*1d S*1e S*1f S*1h S*2d S*2e S*2f S*2g S*2h S*3b S*3d S*3e S*3f S*3h S*4b S*4d S*4e S*4f S*5a S*5b S*5d S*5e S*5f S*5h S*5i S*6b S*6c S*6d S*6e S*6f S*6h S*6i S*7a S*7d S*7e S*7g S*7h S*8b S*8c S*8d S*8e S*8f S*8g S*9a S*9d S*9e S*9f S*9h S*9i R*1b R*1d R*1e R*1f R*1h R*2d R*2e R*2f R*2g R*2h R*3b R*3d R*3e R*3f R*3h R*4b R*4d R*4e R*4f R*5a R*5b R*5d R*5e R*5f R*5h R*5i R*6b R*6c R*6d R*6e R*6f R*6h R*6i R*7a R*7d R*7e R*7g R*7h R*8b R*8c R*8d R*8e R*8f R*8g R*9a R*9d R*9e R*9f R*9h R*9i 1g1f 3g3f 4g4f 5g5f 6g6f 7f7e 8h8g 9g9f 8i7g 3i2h 3i3h 4i3h 4i5h 4i5i 7i6h 7i6i 7i7h 4h3h 4h5h 4h5i 1i1h 5c2f 5c2f+ 5c3a 5c3a+ 5c3e 5c3e+ 5c4b 5c4b+ 5c4d 5c4d+ 5c6b 5c6b+ 5c6d 5c6d+ 5c7a 5c7a+ 5c7e 5c7e+ 5c8f 5c8f+ 2c1c 2c1c+ 2c2b 2c2b+ 2c2d 2c2d+ 2c2e 2c2e+ 2c2f 2c2f+ 2c2g 2c2g+ 2c2h 2c2h+ 2c3c 2c3c+";
+		ShogiTest::genMoveCheck(str13, moves13);
+		ShogiTest::genMoveCheck(str13, Move(88, 10, false), moves13);
+		ShogiTest::genCapMoveCheck(str13);
 		string str12 = "position sfen lns5k/8+P/ppp1p1nG1/6P2/3p2bp1/2P6/PPKP5/1gSlP4/LNb1+r3+l w RG2SNPg4p 1";
 		string moves12 = "";
 		ShogiTest::genMoveCheck(str12, moves12);
