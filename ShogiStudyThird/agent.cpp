@@ -102,7 +102,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			break;
 		case SearchNode::State::QE:
 		case SearchNode::State::QT:
-			if (node->isExpandedAll()) {
+			if (!node->isExpandedAll()) {
 				gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
 			}
 			break;
