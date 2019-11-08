@@ -260,6 +260,7 @@ void genGoteEvationMove(EvaluatedNodes& en, const Kyokumen& kyokumen, std::vecto
 
 std::vector<SearchNode*> MoveGenerator::genMove(SearchNode* parent, const Kyokumen& kyokumen) {
 	EvaluatedNodes en(parent);
+	parent->setExpandedAll();
 	if (kyokumen.teban()) {
 		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
 		if (kusemono.size() > 0) {
@@ -291,6 +292,7 @@ std::vector<SearchNode*> MoveGenerator::genCapMove(SearchNode* parent, const Kyo
 		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
 		if (kusemono.size() > 0) {
 			parent->move.setOute(true);
+			parent->setExpandedAll();
 			genSenteEvationMove(en, kyokumen, kusemono);
 		}
 		else {
@@ -301,6 +303,7 @@ std::vector<SearchNode*> MoveGenerator::genCapMove(SearchNode* parent, const Kyo
 		auto kusemono = kyokumen.getGoteOuCheck(parent->move);
 		if (kusemono.size() > 0) {
 			parent->move.setOute(true);
+			parent->setExpandedAll();
 			genGoteEvationMove(en, kyokumen, kusemono);
 		}
 		else {
@@ -312,6 +315,7 @@ std::vector<SearchNode*> MoveGenerator::genCapMove(SearchNode* parent, const Kyo
 
 std::vector<SearchNode*> MoveGenerator::genNocapMove(SearchNode* parent, const Kyokumen& kyokumen) {
 	EvaluatedNodes en(parent);
+	parent->setExpandedAll();
 	if (kyokumen.teban()) {
 		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
 		if (kusemono.size() == 0){

@@ -101,10 +101,10 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			node->state = SearchNode::State::QE;
 			break;
 		case SearchNode::State::QE:
-			gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
-			break;
 		case SearchNode::State::QT:
-			gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
+			if (node->isExpandedAll()) {
+				gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
+			}
 			break;
 		}
 		if (node->children.empty()) {
@@ -218,6 +218,35 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 						emvec.push_back(std::make_pair(eval, mass));
 						if (eval < emin) {
 							emin = eval;
+						}
+					}
+					if (emin <= -MateScoreBound) {
+						if (qnode->isExpandedAll()) {
+							qnode->setMateVariation(emin);
+							continue;
+						}
+						else {
+							SearchPlayer qp2(player);
+							for (size_t j = 1; j <= i; j++) {
+								qp2.proceed(qhistory[j]->move);
+							}
+							std::vector<SearchNode*> gennodes;
+							gennodes = MoveGenerator::genNocapMove(qnode, qp2.kyokumen);
+							if (gennodes.empty()) {
+								qnode->setMateVariation(emin);
+								continue;
+							}
+							else {
+								Evaluator::evaluate(gennodes, qp2);
+								for (const auto n : gennodes) {
+									const double eval = n->eval;
+									const double mass = n->mass;
+									emvec.push_back(std::make_pair(eval, mass));
+									if (eval < emin) {
+										emin = eval;
+									}
+								}
+							}
 						}
 					}
 					double Z_e = 0;
