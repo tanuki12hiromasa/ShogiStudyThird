@@ -220,7 +220,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 							emin = eval;
 						}
 					}
-					if (emin <= -MateScoreBound) {
+					if (emin >= MateScoreBound) {
 						if (qnode->isExpandedAll()) {
 							qnode->setMateVariation(emin);
 							continue;
