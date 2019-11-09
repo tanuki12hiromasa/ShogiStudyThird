@@ -222,7 +222,7 @@ bool Kyokumen::isDeclarable()const {
 	//王手チェックはしないのでこの関数を呼ぶ前に確認しておくこと(パフォーマンス向上のため)
 	if (teban()) {
 		//宣言側の玉が敵陣三段目以内
-		if (sOuPos() % 9 > 3) {
+		if (sOuPos() % 9 >= 3) {
 			return false;
 		}
 		Bitboard tekijinSenteBB = senteKomaBB & bbmask::Dan1to3;
@@ -254,13 +254,20 @@ bool Kyokumen::isDeclarable()const {
 				break;
 			}
 		}
+		komapoint += getMochigomaNum(Position::m_sFu) * 1;
+		komapoint += getMochigomaNum(Position::m_sKyou) * 1;
+		komapoint += getMochigomaNum(Position::m_sKei) * 1;
+		komapoint += getMochigomaNum(Position::m_sGin) * 1;
+		komapoint += getMochigomaNum(Position::m_sKin) * 1;
+		komapoint += getMochigomaNum(Position::m_sKaku) * 5;
+		komapoint += getMochigomaNum(Position::m_sHi) * 5;
 		if (komapoint >= 28)
 			return true;
 		else return false;
 	}
 	else {
 		//宣言側の玉が敵陣三段目以内
-		if (gOuPos() % 9 > 3) {
+		if (gOuPos() % 9 < 6) {
 			return false;
 		}
 		Bitboard tekijinGoteBB = goteKomaBB & bbmask::Dan7to9;
@@ -292,6 +299,13 @@ bool Kyokumen::isDeclarable()const {
 				break;
 			}
 		}
+		komapoint += getMochigomaNum(Position::m_gFu) * 1;
+		komapoint += getMochigomaNum(Position::m_gKyou) * 1;
+		komapoint += getMochigomaNum(Position::m_gKei) * 1;
+		komapoint += getMochigomaNum(Position::m_gGin) * 1;
+		komapoint += getMochigomaNum(Position::m_gKin) * 1;
+		komapoint += getMochigomaNum(Position::m_gKaku) * 5;
+		komapoint += getMochigomaNum(Position::m_gHi) * 5;
 		if (komapoint >= 27)
 			return true;
 		else return false;
