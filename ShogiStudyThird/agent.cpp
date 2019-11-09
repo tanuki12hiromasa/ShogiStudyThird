@@ -166,6 +166,10 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				}
 				//展開
 				{
+					if (qplayer.kyokumen.isDeclarable()) {
+						qnode->setDeclare();
+						goto qbackup;
+					}
 					std::vector<SearchNode*> gennodes;
 					gennodes = MoveGenerator::genCapMove(qnode, qplayer.kyokumen);
 					newnodecount += gennodes.size();
@@ -248,6 +252,10 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 								}
 							}
 						}
+					}
+					else if (emin <= -MateScoreBound) {
+						qnode->setMateVariation(emin);
+						continue;
 					}
 					double Z_e = 0;
 					double Z_d = 0;
