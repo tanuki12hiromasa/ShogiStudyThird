@@ -440,7 +440,7 @@ bool Kyokumen::isSenteMate(const std::vector<Bitboard>& kusemono)const {
 		return false;
 	}
 	{
-		//
+		//玉で避けれるか
 		const unsigned oupos = gOuPos();
 		Bitboard enemykikibb;
 		Bitboard senteBB = getSenteBB();
@@ -455,21 +455,69 @@ bool Kyokumen::isSenteMate(const std::vector<Bitboard>& kusemono)const {
 		}
 	}
 	if (kusemono.size() == 1) {
-		//
-		if(kusemono[1].popcount() > 1){
+		//打ち合い可能か
+		if(kusemono[0].popcount() > 1){
 			for (size_t m = Position::SQm_sMin; m <= Position::SQm_sMax; m++) {
 				if (m > 0) {
 					return false;
 				}
 			}
 		}
-		//
+		//移動合い可能か
+		{
+			Bitboard goteBB = getGoteBB();
+			for (unsigned pos = goteBB.pop_first(); pos < goteBB.size(); pos = goteBB.pop_first()) {
+				Koma k = getKoma(pos);
+				if ((BBkiki::getKiki(allKomaBB, k, pos) & kusemono[0]).any()) {
+					return false;
+				}
+			}
+		}
 	}
 	return true;
 }
 
 bool Kyokumen::isGoteMate(const std::vector<Bitboard>& kusemono)const {
-
+	using namespace koma;
+	if (kusemono.empty) {
+		return false;
+	}
+	{
+		//玉で避けれるか
+		const unsigned oupos = sOuPos();
+		Bitboard enemykikibb;
+		Bitboard goteBB = getGoteBB();
+		Bitboard allBB = getAllBB();
+		allBB.reset(oupos);
+		for (unsigned pos = goteBB.pop_first(); pos < goteBB.size(); pos = goteBB.pop_first()) {
+			Koma k = getKoma(pos);
+			enemykikibb |= BBkiki::getKiki(allBB, k, pos);
+		}
+		if ((BBkiki::getStepKiki(Koma::s_Ou, oupos) & ~enemykikibb).any()) {
+			return false;
+		}
+	}
+	if (kusemono.size() == 1) {
+		//打ち合い可能か
+		if (kusemono[0].popcount() > 1) {
+			for (size_t m = Position::SQm_gMin; m <= Position::SQm_gMax; m++) {
+				if (m > 0) {
+					return false;
+				}
+			}
+		}
+		//移動合い可能か
+		{
+			Bitboard senteBB = getSenteBB();
+			for (unsigned pos = senteBB.pop_first(); pos < senteBB.size(); pos = senteBB.pop_first()) {
+				Koma k = getKoma(pos);
+				if ((BBkiki::getKiki(allKomaBB, k, pos) & kusemono[0]).any()) {
+					return false;
+				}
+			}
+		}
+	}
+	return true;
 }
 
 Bitboard Kyokumen::pinMaskSente(const unsigned pos)const {
