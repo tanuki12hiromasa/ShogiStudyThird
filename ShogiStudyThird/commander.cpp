@@ -32,6 +32,12 @@ void Commander::execute() {
 		else if (tokens[0] == "usinewgame") {
 			commander.go_alive = false;
 		}
+		else if (tokens[0] == "debugsetup") {
+			auto setLeaveNodeCommand = usi::split("setoption name leave_branchNode value true", ' ');
+			commander.setOption(setLeaveNodeCommand);
+			commander.gameInit();
+			std::cout << "readyok" << std::endl;
+		}
 		else if (tokens[0] == "position") {
 			commander.go_alive = false;
 			commander.tree.prohibitSearch();

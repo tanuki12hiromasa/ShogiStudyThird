@@ -101,10 +101,10 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			node->state = SearchNode::State::QE;
 			break;
 		case SearchNode::State::QE:
-			gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
-			break;
 		case SearchNode::State::QT:
-			gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
+			if (!node->isExpandedAll()) {
+				gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
+			}
 			break;
 		}
 		if (node->children.empty()) {
@@ -125,7 +125,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		{
 			const double qsmassmax = tree.getMQS();
 			const double T_cq = tree.getTcQ();
-			const unsigned failmax = 10u;
+			const unsigned failmax = 30u;
 			unsigned failnum = 0;
 			while (failnum < failmax && !node->isQSTerminal() && node->mass < qsmassmax) {
 				SearchNode* qnode = node;
@@ -166,13 +166,23 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				}
 				//展開
 				{
+					if (qplayer.kyokumen.isDeclarable()) {
+						qnode->setDeclare();
+						goto qbackup;
+					}
 					std::vector<SearchNode*> gennodes;
 					gennodes = MoveGenerator::genCapMove(qnode, qplayer.kyokumen);
 					newnodecount += gennodes.size();
 					if (gennodes.empty()) {
-						qnode->state = SearchNode::State::QT;
-						failnum++;
-						goto qslooptail;
+						if (qnode->move.isOute()) {
+							qnode->setMate();
+							goto qbackup;
+						}
+						else {
+							qnode->state = SearchNode::State::QT;
+							failnum++;
+							goto qslooptail;
+						}
 					}
 					qnode->state = SearchNode::State::QE;
 					//評価,展開ノードの評価値バックアップ
@@ -200,6 +210,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					}
 				}
 				//バックアップ
+				qbackup:
 				for (int i = qhistory.size() - 2; i >= 0; i--) {
 					qnode = qhistory[i];
 					//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
@@ -212,6 +223,39 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 						if (eval < emin) {
 							emin = eval;
 						}
+					}
+					if (emin >= MateScoreBound) {
+						if (qnode->isExpandedAll()) {
+							qnode->setMateVariation(emin);
+							continue;
+						}
+						else {
+							SearchPlayer qp2(player);
+							for (size_t j = 1; j <= i; j++) {
+								qp2.proceed(qhistory[j]->move);
+							}
+							std::vector<SearchNode*> gennodes;
+							gennodes = MoveGenerator::genNocapMove(qnode, qp2.kyokumen);
+							if (gennodes.empty()) {
+								qnode->setMateVariation(emin);
+								continue;
+							}
+							else {
+								Evaluator::evaluate(gennodes, qp2);
+								for (const auto n : gennodes) {
+									const double eval = n->eval;
+									const double mass = n->mass;
+									emvec.push_back(std::make_pair(eval, mass));
+									if (eval < emin) {
+										emin = eval;
+									}
+								}
+							}
+						}
+					}
+					else if (emin <= -MateScoreBound) {
+						qnode->setMateVariation(emin);
+						continue;
 					}
 					double Z_e = 0;
 					double Z_d = 0;
@@ -242,10 +286,11 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	for (int i = history.size() - 2; i >= 0; i--) {
 			node = history[i];
 			double emin = std::numeric_limits<double>::max();
-			std::vector<double> evals;
+			std::vector<dd> emvec;
 			for (const auto& child : node->children) {
 				const double eval = child->eval;
-				evals.push_back(eval);
+				const double mass = child->mass;
+				emvec.push_back(std::make_pair(eval, mass));
 				if (eval < emin) {
 					emin = eval;
 				}
@@ -256,18 +301,18 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			else {
 				double Z_e = 0;
 				double Z_d = 0;
-				for (const auto& eval : evals) {
+				for (const auto& em : emvec) {
+					const double eval = em.first;
 					Z_e += std::exp(-(eval - emin) / T_e);
 					Z_d += std::exp(-(eval - emin) / T_d);
 				}
 				double E = 0;
 				double M = 1;
-				auto cit = node->children.begin();
-				for (const auto& eval : evals) {
-					double mass = (*cit)->mass;
+				for (const auto& em : emvec) {
+					const double eval = em.first;
+					const double mass = em.second;
 					E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
 					M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
-					cit++;
 				}
 				node->setEvaluation(E);
 				node->setMass(M);

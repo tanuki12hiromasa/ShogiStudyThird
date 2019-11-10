@@ -11,7 +11,7 @@ double SearchNode::mateOneScore = 20.0;
 double SearchNode::repetitionScore = -100;
 
 SearchNode::SearchNode(const Move& move)
-	:move(move)
+	:move(move), expanded(false)
 {
 	state = State::N;
 	eval = 0;
@@ -48,7 +48,7 @@ void SearchNode::setMateVariation(const double childmin) {
 	else {
 		eval = -childmin - mateOneScore;
 		const double moves = (mateScore + childmin) / mateOneScore;
-		mass = mateMass = moves;
+		mass = mateMass + moves;
 	}
 }
 

@@ -43,6 +43,7 @@ public:
 	void setDeclare();
 	void setRepetition(const double m);
 	void setRepetitiveCheck(const double m);
+	void setExpandedAll() { expanded = true; }
 
 	double getEvaluation()const { return eval.load(); }
 	bool isNotExpanded()const { return state == State::N; }
@@ -50,10 +51,13 @@ public:
 	bool isQSTerminal()const { return state != State::N && state != State::QE; }
 	bool isLeaf()const { return state == State::N || state == State::QE || state == State::QT; }
 	bool isSearchable()const { return state != State::T; }
+	bool isExpandedAll() { return expanded; }
 
 	std::vector<SearchNode*> children;
 	Move move;
 	std::atomic<State> state;
 	std::atomic<double> eval;
 	std::atomic<double> mass;
+private:
+	bool expanded;
 };

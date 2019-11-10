@@ -34,6 +34,25 @@ inline void genGoteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, ko
 	}
 }
 
+inline void genSenteBanMove_fromprom(EvaluatedNodes& en, const Kyokumen& kyokumen, koma::Koma piece, Bitboard mask) {
+	const Bitboard& allBB = kyokumen.getAllBB();
+	Bitboard komabb = kyokumen.getEachBB(piece) & bbmask::Dan1to3;
+	mask &= bbmask::Dan4to9;
+	for (unsigned from = komabb.pop_first(); from < komabb.size(); from = komabb.pop_first()) {
+		Bitboard kikibb = BBkiki::getKiki(allBB, piece, from) & kyokumen.pinMaskSente(from) & mask;
+		addByBitboard(en, from, kikibb, true);
+	}
+}
+inline void genGoteBanMove_fromprom(EvaluatedNodes& en, const Kyokumen& kyokumen, koma::Koma piece, Bitboard mask) {
+	const Bitboard& allBB = kyokumen.getAllBB();
+	Bitboard komabb = kyokumen.getEachBB(piece) & bbmask::Dan7to9;
+	mask &= bbmask::Dan1to6;
+	for (unsigned from = komabb.pop_first(); from < komabb.size(); from = komabb.pop_first()) {
+		Bitboard kikibb = BBkiki::getKiki(allBB, piece, from) & kyokumen.pinMaskGote(from) & mask;
+		addByBitboard(en, from, kikibb, true);
+	}
+}
+
 inline void genSenteOuMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& mask) {
 	using namespace koma;
 	const unsigned oupos = kyokumen.sOuPos();
@@ -72,6 +91,7 @@ void genSenteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboar
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Kei, true, toMaskBB & bbmask::Dan1to3);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, false, toMaskBB);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, true, toMaskBB & bbmask::Dan1to3);
+	genSenteBanMove_fromprom(en, kyokumen, Koma::s_Gin, toMaskBB);
 
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Kin, false, toMaskBB);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_nFu, false, toMaskBB);
@@ -83,8 +103,10 @@ void genSenteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboar
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Kyou, true, toMaskBB & bbmask::Dan1to3);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, false, toMaskBB);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, true, toMaskBB & bbmask::Dan1to3);
+	genSenteBanMove_fromprom(en, kyokumen, Koma::s_Kaku, toMaskBB);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Hi, false, toMaskBB);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Hi, true, toMaskBB & bbmask::Dan1to3);
+	genSenteBanMove_fromprom(en, kyokumen, Koma::s_Hi, toMaskBB);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_nKaku, false, toMaskBB);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_nHi, false, toMaskBB);
 
@@ -99,6 +121,7 @@ void genGoteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Kei, true, toMaskBB & bbmask::Dan7to9);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Gin, false, toMaskBB);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Gin, true, toMaskBB & bbmask::Dan7to9);
+	genGoteBanMove_fromprom(en, kyokumen, Koma::g_Gin, toMaskBB);
 
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Kin, false, toMaskBB);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_nFu, false, toMaskBB);
@@ -110,8 +133,10 @@ void genGoteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Kyou, true, toMaskBB & bbmask::Dan7to9);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, false, toMaskBB);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, true, toMaskBB & bbmask::Dan7to9);
+	genGoteBanMove_fromprom(en, kyokumen, Koma::g_Kaku, toMaskBB);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Hi, false, toMaskBB);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Hi, true, toMaskBB & bbmask::Dan7to9);
+	genGoteBanMove_fromprom(en, kyokumen, Koma::g_Hi, toMaskBB);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_nKaku, false, toMaskBB);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_nHi, false, toMaskBB);
 
@@ -170,6 +195,7 @@ void genSenteEvationMove(EvaluatedNodes& en, const Kyokumen& kyokumen, std::vect
 		genSenteBanMove_koma(en, kyokumen, Koma::s_Kei, true, target & bbmask::Dan1to3);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, false, target);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, true, target & bbmask::Dan1to3);
+		genSenteBanMove_fromprom(en, kyokumen, Koma::s_Gin, target);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_Kin, false, target);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_nFu, false, target);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_nKyou, false, target);
@@ -180,8 +206,10 @@ void genSenteEvationMove(EvaluatedNodes& en, const Kyokumen& kyokumen, std::vect
 		genSenteBanMove_koma(en, kyokumen, Koma::s_Kyou, true, target & bbmask::Dan1to3);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, false, target);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, true, target & bbmask::Dan1to3);
+		genSenteBanMove_fromprom(en, kyokumen, Koma::s_Kaku, target);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_Hi, false, target);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_Hi, true, target & bbmask::Dan1to3);
+		genSenteBanMove_fromprom(en, kyokumen, Koma::s_Hi, target);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_nKaku, false, target);
 		genSenteBanMove_koma(en, kyokumen, Koma::s_nHi, false, target);
 
@@ -220,6 +248,7 @@ void genGoteEvationMove(EvaluatedNodes& en, const Kyokumen& kyokumen, std::vecto
 		genGoteBanMove_koma(en, kyokumen, Koma::g_Kei, true, target & bbmask::Dan7to9);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_Gin, false, target);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_Gin, true, target & bbmask::Dan7to9);
+		genGoteBanMove_fromprom(en, kyokumen, Koma::g_Gin, target);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_Kin, false, target);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_nFu, false, target);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_nKyou, false, target);
@@ -230,8 +259,10 @@ void genGoteEvationMove(EvaluatedNodes& en, const Kyokumen& kyokumen, std::vecto
 		genGoteBanMove_koma(en, kyokumen, Koma::g_Kyou, true, target & bbmask::Dan7to9);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, false, target);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, true, target & bbmask::Dan7to9);
+		genGoteBanMove_fromprom(en, kyokumen, Koma::g_Kaku, target);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_Hi, false, target);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_Hi, true, target & bbmask::Dan7to9);
+		genGoteBanMove_fromprom(en, kyokumen, Koma::g_Hi, target);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_nKaku, false, target);
 		genGoteBanMove_koma(en, kyokumen, Koma::g_nHi, false, target);
 
@@ -260,6 +291,7 @@ void genGoteEvationMove(EvaluatedNodes& en, const Kyokumen& kyokumen, std::vecto
 
 std::vector<SearchNode*> MoveGenerator::genMove(SearchNode* parent, const Kyokumen& kyokumen) {
 	EvaluatedNodes en(parent);
+	parent->setExpandedAll();
 	if (kyokumen.teban()) {
 		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
 		if (kusemono.size() > 0) {
@@ -291,6 +323,7 @@ std::vector<SearchNode*> MoveGenerator::genCapMove(SearchNode* parent, const Kyo
 		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
 		if (kusemono.size() > 0) {
 			parent->move.setOute(true);
+			parent->setExpandedAll();
 			genSenteEvationMove(en, kyokumen, kusemono);
 		}
 		else {
@@ -301,6 +334,7 @@ std::vector<SearchNode*> MoveGenerator::genCapMove(SearchNode* parent, const Kyo
 		auto kusemono = kyokumen.getGoteOuCheck(parent->move);
 		if (kusemono.size() > 0) {
 			parent->move.setOute(true);
+			parent->setExpandedAll();
 			genGoteEvationMove(en, kyokumen, kusemono);
 		}
 		else {
@@ -312,6 +346,7 @@ std::vector<SearchNode*> MoveGenerator::genCapMove(SearchNode* parent, const Kyo
 
 std::vector<SearchNode*> MoveGenerator::genNocapMove(SearchNode* parent, const Kyokumen& kyokumen) {
 	EvaluatedNodes en(parent);
+	parent->setExpandedAll();
 	if (kyokumen.teban()) {
 		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
 		if (kusemono.size() == 0){
