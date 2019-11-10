@@ -34,6 +34,8 @@ public:
 	std::vector<Bitboard> getGoteOuCheck(const Move)const;
 	std::vector<Bitboard> getSenteOuCheck()const;//盤全体をチェック
 	std::vector<Bitboard> getGoteOuCheck()const;
+	bool isSenteMate(const std::vector<Bitboard>& kusemono)const;
+	bool isGoteMate(const std::vector<Bitboard>& kusemono)const;
 
 	Bitboard pinMaskSente(const unsigned pos)const;//pos上の駒が敵駒にpinされていれば移動可能な直線範囲を返す pinされてなければAllOneが返る
 	Bitboard pinMaskGote(const unsigned pos)const;
