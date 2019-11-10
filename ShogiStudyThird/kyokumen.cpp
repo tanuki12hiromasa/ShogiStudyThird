@@ -434,6 +434,44 @@ std::vector<Bitboard> Kyokumen::getGoteOuCheck()const {
 	return kusemono;
 }
 
+bool Kyokumen::isSenteMate(const std::vector<Bitboard>& kusemono)const {
+	using namespace koma;
+	if (kusemono.empty) {
+		return false;
+	}
+	{
+		//
+		const unsigned oupos = gOuPos();
+		Bitboard enemykikibb;
+		Bitboard senteBB = getSenteBB();
+		Bitboard allBB = getAllBB();
+		allBB.reset(oupos);
+		for (unsigned pos = senteBB.pop_first(); pos < senteBB.size(); pos = senteBB.pop_first()) {
+			Koma k = getKoma(pos);
+			enemykikibb |= BBkiki::getKiki(allBB, k, pos);
+		}
+		if ((BBkiki::getStepKiki(Koma::g_Ou, oupos) & ~enemykikibb).any()) {
+			return false;
+		}
+	}
+	if (kusemono.size() == 1) {
+		//
+		if(kusemono[1].popcount() > 1){
+			for (size_t m = Position::SQm_sMin; m <= Position::SQm_sMax; m++) {
+				if (m > 0) {
+					return false;
+				}
+			}
+		}
+		//
+	}
+	return true;
+}
+
+bool Kyokumen::isGoteMate(const std::vector<Bitboard>& kusemono)const {
+
+}
+
 Bitboard Kyokumen::pinMaskSente(const unsigned pos)const {
 	const unsigned ouPos = sOuPos();
 	Bitboard dpBB(allKomaBB);

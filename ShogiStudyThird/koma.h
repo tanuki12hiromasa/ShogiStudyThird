@@ -99,6 +99,8 @@ namespace koma {
 		SQMin = SQ11, SQMax = SQ99,
 		SQNum = SQMax + 1,
 		SQm_Min = m_sFu, SQm_Max = m_gKin,
+		SQm_sMin = m_sFu, SQm_sMax = m_sKin,
+		SQm_gMin = m_gFu, SQm_gMax = m_gKin,
 		SQm_Num = SQm_Max + 1,
 		NullMove
 	};
