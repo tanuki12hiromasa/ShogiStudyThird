@@ -11,5 +11,6 @@ public:
 	static bool genMoveCheck(std::string parent_sfen, std::string child_moves);
 	static bool genMoveCheck(std::string parent_sfen, Move pmove, std::string child_moves);
 	static bool genCapMoveCheck(std::string parent_sfen);
+	static bool checkMateCheck(std::string sfen, bool isMate);
 	static void test();
 };

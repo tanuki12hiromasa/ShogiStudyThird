@@ -164,6 +164,7 @@
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="mate_checker.cpp" />
     <ClCompile Include="move.cpp" />
     <ClCompile Include="move_gen.cpp" />
     <ClCompile Include="node.cpp" />
@@ -190,6 +191,7 @@
     <ClInclude Include="koma_motion.h" />
     <ClInclude Include="kyokumen.h" />
     <ClInclude Include="logger.h" />
+    <ClInclude Include="mate_checker.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_gen.h" />
     <ClInclude Include="node.h" />

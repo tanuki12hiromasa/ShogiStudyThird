@@ -436,7 +436,7 @@ std::vector<Bitboard> Kyokumen::getGoteOuCheck()const {
 
 bool Kyokumen::isSenteMate(const std::vector<Bitboard>& kusemono)const {
 	using namespace koma;
-	if (kusemono.empty) {
+	if (kusemono.empty()) {
 		return false;
 	}
 	{
@@ -479,7 +479,7 @@ bool Kyokumen::isSenteMate(const std::vector<Bitboard>& kusemono)const {
 
 bool Kyokumen::isGoteMate(const std::vector<Bitboard>& kusemono)const {
 	using namespace koma;
-	if (kusemono.empty) {
+	if (kusemono.empty()) {
 		return false;
 	}
 	{
