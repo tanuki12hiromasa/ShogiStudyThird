@@ -108,13 +108,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			break;
 		}
 		if (node->children.empty()) {
-			auto from = node->move.from();
-			if (from == koma::Position::m_sFu || from == koma::Position::m_gFu) {
-				node->setUchiFuMate();
-			}
-			else {
-				node->setMate();
-			}
+			node->setMate();
 			goto backup;
 		}
 		newnodecount += gennodes.size();
@@ -321,4 +315,21 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	}
 
 	return newnodecount;
+}
+
+size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& player) {
+	unsigned failnum = 0u;
+	const unsigned failmax = 5u;
+	const double Mmax = tree.getMQS();
+	while (root->isQSTerminal() && root->mass < Mmax && failnum < failmax) {
+
+	}
+	if (root->children.empty()) {
+		if (root->isExpandedAll()) {
+			root->setMate();
+		}
+		else {
+			Evaluator::evaluate(root, player);
+		}
+	}
 }

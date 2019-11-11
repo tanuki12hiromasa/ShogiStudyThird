@@ -15,6 +15,7 @@ public:
 	void terminate() { alive = false; }
 private:
 	size_t simulate(SearchNode* const root);
+	size_t qsimulate(SearchNode* const root, const SearchPlayer& player);
 
 	SearchTree& tree;
 	unsigned ID;
