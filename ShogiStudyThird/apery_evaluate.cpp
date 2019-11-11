@@ -40,4 +40,8 @@ namespace apery {
 			node->setEvaluation((double)cfeat.sum.sum(!player.kyokumen.teban()) / FVScale);
 		}
 	}
+
+	void apery_evaluator::evaluate(SearchNode* node, const SearchPlayer& player) {
+		node->setEvaluation((double)player.feature.sum.sum(!player.kyokumen.teban()) / FVScale);
+	}
 }
