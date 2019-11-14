@@ -124,6 +124,8 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
+		
+		
 		node->state = SearchNode::State::E;
 	}//展開評価ここまで
 
@@ -229,7 +231,7 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 			gennodes = MoveGenerator::genCapMove(node, player.kyokumen);
 			newnodecount += gennodes.size();
 			if (gennodes.empty()) {
-				if (node->move.isOute()) {
+				if (node->isExpandedAll()) {
 					node->setMate();
 					goto backup;
 				}
@@ -328,10 +330,7 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 	looptail:;
 	}
 	if (root->children.empty()) {
-		if (root->isExpandedAll()) {
-			root->setMate();
-		}
-		else {
+		if (!root->isExpandedAll()){
 			Evaluator::evaluate(root, p);
 		}
 	}
