@@ -116,9 +116,12 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		for (auto child : node->children) {
 			SearchPlayer p = player;
 			p.proceed(child->move);
+#if 0 //静止探索ノードを残す場合
 			newnodecount += qsimulate(child, p);
 			child->setMass(0);//静止探索の探索指標は別物なので0に戻す
-#if 0
+#else //静止探索ノードを残さない場合
+			qsimulate(child, p);
+			child->setMass(0);//
 			child->deleteTree();
 #endif
 		}
@@ -203,6 +206,7 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 			}
 			if (evals.empty()) {
 				node->state = SearchNode::State::QT;
+				failnum++;
 				goto looptail;
 			}
 			double Z = 0;
@@ -327,6 +331,7 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 			node->setEvaluation(E);
 			node->setMass(M);
 		}
+		newnodecount = 0u;
 	looptail:;
 	}
 	if (root->children.empty()) {
