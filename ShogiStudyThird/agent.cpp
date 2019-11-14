@@ -2,6 +2,8 @@
 #include "agent.h"
 #include <algorithm>
 
+unsigned SearchAgent::maxfailnum = 5u;
+
 SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)
 	:tree(tree), ID(threadid),engine(seed)
 {
@@ -181,13 +183,12 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 	using dd = std::pair<double, double>;
 	size_t newnodecount = 0u;
 	unsigned failnum = 0u;
-	const unsigned failmax = 5u;
 	const double Mmax = tree.getMQS();
 	const double T_c = tree.getTcQ();
 	const double T_d = tree.getTdepth();
 	const double T_e = tree.getTeval();
 	const double MateScoreBound = SearchNode::getMateScoreBound();
-	while (root->isQSTerminal() && root->mass < Mmax && failnum < failmax) {
+	while (root->isQSTerminal() && root->mass < Mmax && failnum < maxfailnum) {
 		SearchNode* node = root;
 		SearchPlayer player = p;
 		std::vector<SearchNode*> history = { node };
