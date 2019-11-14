@@ -80,7 +80,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	}
 	//展開・評価
 	{
-		std::vector<SearchNode*> gennodes;
 		if (player.kyokumen.isDeclarable()) {
 			node->setDeclare();
 			goto backup;
@@ -94,6 +93,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 			goto backup;
 		}
+		std::vector<SearchNode*> gennodes;
 		switch (node->state)
 		{
 		case SearchNode::State::N:
@@ -115,7 +115,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		//Evaluator::evaluate(gennodes, player);下のforループ内で評価するので不要になった
 		for (auto child : node->children) {
 			SearchPlayer p = player;
-			player.proceed(child->move);
+			p.proceed(child->move);
 			newnodecount += qsimulate(child, p);
 			child->setMass(0);//静止探索の探索指標は別物なので0に戻す
 #if 0
