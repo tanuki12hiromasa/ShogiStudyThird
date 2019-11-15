@@ -2,6 +2,8 @@
 #include "agent.h"
 #include <algorithm>
 
+unsigned SearchAgent::maxfailnum = 5u;
+
 SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)
 	:tree(tree), ID(threadid),engine(seed)
 {
@@ -80,7 +82,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	}
 	//展開・評価
 	{
-		std::vector<SearchNode*> gennodes;
 		if (player.kyokumen.isDeclarable()) {
 			node->setDeclare();
 			goto backup;
@@ -94,6 +95,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 			goto backup;
 		}
+		std::vector<SearchNode*> gennodes;
 		switch (node->state)
 		{
 		case SearchNode::State::N:
@@ -108,174 +110,44 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			break;
 		}
 		if (node->children.empty()) {
-			auto from = node->move.from();
-			if (from == koma::Position::m_sFu || from == koma::Position::m_gFu) {
-				node->setUchiFuMate();
-			}
-			else {
-				node->setMate();
-			}
+			node->setMate();
 			goto backup;
 		}
 		newnodecount += gennodes.size();
-		Evaluator::evaluate(gennodes, player);
+		//Evaluator::evaluate(gennodes, player);下のforループ内で評価するので不要になった
+		for (auto child : node->children) {
+			SearchPlayer p = player;
+			p.proceed(child->move);
+#if 0 //静止探索ノードを残す場合
+			newnodecount += qsimulate(child, p);
+			child->setMass(0);//静止探索の探索指標は別物なので0に戻す
+#else //静止探索ノードを残さない場合
+			qsimulate(child, p);
+			child->setMass(0);//
+			child->deleteTree();
+#endif
+		}
+		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
-	
-		//今展開したノードから静止探索
-		{
-			const double qsmassmax = tree.getMQS();
-			const double T_cq = tree.getTcQ();
-			const unsigned failmax = 30u;
-			unsigned failnum = 0;
-			while (failnum < failmax && !node->isQSTerminal() && node->mass < qsmassmax) {
-				SearchNode* qnode = node;
-				SearchPlayer qplayer = player;
-				std::vector<SearchNode*> qhistory = { qnode };
-				//選択
-				while (!qnode->isNotExpanded()) {
-					double emin = std::numeric_limits<double>::max();
-					std::vector<dn> evals;
-					for (auto child : qnode->children) {
-						if (!child->isQSTerminal()) {
-							const double eval = child->getEvaluation();
-							evals.emplace_back(std::make_pair(eval, child));
-							if (eval < emin) {
-								emin = eval;
-							}
-						}
-					}
-					if (evals.empty()) {
-						qnode->state = SearchNode::State::QT;
-						goto qslooptail;
-					}
-					double Z = 0;
-					for (const auto& dn : evals) {
-						Z += std::exp(-(dn.first - emin) / T_cq);
-					}
-					double pip = Z * random(engine);
-					qnode = evals.front().second;
-					for (const auto& dn : evals) {
-						pip -= std::exp(-(dn.first - emin) / T_cq);
-						if (pip <= 0) {
-							qnode = dn.second;
-							break;
-						}
-					}
-					qplayer.proceed(qnode->move);
-					qhistory.push_back(qnode);
-				}
-				//展開
-				{
-					if (qplayer.kyokumen.isDeclarable()) {
-						qnode->setDeclare();
-						goto qbackup;
-					}
-					std::vector<SearchNode*> gennodes;
-					gennodes = MoveGenerator::genCapMove(qnode, qplayer.kyokumen);
-					newnodecount += gennodes.size();
-					if (gennodes.empty()) {
-						if (qnode->move.isOute()) {
-							qnode->setMate();
-							goto qbackup;
-						}
-						else {
-							qnode->state = SearchNode::State::QT;
-							failnum++;
-							goto qslooptail;
-						}
-					}
-					qnode->state = SearchNode::State::QE;
-					//評価,展開ノードの評価値バックアップ
-					Evaluator::evaluate(gennodes, qplayer);
-					{
-						double emin = std::numeric_limits<double>::max();
-						std::vector<double> evals;
-						for (const auto& child : qnode->children) {
-							const double eval = child->getEvaluation();
-							evals.push_back(eval);
-							if (eval < emin) {
-								emin = eval;
-							}
-						}
-						double Z_e = 0;
-						for (const auto& eval : evals) {
-							Z_e += std::exp(-(eval - emin) / T_e);
-						}
-						double E = 0;
-						for (const auto& eval : evals) {
-							E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
-						}
-						qnode->setEvaluation(E);
-						qnode->setMass(1);
-					}
-				}
-				//バックアップ
-				qbackup:
-				for (int i = qhistory.size() - 2; i >= 0; i--) {
-					qnode = qhistory[i];
-					//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
-					double emin = std::numeric_limits<double>::max();
-					std::vector<dd> emvec;
-					for (const auto child : qnode->children) {
-						const double eval = child->eval;
-						const double mass = child->mass;
-						emvec.push_back(std::make_pair(eval, mass));
-						if (eval < emin) {
-							emin = eval;
-						}
-					}
-					if (emin >= MateScoreBound) {
-						if (qnode->isExpandedAll()) {
-							qnode->setMateVariation(emin);
-							continue;
-						}
-						else {
-							SearchPlayer qp2(player);
-							for (size_t j = 1; j <= i; j++) {
-								qp2.proceed(qhistory[j]->move);
-							}
-							std::vector<SearchNode*> gennodes;
-							gennodes = MoveGenerator::genNocapMove(qnode, qp2.kyokumen);
-							if (gennodes.empty()) {
-								qnode->setMateVariation(emin);
-								continue;
-							}
-							else {
-								Evaluator::evaluate(gennodes, qp2);
-								for (const auto n : gennodes) {
-									const double eval = n->eval;
-									const double mass = n->mass;
-									emvec.push_back(std::make_pair(eval, mass));
-									if (eval < emin) {
-										emin = eval;
-									}
-								}
-							}
-						}
-					}
-					else if (emin <= -MateScoreBound) {
-						qnode->setMateVariation(emin);
-						continue;
-					}
-					double Z_e = 0;
-					double Z_d = 0;
-					for (const auto em : emvec) {
-						Z_e += std::exp(-(em.first - emin) / T_e);
-						Z_d += std::exp(-(em.first - emin) / T_d);
-					}
-					double E = 0;
-					double M = 1;
-					for (const auto& em : emvec) {
-						E -= em.first * std::exp(-(em.first - emin) / T_e) / Z_e;
-						M += em.second * std::exp(-(em.first - emin) / T_d) / Z_d;
-					}
-					qnode->setEvaluation(E);
-					qnode->setMass(M);
-				}
-			qslooptail:;
-			}//静止探索1ループここまで
-
-		}//静止探索ここまで
+		double emin = std::numeric_limits<double>::max();
+		std::vector<double> evals;
+		for (const auto& child : node->children) {
+			const double eval = child->getEvaluation();
+			evals.push_back(eval);
+			if (eval < emin) {
+				emin = eval;
+			}
+		}
+		double Z_e = 0;
+		for (const auto& eval : evals) {
+			Z_e += std::exp(-(eval - emin) / T_e);
+		}
+		double E = 0;
+		for (const auto& eval : evals) {
+			E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
+		}
+		node->setEvaluation(E);
+		node->setMass(1);
 		node->state = SearchNode::State::E;
 	}//展開評価ここまで
 
@@ -320,5 +192,170 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}
 	}
 
+	return newnodecount;
+}
+
+size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
+	using dn = std::pair<double, SearchNode*>;
+	using dd = std::pair<double, double>;
+	size_t newnodecount = 0u;
+	unsigned failnum = 0u;
+	const double Mmax = tree.getMQS();
+	const double T_c = tree.getTcQ();
+	const double T_d = tree.getTdepth();
+	const double T_e = tree.getTeval();
+	const double MateScoreBound = SearchNode::getMateScoreBound();
+	while (root->isQSTerminal() && root->mass < Mmax && failnum < maxfailnum) {
+		SearchNode* node = root;
+		SearchPlayer player = p;
+		std::vector<SearchNode*> history = { node };
+		//選択
+		while (node->isNotExpanded()) {
+			double emin = std::numeric_limits<double>::max();
+			std::vector<dn> evals;
+			for (auto child : node->children) {
+				if (!child->isQSTerminal()) {
+					const double eval = child->getEvaluation();
+					evals.emplace_back(std::make_pair(eval, child));
+					if (eval < emin) {
+						emin = eval;
+					}
+				}
+			}
+			if (evals.empty()) {
+				node->state = SearchNode::State::QT;
+				failnum++;
+				goto looptail;
+			}
+			double Z = 0;
+			for (const auto& dn : evals) {
+				Z += std::exp(-(dn.first - emin) / T_c);
+			}
+			double pip = Z * random(engine);
+			node = evals.front().second;
+			for (const auto& dn : evals) {
+				pip -= std::exp(-(dn.first - emin) / T_c);
+				if (pip <= 0) {
+					node = dn.second;
+					break;
+				}
+			}
+			player.proceed(node->move);
+			history.push_back(node);
+		}
+		//展開
+		{
+			if (player.kyokumen.isDeclarable()) {
+				node->setDeclare();
+				goto backup;
+			}
+			std::vector<SearchNode*> gennodes;
+			gennodes = MoveGenerator::genCapMove(node, player.kyokumen);
+			newnodecount += gennodes.size();
+			if (gennodes.empty()) {
+				if (node->isExpandedAll()) {
+					node->setMate();
+					goto backup;
+				}
+				else {
+					node->state = SearchNode::State::QT;
+					failnum++;
+					goto looptail;
+				}
+			}
+			node->state = SearchNode::State::QE;
+			Evaluator::evaluate(gennodes, player);
+			double emin = std::numeric_limits<double>::max();
+			std::vector<double> evals;
+			for (const auto& child : node->children) {
+				const double eval = child->getEvaluation();
+				evals.push_back(eval);
+				if (eval < emin) {
+					emin = eval;
+				}
+			}
+			double Z_e = 0;
+			for (const auto& eval : evals) {
+				Z_e += std::exp(-(eval - emin) / T_e);
+			}
+			double E = 0;
+			for (const auto& eval : evals) {
+				E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
+			}
+			node->setEvaluation(E);
+			node->setMass(1);
+		}
+		backup:
+		//バックアップ
+		for (int i = history.size() - 2; i >= 0; i--) {
+			node = history[i];
+			//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
+			double emin = std::numeric_limits<double>::max();
+			std::vector<dd> emvec;
+			for (const auto child : node->children) {
+				const double eval = child->eval;
+				const double mass = child->mass;
+				emvec.push_back(std::make_pair(eval, mass));
+				if (eval < emin) {
+					emin = eval;
+				}
+			}
+			if (emin >= MateScoreBound) {
+				if (node->isExpandedAll()) {
+					node->setMateVariation(emin);
+					continue;
+				}
+				else {
+					SearchPlayer qp2(player);
+					for (size_t j = 1; j <= i; j++) {
+						qp2.proceed(history[j]->move);
+					}
+					std::vector<SearchNode*> gennodes;
+					gennodes = MoveGenerator::genNocapMove(node, qp2.kyokumen);
+					newnodecount += gennodes.size();
+					if (gennodes.empty()) {
+						node->setMateVariation(emin);
+						continue;
+					}
+					else {
+						Evaluator::evaluate(gennodes, qp2);
+						for (const auto n : gennodes) {
+							const double eval = n->eval;
+							const double mass = n->mass;
+							emvec.push_back(std::make_pair(eval, mass));
+							if (eval < emin) {
+								emin = eval;
+							}
+						}
+					}
+				}
+			}
+			else if (emin <= -MateScoreBound) {
+				node->setMateVariation(emin);
+				continue;
+			}
+			double Z_e = 0;
+			double Z_d = 0;
+			for (const auto em : emvec) {
+				Z_e += std::exp(-(em.first - emin) / T_e);
+				Z_d += std::exp(-(em.first - emin) / T_d);
+			}
+			double E = 0;
+			double M = 1;
+			for (const auto& em : emvec) {
+				E -= em.first * std::exp(-(em.first - emin) / T_e) / Z_e;
+				M += em.second * std::exp(-(em.first - emin) / T_d) / Z_d;
+			}
+			node->setEvaluation(E);
+			node->setMass(M);
+		}
+		newnodecount = 0u;
+	looptail:;
+	}
+	if (root->children.empty()) {
+		if (!root->isExpandedAll()){
+			Evaluator::evaluate(root, p);
+		}
+	}
 	return newnodecount;
 }

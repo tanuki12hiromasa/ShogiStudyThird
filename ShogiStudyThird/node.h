@@ -39,7 +39,6 @@ public:
 
 	void setMateVariation(const double childmin);
 	void setMate();
-	void setUchiFuMate();
 	void setDeclare();
 	void setRepetition(const double m);
 	void setRepetitiveCheck(const double m);

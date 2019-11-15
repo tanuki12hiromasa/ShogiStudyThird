@@ -5,6 +5,10 @@
 
 class SearchAgent {
 public:
+	static void setFailnum(unsigned num) { maxfailnum = num; }
+private:
+	static unsigned maxfailnum;
+public:
 	SearchAgent(SearchTree& tree, unsigned threadid, int seed);
 	SearchAgent(SearchTree& tree, unsigned threadid) :SearchAgent(tree, threadid, threadid){}
 	SearchAgent(SearchAgent&&)noexcept;
@@ -15,6 +19,7 @@ public:
 	void terminate() { alive = false; }
 private:
 	size_t simulate(SearchNode* const root);
+	size_t qsimulate(SearchNode* const root, const SearchPlayer& player);
 
 	SearchTree& tree;
 	unsigned ID;

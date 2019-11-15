@@ -19,6 +19,9 @@ SearchNode::SearchNode(const Move& move)
 }
 
 size_t SearchNode::deleteTree() {
+	if (children.empty()) {
+		return 0;
+	}
 	std::vector<SearchNode*> nodes = children;
 	children.clear();
 	size_t delnum = nodes.size();
@@ -53,13 +56,13 @@ void SearchNode::setMateVariation(const double childmin) {
 }
 
 void SearchNode::setMate() {
-	eval = -mateScore;
-	mass = mateMass;
-	state = State::T;
-}
-
-void SearchNode::setUchiFuMate() {
-	eval = mateScore;
+	auto const from = move.from();
+	if (from == koma::Position::m_sFu || from == koma::Position::m_gFu) {
+		eval = mateScore;
+	}
+	else {
+		eval = -mateScore;
+	}
 	mass = mateMass;
 	state = State::T;
 }

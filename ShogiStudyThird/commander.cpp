@@ -142,7 +142,7 @@ void Commander::paramInit() {
 	tree.setTchoice_q(90);
 	tree.setTdepth(90);
 	tree.setTeval(20);
-	tree.setMassmaxInQSearch(6);
+	tree.setMassmaxInQSearch(5);
 	tree.setNodeMaxsize(100000000);
 	SearchNode::setMateScore(34000);
 	SearchNode::setMateOneScore(20);
