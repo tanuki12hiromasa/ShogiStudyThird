@@ -34,7 +34,6 @@ void SearchAgent::loop() {
 size_t SearchAgent::simulate(SearchNode* const root) {
 	using dn = std::pair<double, SearchNode*>;
 	using dd = std::pair<double, double>;
-	const double T_c = tree.getTchoice();
 	const double T_e = tree.getTeval();
 	const double T_d = tree.getTdepth();
 	const double MateScoreBound = SearchNode::getMateScoreBound();
@@ -59,6 +58,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			node->state = SearchNode::State::Terminal;
 			return 0;
 		}
+		const double T_c = node->getT_c();
 		double Z = 0;
 		for (const auto& eval : evals) {
 			Z += std::exp(-(eval.first - CE) / T_c);
@@ -201,7 +201,6 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 	size_t newnodecount = 0u;
 	unsigned failnum = 0u;
 	const double Mmax = tree.getMQS();
-	const double T_c = tree.getTcQ();
 	const double T_d = tree.getTdepth();
 	const double T_e = tree.getTeval();
 	const double MateScoreBound = SearchNode::getMateScoreBound();
@@ -227,6 +226,7 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 				failnum++;
 				goto looptail;
 			}
+			const double T_c = node->getT_c();
 			double Z = 0;
 			for (const auto& dn : evals) {
 				Z += std::exp(-(dn.first - emin) / T_c);

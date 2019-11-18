@@ -51,6 +51,7 @@ public:
 	bool isLeaf()const { return state == State::N || state == State::QE || state == State::QT; }
 	bool isSearchable()const { return state != State::T; }
 	bool isExpandedAll() { return expanded; }
+	double getT_c()const;
 
 	std::vector<SearchNode*> children;
 	Move move;

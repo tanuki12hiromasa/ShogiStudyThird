@@ -84,3 +84,7 @@ void SearchNode::setRepetitiveCheck(const double m) {
 	mass = m;
 	state = State::T;
 }
+
+double SearchNode::getT_c() const {
+	return 60.0 * (mass / 2.0 + 0.5);
+}
