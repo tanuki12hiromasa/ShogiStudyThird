@@ -21,7 +21,6 @@ private:
 	std::vector<SearchAgent> agents;
 	unsigned agentNum = 6;
 	bool permitPonder;
-	std::string filepath;
 
 	std::vector<std::thread> agent_threads;
 	std::thread go_thread;

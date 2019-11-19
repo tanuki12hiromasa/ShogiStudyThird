@@ -90,4 +90,5 @@ namespace usi {
 		return tokens;
 	}
 
+	std::string btos(bool b) { return b ? "true" : "false"; }
 }

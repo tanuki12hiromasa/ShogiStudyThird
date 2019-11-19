@@ -77,8 +77,7 @@ void Commander::execute() {
 }
 
 Commander::Commander():
-	tree(),permitPonder(false),
-	filepath("./setting.txt")
+	tree(),permitPonder(false)
 {
 	go_alive = false;
 	info_enable = false;
@@ -102,8 +101,17 @@ Commander::~Commander() {
 }
 
 void Commander::coutOption() {
-	std::cout << "option name leave_branchNode type check default false" << std::endl;
-	std::cout << "option name setting_filepath type string default ./setting.txt" << std::endl;
+	using namespace std;
+	cout << "option name kppt_filepath type string default ./data/kppt_apery" << endl;
+	cout << "option name leave_branchNode type check default false" << endl;
+	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
+	cout << "option name leave_qsearchNode type check default true" << endl;
+	cout << "option name QSstopper_failnum type spin default 4 min 1 max 64" << endl;
+	cout << "option name QSstopper_mass type string default 3.0" << endl;
+	cout << "option name T_choice_atLeaf type string default 60" << endl;
+	cout << "option name T_choice_inclination type string default 20" << endl;
+	cout << "option name T_eval type string default 60" << endl;
+	cout << "option name T_depth type string default 160" << endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {
@@ -128,20 +136,43 @@ void Commander::setOption(std::vector<std::string>& token) {
 				std::cout << "leaveNode : true" << std::endl;
 			}
 		}
-		else if (token[2] == "setting_filepath") {
-			filepath = token[4];
-			std::cout << "filepath : " << filepath << std::endl;
-			paramInit();
+		else if (token[2] == "kppt_filepath") {
+			//aperyのパラメータファイルの位置を指定する 優先度低め
+			//E = token[4];
+		}
+		else if (token[2] == "NumOfAgent") {
+
+		}
+		else if (token[2] == "leave_qsearchNode") {
+
+		}
+		else if (token[2] == "QSstopper_failnum") {
+
+		}
+		else if (token[2] == "QSstopper_mass") {
+
+		}
+		else if (token[2] == "T_choice_atLeaf") {
+
+		}
+		else if (token[2] == "T_choice_inclination") {
+
+		}
+		else if (token[2] == "T_eval") {
+
+		}
+		else if (token[2] == "T_depth") {
+
 		}
 	}
 }
 
 void Commander::paramInit() {
-	//filepathから設定ファイルを読み込む
-	tree.setTchoice({ 60 });
-	tree.setTchoice_q(90);
-	tree.setTdepth(90);
-	tree.setTeval(20);
+	//usiによる設定前のデフォルト値
+	tree.setTchoice({ 120 });
+	tree.setTchoice_q(200);
+	tree.setTdepth(100);
+	tree.setTeval(60);
 	tree.setMassmaxInQSearch(5);
 	tree.setNodeMaxsize(100000000);
 	SearchNode::setMateScore(34000);
