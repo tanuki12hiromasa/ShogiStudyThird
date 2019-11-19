@@ -9,6 +9,8 @@ double SearchNode::mateScore = 34000.0;
 double SearchNode::mateScoreBound = 30000.0;
 double SearchNode::mateOneScore = 20.0;
 double SearchNode::repetitionScore = -100;
+double SearchNode::Tc_one = 60;
+double SearchNode::Tc_inclination = 30;
 
 SearchNode::SearchNode(const Move& move)
 	:move(move), expanded(false)
@@ -86,5 +88,5 @@ void SearchNode::setRepetitiveCheck(const double m) {
 }
 
 double SearchNode::getT_c() const {
-	return 60.0 * (mass / 2.0 + 0.5);
+	return (mass - 1.0) * Tc_inclination + Tc_one;
 }

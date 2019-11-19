@@ -20,12 +20,16 @@ private:
 	static double mateScoreBound;
 	static double mateOneScore;
 	static double repetitionScore;
+	static double Tc_one;
+	static double Tc_inclination;
 public:
 	static void setMateScore(const double score) { mateScore = score; }
 	static void setMateScoreBound(const double bound) { mateScoreBound = bound; }
 	static void setMateOneScore(const double score) { mateOneScore = score; }
 	static void setRepScore(const double score) { repetitionScore = score; }
 	static double getMateScoreBound() { return mateScoreBound; }
+	static void setTc1(const double Tc) { Tc_one = Tc; }
+	static void setTcA(const double Tc) { Tc_inclination = Tc; }
 public:
 	SearchNode(const Move& move);
 	SearchNode(const SearchNode&) = delete;
