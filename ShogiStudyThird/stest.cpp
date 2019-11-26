@@ -138,6 +138,15 @@ void ShogiTest::test() {
 	}
 #endif;
 	{
+		string str16 = "position sfen 1r3g3/l2gk3l/3p4p/2p1+B1p2/p4s3/2P1P1Pb1/1+p1PSP2P/L2S3GL/1NGKNsr2 b N3Pn3p 1";
+		string moves16 = "P*2b P*2c P*2d P*2e P*2g P*2i P*8b P*8c P*8d P*8e P*8f P*8h P*9c P*9d P*9f P*9g P*9i N*1d N*1e N*1f N*1i N*2c N*2d N*2e N*2g N*2i N*3c N*3e N*3g N*3h N*4c N*4d N*4f N*4h N*5c N*5e N*5h N*6d N*6e N*6f N*7c N*7e N*7g N*7h N*8c N*8d N*8e N*8f N*8h N*9c N*9d N*9f N*9g N*9i 1g1f 3f3e 4g4f 5f5e 6g6f 7f7e 8i7g 8i9g 5g4f 5g4h 5g6f 6h7g 2h2g 2h2i 2h3g 2h3h 7i7h 7i8h 5d4d 5d5c 5d5e 5d6d 9h9e 9h9f 9h9g 5d2a 5d3b 5d4c 5d4e 5d6c 5d6e";
+		ShogiTest::genMoveCheck(str16, moves16);
+		ShogiTest::genCapMoveCheck(str16);
+		string str15 = "position sfen 1r3g3/l2gk3l/3p4p/2p1+B1p2/p4s3/2P1P1Pb1/1+p1PSP2P/L2S3GL/1NGKNsr2 w N3Pn3p 1";
+		string moves15 = "P*2a P*2b P*2c P*2d P*2e P*2g P*4b P*4c P*4d P*4f P*4h P*5a P*5c P*5e P*5h P*8b P*8c P*8d P*8e P*8f P*8h N*1a N*1d N*1e N*1f N*2a N*2b N*2c N*2d N*2e N*2g N*3a N*3b N*3c N*3e N*3g N*4b N*4c N*4d N*4f N*5a N*5c N*5e N*6a N*6d N*6e N*6f N*7a N*7b N*7c N*7e N*7g N*8b N*8c N*8d N*8e N*8f N*9a N*9c N*9d N*9f N*9g 1c1d 3d3e 6c6d 7d7e 9e9f 4e3f 4e4f 4e5d 4e5f 4i3h 4i3h+ 4i5h 4i5h+ 4a3a 4a3b 4a4b 4a5a 6b5c 6b6a 6b7b 6b7c 8g7g 8g7h 8g8f 8g8h 8g9g 8g9h 5b4b 5b5a 5b6a 9b9c 9b9d 2f1e 2f1g 2f1g+ 2f3e 2f3g 2f3g+ 2f4d 2f4h 2f4h+ 2f5c 2f5i 2f5i+ 3i1i 3i1i+ 3i2i 3i2i+ 3i3f 3i3f+ 3i3g 3i3g+ 3i3h 3i3h+ 8a5a 8a6a 8a7a 8a8b 8a8c 8a8d 8a8e 8a8f 8a9a";
+		ShogiTest::genMoveCheck(str15, moves15);
+		ShogiTest::genMoveCheck(str15, Move(9, 39, false), moves15);
+		ShogiTest::genCapMoveCheck(str15);
 		string str14 = "position sfen ln1gk1gnl/2s6/p1p1ppppp/3p3R1/4B4/2P6/P2PPPP1P/L3K4/1+rSG1GSNL b BSPn2p 1";
 		string moves14 = "P*2b P*2e P*2f P*2g P*2h P*8b P*8c P*8d P*8e P*8f P*8g P*8h S*1b S*1d S*1e S*1f S*1h S*2b S*2e S*2f S*2g S*2h S*3b S*3d S*3e S*3f S*3h S*4a S*4b S*4d S*4e S*4f S*4h S*5b S*5d S*5f S*5i S*6b S*6c S*6e S*6f S*6h S*7a S*7d S*7e S*7g S*7h S*8b S*8c S*8d S*8e S*8f S*8g S*8h S*9b S*9d S*9e S*9f S*9i B*1b B*1d B*1e B*1f B*1h B*2b B*2e B*2f B*2g B*2h B*3b B*3d B*3e B*3f B*3h B*4a B*4b B*4d B*4e B*4f B*4h B*5b B*5d B*5f B*5i B*6b B*6c B*6e B*6f B*6h B*7a B*7d B*7e B*7g B*7h B*8b B*8c B*8d B*8e B*8f B*8g B*8h B*9b B*9d B*9e B*9f B*9i 1g1f 3g3f 4g4f 5g5f 6g6f 7f7e 9g9f 3i2h 3i3h 3i4h 7i6h 7i7h 7i8h 4i3h 4i4h 4i5i 6i5i 6i6h 6i7h 5h4h 5h5i 5h6h 1i1h 5e3c 5e3c+ 5e4d 5e4f 5e6d 5e6f 5e7g 5e8h 5e9i 2d1d 2d2c 2d2c+ 2d2e 2d2f 2d2g 2d2h 2d3d 2d4d 2d5d 2d6d";
 		ShogiTest::genMoveCheck(str14, moves14);
