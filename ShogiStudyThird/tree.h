@@ -34,9 +34,6 @@ public:
 	double getTdepth()const { return T_depth; }
 	double getMQS()const { return MassMax_QS; }
 
-	bool resisterLeafNode(SearchNode* const node);
-	void excludeLeafNode(SearchNode* const node);
-
 	SearchNode* getRoot(unsigned threadNo, size_t increaseNodes);
 	SearchNode* getRoot() const { return history.back(); }
 
@@ -56,9 +53,6 @@ private:
 	double T_eval;
 	double T_depth;
 	double MassMax_QS;
-
-	std::unordered_map<SearchNode*, unsigned> nmap;
-	std::mutex lnmutex;
 
 	bool leave_branchNode;
 	std::vector<std::uint8_t> lastRefRootByThread;
