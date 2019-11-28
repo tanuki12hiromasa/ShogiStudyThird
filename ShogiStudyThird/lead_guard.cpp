@@ -8,7 +8,7 @@ LeafGuard::LeafGuard(SearchNode* const node)
 	:node(node)
 {
 	std::lock_guard<std::mutex> lock(mutex);
-	if (nmap.count(node) == 0) {//先約がいない場合
+	if (node->isLeaf() && nmap.count(node) == 0) {//先約がいない場合
 		nmap.insert(std::make_pair(node, true));
 		result = true;
 	}
