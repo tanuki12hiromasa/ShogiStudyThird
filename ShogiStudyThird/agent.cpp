@@ -1,8 +1,10 @@
 ﻿#include "stdafx.h"
 #include "agent.h"
+#include "leaf_guard.h"
 #include <algorithm>
 
 unsigned SearchAgent::maxfailnum = 5u;
+bool SearchAgent::leave_QsearchNode = false;
 
 SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)
 	:tree(tree), ID(threadid),engine(seed)
@@ -34,9 +36,8 @@ void SearchAgent::loop() {
 size_t SearchAgent::simulate(SearchNode* const root) {
 	using dn = std::pair<double, SearchNode*>;
 	using dd = std::pair<double, double>;
-	const double T_c = tree.getTchoice();
-	const double T_e = tree.getTeval();
-	const double T_d = tree.getTdepth();
+	const double T_e = SearchNode::getTeval();
+	const double T_d = SearchNode::getTdepth();
 	const double MateScoreBound = SearchNode::getMateScoreBound();
 	size_t newnodecount = 0;
 	SearchNode* node = root;
@@ -59,6 +60,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			node->state = SearchNode::State::Terminal;
 			return 0;
 		}
+		const double T_c = node->getT_c();
 		double Z = 0;
 		for (const auto& eval : evals) {
 			Z += std::exp(-(eval.first - CE) / T_c);
@@ -76,12 +78,13 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		player.proceed(node->move);
 		history.push_back(node);
 	}
-	//末端ノードが他スレッドで展開中になっていないかチェック
-	if (!tree.resisterLeafNode(node)) {
-		return 0;
-	}
 	//展開・評価
 	{
+		//末端ノードが他スレッドで展開中になっていないかチェック
+		LeafGuard dredear(node);
+		if (!dredear.Result()) {
+			return 0;
+		}
 		if (player.kyokumen.isDeclarable()) {
 			node->setDeclare();
 			goto backup;
@@ -118,14 +121,18 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		for (auto child : node->children) {
 			SearchPlayer p = player;
 			p.proceed(child->move);
-#if 0 //静止探索ノードを残す場合
-			newnodecount += qsimulate(child, p);
-			child->setMass(0);//静止探索の探索指標は別物なので0に戻す
-#else //静止探索ノードを残さない場合
-			qsimulate(child, p);
-			child->setMass(0);//
-			child->deleteTree();
-#endif
+//#if 0 //静止探索ノードを残す場合
+			if (leave_QsearchNode) {
+				newnodecount += qsimulate(child, p);
+				child->setMass(0);//静止探索の探索指標は別物なので0に戻す
+			}
+//#else //静止探索ノードを残さない場合
+			else {
+				qsimulate(child, p);
+				child->setMass(0);//
+				child->deleteTree();
+			}
+//#endif
 		}
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
@@ -153,7 +160,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 
 	//バックアップ
 	backup:
-	tree.excludeLeafNode(node);
 	{
 	for (int i = history.size() - 2; i >= 0; i--) {
 			node = history[i];
@@ -200,10 +206,9 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 	using dd = std::pair<double, double>;
 	size_t newnodecount = 0u;
 	unsigned failnum = 0u;
-	const double Mmax = tree.getMQS();
-	const double T_c = tree.getTcQ();
-	const double T_d = tree.getTdepth();
-	const double T_e = tree.getTeval();
+	const double Mmax = SearchNode::getMQS();
+	const double T_d = SearchNode::getTdepth();
+	const double T_e = SearchNode::getTeval();
 	const double MateScoreBound = SearchNode::getMateScoreBound();
 	while (root->isQSTerminal() && root->mass < Mmax && failnum < maxfailnum) {
 		SearchNode* node = root;
@@ -227,6 +232,7 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 				failnum++;
 				goto looptail;
 			}
+			const double T_c = node->getT_c();
 			double Z = 0;
 			for (const auto& dn : evals) {
 				Z += std::exp(-(dn.first - emin) / T_c);

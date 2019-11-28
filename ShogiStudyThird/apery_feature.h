@@ -62,6 +62,7 @@ namespace apery {
 		static KKPEvalElementType1* KKP;
 		static bool allocated;
 	public:
+		static std::string folderpath;
 		static void init();
 		static EvalSum EvalFull(const Kyokumen&, const EvalList&);
 

@@ -77,8 +77,7 @@ void Commander::execute() {
 }
 
 Commander::Commander():
-	tree(),permitPonder(false),
-	filepath("./setting.txt")
+	tree(),permitPonder(false)
 {
 	go_alive = false;
 	info_enable = false;
@@ -102,47 +101,72 @@ Commander::~Commander() {
 }
 
 void Commander::coutOption() {
-	std::cout << "option name leave_branchNode type check default false" << std::endl;
-	std::cout << "option name setting_filepath type string default ./setting.txt" << std::endl;
+	using namespace std;
+	//cout << "option name kppt_filepath type string default ./data/kppt_apery" << endl; //隠しオプション
+	cout << "option name leave_branchNode type check default false" << endl;
+	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
+	cout << "option name leave_qsearchNode type check default true" << endl;
+	cout << "option name QSstopper_failnum type spin default 4 min 1 max 64" << endl;
+	cout << "option name QSstopper_mass type string default 3.0" << endl;
+	cout << "option name T_choice_const type string default 60" << endl;
+	cout << "option name T_choice_mass_parent type string default 20" << endl;
+	cout << "option name T_choice_children_masses type string default 10" << endl;
+	cout << "option name T_choice_expecrable_variance type check defaule false" << endl;
+	cout << "option name T_eval type string default 60" << endl;
+	cout << "option name T_depth type string default 120" << endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {
-	if (token.size() > 2) {
+	if (token.size() > 4) {
 		if (token[2] == "USI_Ponder") {
-			if (token.size() <= 3 || token[4] == "false") {
-				permitPonder = false;
-				std::cout << "ponder : false" << std::endl;
-			}
-			else {
-				permitPonder = true;
-				std::cout << "ponder : true" << std::endl;
-			}
+			permitPonder = (token[4] == "true");
 		}
 		else if (token[2] == "leave_branchNode") {
-			if (token.size() <= 3 || token[4] == "false") {
-				tree.leave_branchNode = false;
-				std::cout << "leaveNode : false" << std::endl;
-			}
-			else {
-				tree.leave_branchNode = true;
-				std::cout << "leaveNode : true" << std::endl;
-			}
+			tree.leave_branchNode = (token[4] == "true");
 		}
-		else if (token[2] == "setting_filepath") {
-			filepath = token[4];
-			std::cout << "filepath : " << filepath << std::endl;
-			paramInit();
+		else if (token[2] == "kppt_filepath") {
+			//aperyのパラメータファイルの位置を指定する 隠しオプション
+			apery::apery_feat::folderpath = token[4];
+		}
+		else if (token[2] == "NumOfAgent") {
+			agentNum = std::stoi(token[4]);
+		}
+		else if (token[2] == "leave_qsearchNode") {
+			SearchAgent::setLeaveQSNode(token[4]=="true");
+		}
+		else if (token[2] == "QSstopper_failnum") {
+			SearchAgent::setFailnum(std::stoi(token[4]));
+		}
+		else if (token[2] == "QSstopper_mass") {
+			SearchNode::setMassmaxInQSearch(std::stod(token[4]));
+		}
+		else if (token[2] == "T_choice_const") {
+			SearchNode::setTcConst(std::stod(token[4]));
+		}
+		else if (token[2] == "T_choice_mass_parent") {
+			SearchNode::setTcmp(std::stod(token[4]));
+		}
+		else if (token[2] == "T_choice_children_masses") {
+			SearchNode::setTcmc(std::stod(token[4]));
+		}
+		else if (token[2] == "T_choice_expecrable_variance") {
+			SearchNode::setTcmc_expectable_flag(token[4] == "true");
+		}
+		else if (token[2] == "T_eval") {
+			SearchNode::setTeval(std::stod(token[4]));
+		}
+		else if (token[2] == "T_depth") {
+			SearchNode::setTdepth(std::stod(token[4]));
 		}
 	}
 }
 
 void Commander::paramInit() {
-	//filepathから設定ファイルを読み込む
-	tree.setTchoice({ 60 });
-	tree.setTchoice_q(90);
-	tree.setTdepth(90);
-	tree.setTeval(20);
-	tree.setMassmaxInQSearch(5);
+	//usiによる設定前のデフォルト値
+
+	SearchNode::setTdepth(100);
+	SearchNode::setTeval(60);
+	SearchNode::setMassmaxInQSearch(5);
 	tree.setNodeMaxsize(100000000);
 	SearchNode::setMateScore(34000);
 	SearchNode::setMateOneScore(20);
