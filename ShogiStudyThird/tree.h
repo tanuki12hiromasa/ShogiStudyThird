@@ -12,11 +12,6 @@ public:
 	void set(const std::vector<std::string>& usitokens);
 
 	void setNodeMaxsize(const size_t s) { nodesMaxCount = s; }
-	void setTchoice(const std::vector<double>&);
-	void setTchoice_q(const double Tcq) { T_choice_quiescence = Tcq; }
-	void setTeval(const double Te) { T_eval = Te; }
-	void setTdepth(const double Td) { T_depth = Td; }
-	void setMassmaxInQSearch(const double mmqs) { MassMax_QS = mmqs; }
 
 	void permitSearch() { search_enable = true; }
 	void prohibitSearch() { search_enable = false; }
@@ -28,11 +23,6 @@ public:
 	const uint64_t getNodeCount() const { return nodecount; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
 	const SearchPlayer& getRootPlayer()const { return rootPlayer; }
-	double getTchoice();
-	double getTcQ()const { return T_choice_quiescence; }
-	double getTeval()const { return T_eval; }
-	double getTdepth()const { return T_depth; }
-	double getMQS()const { return MassMax_QS; }
 
 	SearchNode* getRoot(unsigned threadNo, size_t increaseNodes);
 	SearchNode* getRoot() const { return history.back(); }
@@ -46,13 +36,6 @@ private:
 	SearchPlayer rootPlayer;
 	std::atomic_uint64_t nodecount;
 	std::uint64_t nodesMaxCount;
-
-	std::array<double, 64> T_choice;
-	std::atomic_uint64_t T_c_count;
-	double T_choice_quiescence;
-	double T_eval;
-	double T_depth;
-	double MassMax_QS;
 
 	bool leave_branchNode;
 	std::vector<std::uint8_t> lastRefRootByThread;

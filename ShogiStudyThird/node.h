@@ -20,16 +20,30 @@ private:
 	static double mateScoreBound;
 	static double mateOneScore;
 	static double repetitionScore;
-	static double Tc_one;
-	static double Tc_inclination;
+	static double Tc_const;
+	static double Tc_mp;
+	static double Tc_mc;
+	static bool Tc_mc_expectable_variance;//探索指標の分散を期待値で重みづけするかどうかのフラグ
+	static double T_eval;
+	static double T_depth;
+	static double MassMax_QS;
 public:
 	static void setMateScore(const double score) { mateScore = score; }
 	static void setMateScoreBound(const double bound) { mateScoreBound = bound; }
 	static void setMateOneScore(const double score) { mateOneScore = score; }
 	static void setRepScore(const double score) { repetitionScore = score; }
 	static double getMateScoreBound() { return mateScoreBound; }
-	static void setTc1(const double Tc) { Tc_one = Tc; }
-	static void setTcA(const double Tc) { Tc_inclination = Tc; }
+	static void setTcConst(const double Tc) { Tc_const = Tc; }
+	static void setTcmp(const double Tc) { Tc_mp = Tc; }
+	static void setTcmc(const double Tc) { Tc_mc = Tc; }
+	static void setTcmc_expectable_flag(bool b) { Tc_mc_expectable_variance = b; }
+	static void setTeval(const double Te) { T_eval = Te; }
+	static void setTdepth(const double Td) { T_depth = Td; }
+	static void setMassmaxInQSearch(const double mmqs) { MassMax_QS = mmqs; }
+	static double getTeval() { return T_eval; }
+	static double getTdepth() { return T_depth; }
+	static double getMQS() { return MassMax_QS; }
+
 public:
 	SearchNode(const Move& move);
 	SearchNode(const SearchNode&) = delete;
@@ -56,7 +70,9 @@ public:
 	bool isSearchable()const { return state != State::T; }
 	bool isExpandedAll() { return expanded; }
 	double getT_c()const;
-
+private:
+	double getTcMcVariance()const;
+public:
 	std::vector<SearchNode*> children;
 	Move move;
 	std::atomic<State> state;

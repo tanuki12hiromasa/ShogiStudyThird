@@ -87,6 +87,9 @@
     <ClCompile Include="stest.cpp">
       <Filter>debug</Filter>
     </ClCompile>
+    <ClCompile Include="leaf_guard.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -160,6 +163,9 @@
     </ClInclude>
     <ClInclude Include="logger.h">
       <Filter>debug</Filter>
+    </ClInclude>
+    <ClInclude Include="leaf_guard.h">
+      <Filter>ヘッダー ファイル\search</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

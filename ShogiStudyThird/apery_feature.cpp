@@ -42,6 +42,7 @@ namespace apery {
 		assert(nlist == 38);
 	}
 
+	std::string apery_feat::folderpath = "data/kppt_apery";
 	KPPEvalElementType1* apery_feat::KPP;
 	KKPEvalElementType1* apery_feat::KKP;
 	bool apery_feat::allocated = false;
@@ -54,7 +55,7 @@ namespace apery {
 			memset(KKP, 0, sizeof(KKPEvalElementType1) * (size_t)SquareNum);
 		}
 		{
-			std::ifstream fs("data/kppt_apery/KPP.bin", std::ios::binary);
+			std::ifstream fs(folderpath + "/KPP.bin", std::ios::binary);
 			if (!fs) {
 				std::cerr << "error:file(KPP.bin) cannot open" << std::endl;
 				return;
@@ -66,7 +67,7 @@ namespace apery {
 			}
 		}
 		{
-			std::ifstream fs("data/kppt_apery/KKP.bin", std::ios::binary);
+			std::ifstream fs(folderpath + "/KKP.bin", std::ios::binary);
 			if (!fs) {
 				std::cerr << "error:file(KKP.bin) cannot open" << std::endl;
 				return;

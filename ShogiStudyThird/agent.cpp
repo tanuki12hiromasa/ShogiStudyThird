@@ -4,6 +4,7 @@
 #include <algorithm>
 
 unsigned SearchAgent::maxfailnum = 5u;
+bool SearchAgent::leave_QsearchNode = false;
 
 SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)
 	:tree(tree), ID(threadid),engine(seed)
@@ -35,8 +36,8 @@ void SearchAgent::loop() {
 size_t SearchAgent::simulate(SearchNode* const root) {
 	using dn = std::pair<double, SearchNode*>;
 	using dd = std::pair<double, double>;
-	const double T_e = tree.getTeval();
-	const double T_d = tree.getTdepth();
+	const double T_e = SearchNode::getTeval();
+	const double T_d = SearchNode::getTdepth();
 	const double MateScoreBound = SearchNode::getMateScoreBound();
 	size_t newnodecount = 0;
 	SearchNode* node = root;
@@ -120,14 +121,18 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		for (auto child : node->children) {
 			SearchPlayer p = player;
 			p.proceed(child->move);
-#if 0 //静止探索ノードを残す場合
-			newnodecount += qsimulate(child, p);
-			child->setMass(0);//静止探索の探索指標は別物なので0に戻す
-#else //静止探索ノードを残さない場合
-			qsimulate(child, p);
-			child->setMass(0);//
-			child->deleteTree();
-#endif
+//#if 0 //静止探索ノードを残す場合
+			if (leave_QsearchNode) {
+				newnodecount += qsimulate(child, p);
+				child->setMass(0);//静止探索の探索指標は別物なので0に戻す
+			}
+//#else //静止探索ノードを残さない場合
+			else {
+				qsimulate(child, p);
+				child->setMass(0);//
+				child->deleteTree();
+			}
+//#endif
 		}
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
@@ -201,9 +206,9 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 	using dd = std::pair<double, double>;
 	size_t newnodecount = 0u;
 	unsigned failnum = 0u;
-	const double Mmax = tree.getMQS();
-	const double T_d = tree.getTdepth();
-	const double T_e = tree.getTeval();
+	const double Mmax = SearchNode::getMQS();
+	const double T_d = SearchNode::getTdepth();
+	const double T_e = SearchNode::getTeval();
 	const double MateScoreBound = SearchNode::getMateScoreBound();
 	while (root->isQSTerminal() && root->mass < Mmax && failnum < maxfailnum) {
 		SearchNode* node = root;

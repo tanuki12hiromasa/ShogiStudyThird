@@ -161,6 +161,7 @@
     <ClCompile Include="evaluated_nodes.cpp" />
     <ClCompile Include="koma.cpp" />
     <ClCompile Include="kyokumen.cpp" />
+    <ClCompile Include="leaf_guard.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
@@ -189,6 +190,7 @@
     <ClInclude Include="koma.h" />
     <ClInclude Include="koma_motion.h" />
     <ClInclude Include="kyokumen.h" />
+    <ClInclude Include="leaf_guard.h" />
     <ClInclude Include="logger.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_gen.h" />

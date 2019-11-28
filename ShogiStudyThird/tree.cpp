@@ -4,14 +4,9 @@
 #include <fstream>
 
 SearchTree::SearchTree()
-	:rootPlayer(),startKyokumen(),
-	T_choice_quiescence(90),
-	T_eval(40),T_depth(90),
-	MassMax_QS(8)
+	:rootPlayer(),startKyokumen()
 {
 	leave_branchNode = false;
-	T_c_count = 0;
-	setTchoice({ 30,60,90,120 });
 	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
 	nodecount = 0;
 }
@@ -99,18 +94,6 @@ void SearchTree::proceed(SearchNode* node) {
 	rootPlayer.feature.set(rootPlayer.kyokumen);
 	deleteBranchParallel(getRoot(), node, history.size() - 1);
 	history.push_back(node);
-}
-
-void SearchTree::setTchoice(const std::vector<double>& T) {
-	const size_t size = T.size();
-	for (size_t i = 0; i < T_choice.size(); i++) {
-		T_choice[i] = T[i % size];
-	}
-}
-
-double SearchTree::getTchoice() {
-	const unsigned long long count = T_c_count++ % 64;
-	return T_choice[count];
 }
 
 SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
