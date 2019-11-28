@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "agent.h"
+#include "leaf_guard.h"
 #include <algorithm>
 
 unsigned SearchAgent::maxfailnum = 5u;
@@ -76,12 +77,13 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		player.proceed(node->move);
 		history.push_back(node);
 	}
-	//末端ノードが他スレッドで展開中になっていないかチェック
-	if (!tree.resisterLeafNode(node)) {
-		return 0;
-	}
 	//展開・評価
 	{
+		//末端ノードが他スレッドで展開中になっていないかチェック
+		LeafGuard dredear(node);
+		if (!dredear.Result()) {
+			return 0;
+		}
 		if (player.kyokumen.isDeclarable()) {
 			node->setDeclare();
 			goto backup;
@@ -153,7 +155,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 
 	//バックアップ
 	backup:
-	tree.excludeLeafNode(node);
 	{
 	for (int i = history.size() - 2; i >= 0; i--) {
 			node = history[i];
