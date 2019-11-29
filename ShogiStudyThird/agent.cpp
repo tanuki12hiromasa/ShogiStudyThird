@@ -91,10 +91,10 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}
 		if (false/*千日手である*/) {
 			if (false/*連続王手である*/) {
-				node->setRepetitiveCheck(1);
+				node->setRepetitiveCheck();
 			}
 			else {
-				node->setRepetition(1);
+				node->setRepetition(player.kyokumen.teban());
 			}
 			goto backup;
 		}

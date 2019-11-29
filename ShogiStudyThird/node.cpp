@@ -80,15 +80,17 @@ void SearchNode::setDeclare() {
 	state = State::T;
 }
 
-void SearchNode::setRepetition(const double m) {
-	eval = repetitionScore;
-	mass = m;
+void SearchNode::setRepetition(const bool teban) {
+	deleteTree();
+	eval = teban ? (-repetitionScore) : repetitionScore;
+	mass = mateMass;
 	state = State::T;
 }
 
-void SearchNode::setRepetitiveCheck(const double m) {
+void SearchNode::setRepetitiveCheck() {
+	deleteTree();
 	eval = mateScore;
-	mass = m;
+	mass = mateMass;
 	state = State::T;
 }
 

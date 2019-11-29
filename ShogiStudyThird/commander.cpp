@@ -106,14 +106,15 @@ void Commander::coutOption() {
 	cout << "option name leave_branchNode type check default false" << endl;
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
 	cout << "option name leave_qsearchNode type check default true" << endl;
+	cout << "option name Repetition_score type string default -200" << endl;
 	cout << "option name QSstopper_failnum type spin default 4 min 1 max 64" << endl;
 	cout << "option name QSstopper_mass type string default 3.0" << endl;
+	cout << "option name T_choice_expecrable_variance type check default false" << endl;
 	cout << "option name T_choice_const type string default 60" << endl;
 	cout << "option name T_choice_mass_parent type string default 20" << endl;
 	cout << "option name T_choice_children_masses type string default 10" << endl;
 	cout << "option name T_eval type string default 60" << endl;
 	cout << "option name T_depth type string default 120" << endl;
-	cout << "option name T_choice_expecrable_variance type check default false" << endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {
@@ -133,6 +134,9 @@ void Commander::setOption(std::vector<std::string>& token) {
 		}
 		else if (token[2] == "leave_qsearchNode") {
 			SearchAgent::setLeaveQSNode(token[4]=="true");
+		}
+		else if (token[2] == "Repetition_score") {
+			SearchNode::setRepScore(std::stod(token[4]));
 		}
 		else if (token[2] == "QSstopper_failnum") {
 			SearchAgent::setFailnum(std::stoi(token[4]));

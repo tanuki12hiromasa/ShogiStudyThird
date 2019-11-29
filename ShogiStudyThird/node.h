@@ -58,8 +58,8 @@ public:
 	void setMateVariation(const double childmin);
 	void setMate();
 	void setDeclare();
-	void setRepetition(const double m);
-	void setRepetitiveCheck(const double m);
+	void setRepetition(const bool teban);
+	void setRepetitiveCheck();
 	void setExpandedAll() { expanded = true; }
 
 	double getEvaluation()const { return eval.load(); }
