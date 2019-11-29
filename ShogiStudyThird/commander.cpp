@@ -111,9 +111,9 @@ void Commander::coutOption() {
 	cout << "option name T_choice_const type string default 60" << endl;
 	cout << "option name T_choice_mass_parent type string default 20" << endl;
 	cout << "option name T_choice_children_masses type string default 10" << endl;
-	cout << "option name T_choice_expecrable_variance type check defaule false" << endl;
 	cout << "option name T_eval type string default 60" << endl;
 	cout << "option name T_depth type string default 120" << endl;
+	cout << "option name T_choice_expecrable_variance type check default false" << endl;
 }
 
 void Commander::setOption(std::vector<std::string>& token) {
