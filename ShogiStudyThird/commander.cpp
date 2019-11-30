@@ -274,6 +274,7 @@ bool Commander::chakushu() {
 	}
 	const SearchNode* const root = tree.getRoot();
 	if (root->eval < -33000) {
+		std::cout << "info score cp " << root->eval << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return true;
 	}

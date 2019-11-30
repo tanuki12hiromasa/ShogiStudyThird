@@ -17,7 +17,7 @@ void SearchTree::set(const std::vector<std::string>& usitokens) {
 }
 
 void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
-	if (!history.empty() && startKyokumen == startpos)	{
+	if (!history.empty() && (history.size() <= usihis.size()) && startKyokumen == startpos)	{
 		int i;
 		for (i = 0; i < history.size() - 1; i++) {
 			if (history[i+1ull]->move != usihis[i]) {
