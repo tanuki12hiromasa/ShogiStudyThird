@@ -217,6 +217,17 @@ koma::Position Kyokumen::proceed(const Move move) {
 	return captured;
 }
 
+std::uint64_t Kyokumen::getHash()const {
+	auto& _p = allKomaBB.val();
+	return _p[1] ^ (_p[0] << 22) ^ (_p[2] << 32)
+		^ (static_cast<uint64_t>(bammen[81]) << 1) ^ (static_cast<uint64_t>(bammen[82]) << 6) 
+		^ (static_cast<uint64_t>(bammen[83]) << 9) ^ (static_cast<uint64_t>(bammen[84]) << 12)
+		^ (static_cast<uint64_t>(bammen[87]) << 15) ^ (static_cast<uint64_t>(bammen[85]) << 18) ^ (static_cast<uint64_t>(bammen[86]) << 20)
+		^ (static_cast<uint64_t>(bammen[93]) << 43) ^ (static_cast<uint64_t>(bammen[92]) << 45) ^ (static_cast<uint64_t>(bammen[94]) << 47)
+		^ (static_cast<uint64_t>(bammen[91]) << 50) ^ (static_cast<uint64_t>(bammen[90]) << 53)
+		^ (static_cast<uint64_t>(bammen[89]) << 56) ^ (static_cast<uint64_t>(bammen[88]) << 59);
+}
+
 bool Kyokumen::isDeclarable()const {
 	using namespace koma;
 	//王手チェックはしないのでこの関数を呼ぶ前に確認しておくこと(パフォーマンス向上のため)
