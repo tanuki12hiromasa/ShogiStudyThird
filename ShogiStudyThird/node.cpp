@@ -31,6 +31,7 @@ size_t SearchNode::deleteTree() {
 	}
 	std::vector<SearchNode*> nodes = children;
 	children.clear();
+	state = State::N;
 	size_t delnum = nodes.size();
 	while (!nodes.empty()) {
 		SearchNode* node = nodes.back();
@@ -39,7 +40,6 @@ size_t SearchNode::deleteTree() {
 		nodes.insert(nodes.end(), node->children.begin(), node->children.end());
 		delete node;
 	}
-	state = State::N;
 	return delnum;
 }
 
