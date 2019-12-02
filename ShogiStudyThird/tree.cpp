@@ -160,15 +160,17 @@ std::pair<unsigned, SearchNode*> SearchTree::findRepetition(const Kyokumen& kyok
 	auto range = historymap.equal_range(kyokumen.getHash());
 	unsigned num = 0;
 	size_t latest = 0;
+	SearchNode* latestNode = nullptr;
 	for (auto it = range.first; it != range.second; it++) {
 		if (kyokumen.teban() == ((*it).second.second % 2 == 0) && (*it).second.first == kyokumen.getBammen()) {
 			num++;
 			if ((*it).second.second > latest) {
 				latest = (*it).second.second;
+				latestNode = history[latest];
 			}
 		}
 	}
-	return (num > 0) ? (std::make_pair(num, history[latest])) : (std::make_pair(0, nullptr));
+	return std::make_pair(num, latestNode);
 }
 
 void SearchTree::foutTree()const {
