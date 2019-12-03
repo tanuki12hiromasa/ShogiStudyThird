@@ -113,7 +113,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		if (repnum > 0/*千日手である*/) {
-			if (repnum > 3) {
+			if (repnum >= 3) {
 				if (checkRepetitiveCheck(history,latestRepnode)) {
 					node->setRepetitiveCheck();
 				}

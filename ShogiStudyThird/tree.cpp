@@ -90,7 +90,7 @@ std::vector<SearchNode*> SearchTree::getPV()const {
 }
 
 void SearchTree::proceed(SearchNode* node) {
-	historymap.emplace(rootPlayer.kyokumen.getHash(), std::make_pair(rootPlayer.kyokumen.getBammen(), history.size()));
+	historymap.emplace(rootPlayer.kyokumen.getHash(), std::make_pair(rootPlayer.kyokumen.getBammen(), history.size() - 1));
 	rootPlayer.kyokumen.proceed(node->move);
 	rootPlayer.feature.set(rootPlayer.kyokumen);
 	deleteBranchParallel(getRoot(), node, history.size() - 1);

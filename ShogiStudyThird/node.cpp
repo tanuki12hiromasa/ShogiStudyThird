@@ -5,10 +5,10 @@
 #include <limits>
 
 double SearchNode::mateMass = 1;
-double SearchNode::mateScore = 34000.0;
+double SearchNode::mateScore = 34000.0;//詰ませた側(勝った側)のscore
 double SearchNode::mateScoreBound = 30000.0;
 double SearchNode::mateOneScore = 20.0;
-double SearchNode::repetitionScore = -100;
+double SearchNode::repetitionScore = -100;//先手側のscore（千日手のscoreは手番に依存する）
 double SearchNode::Tc_const = 60;
 double SearchNode::Tc_mp = 30;
 double SearchNode::Tc_mc = 20;
@@ -83,7 +83,7 @@ void SearchNode::setDeclare() {
 
 void SearchNode::setRepetition(const bool teban) {
 	deleteTree();
-	eval = teban ? (-repetitionScore) : repetitionScore;
+	eval = teban ? repetitionScore : (-repetitionScore);
 	mass = mateMass;
 	state = State::T;
 }
