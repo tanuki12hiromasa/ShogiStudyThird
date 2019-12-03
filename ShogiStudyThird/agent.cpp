@@ -117,7 +117,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}
 		if (repnum > 0/*千日手である*/) {
 			if (repnum >= 3) {
-				if (checkRepetitiveCheck(history,latestRepnode)) {
+				if (checkRepetitiveCheck(player.kyokumen,history,latestRepnode)) {
 					node->setRepetitiveCheck();
 				}
 				else {
@@ -400,9 +400,21 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 	return newnodecount;
 }
 
-bool SearchAgent::checkRepetitiveCheck(const std::vector<SearchNode*>& searchhis, const SearchNode* const repnode)const {
+bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vector<SearchNode*>& searchhis, const SearchNode* const repnode)const {
+	//対象ノードは未展開なので局面から王手かどうか判断する この関数は4回目の繰り返しの終端ノードで呼ばれているのでkusemonoを何回も生成するような無駄は発生していない
+	if (kyokumen.teban()) {
+		if (kyokumen.getSenteOuCheck().empty()) {
+			return false;
+		}
+	}
+	else {
+		if (kyokumen.getGoteOuCheck().empty()) {
+			return false;
+		}
+	}
+	//過去ノードはmoveのouteフラグから王手だったか判定する
 	int t;
-	for (t = searchhis.size() - 1; t >= 0; t -= 2) {
+	for (t = searchhis.size() - 3; t >= 0; t -= 2) {//historyの後端は末端ノードなのでその二つ前から調べていく
 		if (!searchhis[t]->move.isOute()) {
 			return false;
 		}
