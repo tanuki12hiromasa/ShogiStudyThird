@@ -117,7 +117,7 @@ void Commander::coutOption() {
 	cout << "option name T_depth type string default 120" << endl;
 }
 
-void Commander::setOption(std::vector<std::string>& token) {
+void Commander::setOption(const std::vector<std::string>& token) {
 	if (token.size() > 4) {
 		if (token[2] == "USI_Ponder") {
 			permitPonder = (token[4] == "true");
@@ -205,7 +205,7 @@ void Commander::gameInit() {
 	info();
 }
 
-void Commander::go(std::vector<std::string>& tokens) {
+void Commander::go(const std::vector<std::string>& tokens) {
 	//宣言可能かどうかは先に調べる
 	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
 	if (kyokumen.isDeclarable()) {

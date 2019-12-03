@@ -9,11 +9,11 @@ private:
 	Commander();
 	~Commander();
 	static void coutOption();
-	void setOption(std::vector<std::string>& token);
+	void setOption(const std::vector<std::string>& token);
 	void paramInit();
 	void gameInit();
 
-	void go(std::vector<std::string>& tokens);
+	void go(const std::vector<std::string>& tokens);
 	void info();
 	bool chakushu();
 
