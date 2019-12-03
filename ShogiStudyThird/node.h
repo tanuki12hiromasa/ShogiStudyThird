@@ -67,7 +67,7 @@ public:
 	bool isLimitedExpanded()const { return state == State::QE || state == State::QT; }
 	bool isQSTerminal()const { return state != State::N && state != State::QE; }
 	bool isLeaf()const { return state == State::N || state == State::QE || state == State::QT; }
-	bool isSearchable()const { return state != State::T; }
+	bool isTerminal()const { return state == State::T; }
 	bool isExpandedAll() { return expanded; }
 	double getT_c()const;
 private:

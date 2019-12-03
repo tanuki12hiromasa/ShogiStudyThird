@@ -49,7 +49,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		double CE = std::numeric_limits<double>::max();
 		std::vector<dn> evals;
 		for (const auto& child : node->children) {
-			if (child->isSearchable()) {
+			if (!child->isTerminal()) {
 				double eval = child->getEvaluation();
 				evals.push_back(std::make_pair(eval,child));
 				if (eval < CE) {
@@ -158,8 +158,10 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 //#else //静止探索ノードを残さない場合
 			else {
 				qsimulate(child, p);
-				child->setMass(0);//
-				child->deleteTree();
+				if (!child->isTerminal()) {
+					child->setMass(0);//
+					child->deleteTree();
+				}
 			}
 //#endif
 		}
@@ -393,4 +395,38 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 		}
 	}
 	return newnodecount;
+}
+
+bool SearchAgent::checkRepetitiveCheck(const std::vector<SearchNode*>& searchhis, const SearchNode* const repnode)const {
+	int t;
+	for (t = searchhis.size() - 1; t >= 0; t -= 2) {
+		if (!searchhis[t]->move.isOute()) {
+			return false;
+		}
+		if (searchhis[t] == repnode) {
+			return true;
+		}
+	}
+	const auto& treehis = tree.getHistory();
+	for (t += treehis.size() - 1; t >= 0; t -= 2) {
+		if (!treehis[t]->move.isOute()) {
+			return false;
+		}
+		if (treehis[t] == repnode) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void SearchAgent::nodeCopy(const SearchNode* const origin, SearchNode* const copy)const {
+	copy->setEvaluation(origin->getEvaluation());
+	copy->move = origin->move;
+	for (auto& child : origin->children) {
+		auto copy_child = copy->addChild(child->move);
+		copy_child->eval = child->getEvaluation();
+	}
+	copy->setExpandedAll();
+	copy->setMass(1);
+	copy->state = SearchNode::State::E;
 }
