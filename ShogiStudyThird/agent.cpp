@@ -412,6 +412,7 @@ bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vecto
 			return false;
 		}
 	}
+	searchhis.back()->move.setOute(true);
 	//過去ノードはmoveのouteフラグから王手だったか判定する
 	int t;
 	for (t = searchhis.size() - 3; t >= 0; t -= 2) {//historyの後端は末端ノードなのでその二つ前から調べていく
