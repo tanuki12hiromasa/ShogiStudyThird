@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "tree.h"
+#include "move_gen.h"
 #include <queue>
 #include <fstream>
 
@@ -28,6 +29,14 @@ void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
 			SearchNode* root = getRoot();
 			const Move nextmove = usihis[i];
 			SearchNode* nextNode = nullptr;
+			if (!root->isExpandedAll()) {
+				if (root->isLimitedExpanded()) {
+					MoveGenerator::genNocapMove(root, rootPlayer.kyokumen);
+				}
+				else {
+					MoveGenerator::genMove(root, rootPlayer.kyokumen);
+				}
+			}
 			for (SearchNode* child : root->children) {
 				if (child->move == nextmove) {
 					nextNode = child;
@@ -46,11 +55,21 @@ makenewtree:
 		if (!history.empty()) deleteTreeParallel(history.front(), history.size() - 1);
 		history.clear();
 		startKyokumen = startpos;
-		SearchNode* rootNode = new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false));
-		history.push_back(rootNode);
+		history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
 		rootPlayer = SearchPlayer(startKyokumen);
 		for (auto& usimove : usihis) {
-			SearchNode* next = rootNode->addChild(usimove);
+			SearchNode* rootNode = getRoot();
+			MoveGenerator::genMove(rootNode, rootPlayer.kyokumen);
+			SearchNode* next = rootNode->children.front();
+			for (const auto& child : rootNode->children) {
+				if (child->move == usimove) {
+					next = child;
+					break;
+				}
+			}
+			if (next == nullptr) {
+				next = rootNode->addChild(usimove);
+			}
 			proceed(next);
 		}
 	}

@@ -111,6 +111,9 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 					}
 				}
 			}
+			if (latestRepnode == nullptr) {
+				latestRepnode = repnode;
+			}
 		}
 		if (repnum > 0/*千日手である*/) {
 			if (repnum >= 3) {
