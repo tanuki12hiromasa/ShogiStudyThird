@@ -210,24 +210,21 @@ void ShogiTest::test() {
 		ShogiTest::genMoveCheck(str2, moves2);
 		ShogiTest::genCapMoveCheck(str2);
 	}
-#if 1
+#if 0
 	{
 		Commander com;
 		std::cout << "initializing now..." << std::endl;
-		com.paramInit();
-		Evaluator::init();
-		SearchTree& tree = com.tree;
-		tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
-		SearchAgent ag(tree, 0);
-
-		tree.lastRefRootByThread.assign(1, 0);
-		tree.permitSearch();
-		std::thread th(&SearchAgent::loop, &ag);
-		std::this_thread::sleep_for(500ms);
-		tree.prohibitSearch();
-		ag.alive = false;
-		th.join();
-		tree.foutTree();
+		com.setOption(usi::split("setoption name USI_Ponder value false", ' '));
+		com.setOption(usi::split("setoption name leave_branchNode value true", ' '));
+		com.setOption(usi::split("setoption name leave_qsearchNode value true", ' '));
+		com.setOption(usi::split("setoption name NumOfAgent value 6", ' '));
+		com.gameInit();
+		com.tree.set(usi::split("position startpos moves 7g7f 8c8d 9g9f 8d8e 7i7h 8e8f 8g8f 8b8f 8h9g 8f9f 9g8h 9f8f 8h9g 8f9f 9g8h 9f8f 8h9g 8f9f 9g8h 9f8f 8h9g", ' '));
+		std::cout << "search start(500ms)" << std::endl;
+		com.go(usi::split("go btime 0 wtime 0 byoyomi 650", ' '));
+		std::this_thread::sleep_for(510ms);
+		com.tree.prohibitSearch();
+		com.tree.foutTree();
 	}
 #endif
 }

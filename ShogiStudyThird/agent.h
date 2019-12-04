@@ -22,7 +22,8 @@ public:
 private:
 	size_t simulate(SearchNode* const root);
 	size_t qsimulate(SearchNode* const root, const SearchPlayer& player);
-
+	bool checkRepetitiveCheck(const Kyokumen& k,const std::vector<SearchNode*>& searchhis, const SearchNode* const latestRepnode)const;
+	void nodeCopy(const SearchNode* const origin, SearchNode* const copy)const;
 	SearchTree& tree;
 	unsigned ID;
 	std::atomic_bool alive;//生きているかどうか

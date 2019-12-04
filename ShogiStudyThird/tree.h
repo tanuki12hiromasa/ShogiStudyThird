@@ -23,7 +23,7 @@ public:
 	const uint64_t getNodeCount() const { return nodecount; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
 	const SearchPlayer& getRootPlayer()const { return rootPlayer; }
-
+	std::pair<unsigned,SearchNode*> findRepetition(const Kyokumen& kyokumen)const;//過去に同一局面が無かったか検索する なければ-1を返す
 	SearchNode* getRoot(unsigned threadNo, size_t increaseNodes);
 	SearchNode* getRoot() const { return history.back(); }
 
@@ -31,6 +31,7 @@ public:
 private:
 	void deleteTreeParallel(SearchNode* root,uint8_t oldhisnum);//rootを含め子孫を全消去する
 
+	std::unordered_multimap<std::uint64_t, std::pair<std::array<uint8_t, 95>, uint16_t>> historymap;
 	std::vector<SearchNode*> history;
 	Kyokumen startKyokumen;
 	SearchPlayer rootPlayer;

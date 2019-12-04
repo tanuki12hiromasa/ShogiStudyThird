@@ -58,6 +58,7 @@ public:
 	Bitboard operator~()const;
 	size_t size() const { return bbNum; }
 
+	const std::array<uint64_t, 3>& val()const { return _p; }
 private:
 	std::array<uint64_t, 3> _p;
 

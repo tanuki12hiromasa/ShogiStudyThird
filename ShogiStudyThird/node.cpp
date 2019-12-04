@@ -5,10 +5,10 @@
 #include <limits>
 
 double SearchNode::mateMass = 1;
-double SearchNode::mateScore = 34000.0;
+double SearchNode::mateScore = 34000.0;//詰ませた側(勝った側)のscore
 double SearchNode::mateScoreBound = 30000.0;
 double SearchNode::mateOneScore = 20.0;
-double SearchNode::repetitionScore = -100;
+double SearchNode::repetitionScore = -100;//先手側のscore（千日手のscoreは手番に依存する）
 double SearchNode::Tc_const = 60;
 double SearchNode::Tc_mp = 30;
 double SearchNode::Tc_mc = 20;
@@ -31,6 +31,8 @@ size_t SearchNode::deleteTree() {
 	}
 	std::vector<SearchNode*> nodes = children;
 	children.clear();
+	state = State::N;
+	expanded = false;
 	size_t delnum = nodes.size();
 	while (!nodes.empty()) {
 		SearchNode* node = nodes.back();
@@ -39,7 +41,6 @@ size_t SearchNode::deleteTree() {
 		nodes.insert(nodes.end(), node->children.begin(), node->children.end());
 		delete node;
 	}
-	state = State::N;
 	return delnum;
 }
 
@@ -80,15 +81,17 @@ void SearchNode::setDeclare() {
 	state = State::T;
 }
 
-void SearchNode::setRepetition(const double m) {
-	eval = repetitionScore;
-	mass = m;
+void SearchNode::setRepetition(const bool teban) {
+	deleteTree();
+	eval = teban ? repetitionScore : (-repetitionScore);
+	mass = mateMass;
 	state = State::T;
 }
 
-void SearchNode::setRepetitiveCheck(const double m) {
+void SearchNode::setRepetitiveCheck() {
+	deleteTree();
 	eval = mateScore;
-	mass = m;
+	mass = mateMass;
 	state = State::T;
 }
 

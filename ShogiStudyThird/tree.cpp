@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "tree.h"
+#include "move_gen.h"
 #include <queue>
 #include <fstream>
 
@@ -17,7 +18,7 @@ void SearchTree::set(const std::vector<std::string>& usitokens) {
 }
 
 void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
-	if (!history.empty() && startKyokumen == startpos)	{
+	if (!history.empty() && (history.size() <= usihis.size()) && startKyokumen == startpos)	{
 		int i;
 		for (i = 0; i < history.size() - 1; i++) {
 			if (history[i+1ull]->move != usihis[i]) {
@@ -28,6 +29,14 @@ void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
 			SearchNode* root = getRoot();
 			const Move nextmove = usihis[i];
 			SearchNode* nextNode = nullptr;
+			if (!root->isExpandedAll()) {
+				if (root->isLimitedExpanded()) {
+					MoveGenerator::genNocapMove(root, rootPlayer.kyokumen);
+				}
+				else {
+					MoveGenerator::genMove(root, rootPlayer.kyokumen);
+				}
+			}
 			for (SearchNode* child : root->children) {
 				if (child->move == nextmove) {
 					nextNode = child;
@@ -46,11 +55,21 @@ makenewtree:
 		if (!history.empty()) deleteTreeParallel(history.front(), history.size() - 1);
 		history.clear();
 		startKyokumen = startpos;
-		SearchNode* rootNode = new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false));
-		history.push_back(rootNode);
+		history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
 		rootPlayer = SearchPlayer(startKyokumen);
 		for (auto& usimove : usihis) {
-			SearchNode* next = rootNode->addChild(usimove);
+			SearchNode* rootNode = getRoot();
+			MoveGenerator::genMove(rootNode, rootPlayer.kyokumen);
+			SearchNode* next = rootNode->children.front();
+			for (const auto& child : rootNode->children) {
+				if (child->move == usimove) {
+					next = child;
+					break;
+				}
+			}
+			if (next == nullptr) {
+				next = rootNode->addChild(usimove);
+			}
 			proceed(next);
 		}
 	}
@@ -90,6 +109,7 @@ std::vector<SearchNode*> SearchTree::getPV()const {
 }
 
 void SearchTree::proceed(SearchNode* node) {
+	historymap.emplace(rootPlayer.kyokumen.getHash(), std::make_pair(rootPlayer.kyokumen.getBammen(), history.size() - 1));
 	rootPlayer.kyokumen.proceed(node->move);
 	rootPlayer.feature.set(rootPlayer.kyokumen);
 	deleteBranchParallel(getRoot(), node, history.size() - 1);
@@ -114,7 +134,7 @@ void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved, uint8
 		{
 			bool immigrated;
 			do {
-				std::this_thread::sleep_for(std::chrono::milliseconds(200));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 				immigrated = true;
 				std::lock_guard<std::mutex> lock(thmutex);
 				for (uint8_t hnum : lastRefRootByThread) {
@@ -153,6 +173,23 @@ void SearchTree::deleteTreeParallel(SearchNode* root,uint8_t oldhisnum) {
 		}
 	);
 	th.detach();
+}
+
+std::pair<unsigned, SearchNode*> SearchTree::findRepetition(const Kyokumen& kyokumen)const {
+	auto range = historymap.equal_range(kyokumen.getHash());
+	unsigned num = 0;
+	size_t latest = 0;
+	SearchNode* latestNode = nullptr;
+	for (auto it = range.first; it != range.second; it++) {
+		if (kyokumen.teban() == ((*it).second.second % 2 == 0) && (*it).second.first == kyokumen.getBammen()) {
+			num++;
+			if ((*it).second.second > latest) {
+				latest = (*it).second.second;
+				latestNode = history[latest];
+			}
+		}
+	}
+	return std::make_pair(num, latestNode);
 }
 
 void SearchTree::foutTree()const {

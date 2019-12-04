@@ -43,12 +43,13 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	SearchNode* node = root;
 	SearchPlayer player(tree.getRootPlayer());
 	std::vector<SearchNode*> history = { node };
+	std::vector<std::pair<uint64_t, std::array<uint8_t, 95>>> k_history;
 	//選択
 	while (!node->isLeaf()) {
 		double CE = std::numeric_limits<double>::max();
 		std::vector<dn> evals;
 		for (const auto& child : node->children) {
-			if (child->isSearchable()) {
+			if (!child->isTerminal()) {
 				double eval = child->getEvaluation();
 				evals.push_back(std::make_pair(eval,child));
 				if (eval < CE) {
@@ -75,6 +76,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		//局面を進める
+		k_history.push_back(std::make_pair(player.kyokumen.getHash(), player.kyokumen.getBammen()));
 		player.proceed(node->move);
 		history.push_back(node);
 	}
@@ -89,14 +91,44 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			node->setDeclare();
 			goto backup;
 		}
-		if (false/*千日手である*/) {
-			if (false/*連続王手である*/) {
-				node->setRepetitiveCheck(1);
+		//千日手チェック
+		unsigned repnum = 0;
+		SearchNode* repnode = nullptr;
+		SearchNode* latestRepnode = nullptr;
+		{
+			auto p = tree.findRepetition(player.kyokumen);
+			repnum += p.first;
+			repnode = p.second;
+			const auto hash = player.kyokumen.getHash();
+			//先後一致している方のみを調べればよいので1つ飛ばしで調べる
+			for (int t = k_history.size() - 2; t >= 0; t -= 2) {
+				const auto& k = k_history[t];
+				if ( k.first == hash && k.second==player.kyokumen.getBammen()) {
+					repnum++;
+					repnode = history[t];
+					if (latestRepnode == nullptr) {
+						latestRepnode = repnode;
+					}
+				}
 			}
-			else {
-				node->setRepetition(1);
+			if (latestRepnode == nullptr) {
+				latestRepnode = repnode;
 			}
-			goto backup;
+		}
+		if (repnum > 0/*千日手である*/) {
+			if (repnum >= 3) {
+				if (checkRepetitiveCheck(player.kyokumen,history,latestRepnode)) {
+					node->setRepetitiveCheck();
+				}
+				else {
+					node->setRepetition(player.kyokumen.teban());
+				}
+				goto backup;
+			}
+			else if(!repnode->isLeaf()) {
+				nodeCopy(repnode, node);
+				goto backup;
+			}
 		}
 		std::vector<SearchNode*> gennodes;
 		switch (node->state)
@@ -129,8 +161,10 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 //#else //静止探索ノードを残さない場合
 			else {
 				qsimulate(child, p);
-				child->setMass(0);//
-				child->deleteTree();
+				if (!child->isTerminal()) {
+					child->setMass(0);//
+					child->deleteTree();
+				}
 			}
 //#endif
 		}
@@ -364,4 +398,51 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 		}
 	}
 	return newnodecount;
+}
+
+bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vector<SearchNode*>& searchhis, const SearchNode* const repnode)const {
+	//対象ノードは未展開なので局面から王手かどうか判断する この関数は4回目の繰り返しの終端ノードで呼ばれているのでkusemonoを何回も生成するような無駄は発生していない
+	if (kyokumen.teban()) {
+		if (kyokumen.getSenteOuCheck().empty()) {
+			return false;
+		}
+	}
+	else {
+		if (kyokumen.getGoteOuCheck().empty()) {
+			return false;
+		}
+	}
+	searchhis.back()->move.setOute(true);
+	//過去ノードはmoveのouteフラグから王手だったか判定する
+	int t;
+	for (t = searchhis.size() - 3; t >= 0; t -= 2) {//historyの後端は末端ノードなのでその二つ前から調べていく
+		if (!searchhis[t]->move.isOute()) {
+			return false;
+		}
+		if (searchhis[t] == repnode) {
+			return true;
+		}
+	}
+	const auto& treehis = tree.getHistory();
+	for (t += treehis.size() - 1; t >= 0; t -= 2) {
+		if (!treehis[t]->move.isOute()) {
+			return false;
+		}
+		if (treehis[t] == repnode) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void SearchAgent::nodeCopy(const SearchNode* const origin, SearchNode* const copy)const {
+	copy->setEvaluation(origin->getEvaluation());
+	copy->move = origin->move;
+	for (auto& child : origin->children) {
+		auto copy_child = copy->addChild(child->move);
+		copy_child->eval = child->getEvaluation();
+	}
+	copy->setExpandedAll();
+	copy->setMass(1);
+	copy->state = SearchNode::State::E;
 }

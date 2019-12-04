@@ -16,6 +16,8 @@ public:
 	
 	koma::Position proceed(const Move);
 
+	const std::array<std::uint8_t, 95>& getBammen()const { return bammen; }
+	std::uint64_t getHash()const;
 	bool teban()const { return isSente; }
 	koma::Koma getKoma(const koma::Position pos)const { assert(pos < 81); return static_cast<koma::Koma> (bammen[static_cast<size_t>(pos)]); }
 	koma::Koma getKoma(const unsigned pos)const { assert(pos < 81); return static_cast<koma::Koma> (bammen[static_cast<size_t>(pos)]); }

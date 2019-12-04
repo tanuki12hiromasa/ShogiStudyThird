@@ -58,8 +58,8 @@ public:
 	void setMateVariation(const double childmin);
 	void setMate();
 	void setDeclare();
-	void setRepetition(const double m);
-	void setRepetitiveCheck(const double m);
+	void setRepetition(const bool teban);
+	void setRepetitiveCheck();
 	void setExpandedAll() { expanded = true; }
 
 	double getEvaluation()const { return eval.load(); }
@@ -67,7 +67,7 @@ public:
 	bool isLimitedExpanded()const { return state == State::QE || state == State::QT; }
 	bool isQSTerminal()const { return state != State::N && state != State::QE; }
 	bool isLeaf()const { return state == State::N || state == State::QE || state == State::QT; }
-	bool isSearchable()const { return state != State::T; }
+	bool isTerminal()const { return state == State::T; }
 	bool isExpandedAll() { return expanded; }
 	double getT_c()const;
 private:
