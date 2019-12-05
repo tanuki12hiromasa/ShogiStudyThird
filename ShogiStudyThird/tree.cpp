@@ -202,7 +202,7 @@ void SearchTree::foutTree()const {
 	while (!nq.empty()) {
 		const SearchNode* const node = nq.front();
 		nq.pop();
-		int st = static_cast<int>(node->state.load());
+		int st = static_cast<int>(node->status.load());
 		fs << index << ", " << st << ", " << node->move.toUSI() << ", " << node->eval << ", " << node->mass << ", [";
 		for (const auto c : node->children) {
 			nq.push(c);

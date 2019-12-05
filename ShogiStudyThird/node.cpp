@@ -20,7 +20,7 @@ double SearchNode::MassMax_QS = 8;
 SearchNode::SearchNode(const Move& move)
 	:move(move), expanded(false)
 {
-	state = State::N;
+	status = State::N;
 	eval = 0;
 	mass = 0;
 }
@@ -31,7 +31,7 @@ size_t SearchNode::deleteTree() {
 	}
 	std::vector<SearchNode*> nodes = children;
 	children.clear();
-	state = State::N;
+	status = State::N;
 	expanded = false;
 	size_t delnum = nodes.size();
 	while (!nodes.empty()) {
@@ -72,27 +72,27 @@ void SearchNode::setMate() {
 		eval = -mateScore;
 	}
 	mass = mateMass;
-	state = State::T;
+	status = State::T;
 }
 
 void SearchNode::setDeclare() {
 	eval = mateScore;
 	mass = mateMass;
-	state = State::T;
+	status = State::T;
 }
 
 void SearchNode::setRepetition(const bool teban) {
 	deleteTree();
 	eval = teban ? repetitionScore : (-repetitionScore);
 	mass = mateMass;
-	state = State::T;
+	status = State::T;
 }
 
 void SearchNode::setRepetitiveCheck() {
 	deleteTree();
 	eval = mateScore;
 	mass = mateMass;
-	state = State::T;
+	status = State::T;
 }
 
 double SearchNode::getT_c() const {

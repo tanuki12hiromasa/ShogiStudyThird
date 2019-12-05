@@ -63,11 +63,11 @@ public:
 	void setExpandedAll() { expanded = true; }
 
 	double getEvaluation()const { return eval.load(); }
-	bool isNotExpanded()const { return state == State::N; }
-	bool isLimitedExpanded()const { return state == State::QE || state == State::QT; }
-	bool isQSTerminal()const { return state != State::N && state != State::QE; }
-	bool isLeaf()const { return state == State::N || state == State::QE || state == State::QT; }
-	bool isTerminal()const { return state == State::T; }
+	bool isNotExpanded()const { return status == State::N; }
+	bool isLimitedExpanded()const { return status == State::QE || status == State::QT; }
+	bool isQSTerminal()const { return status != State::N && status != State::QE; }
+	bool isLeaf()const { return status == State::N || status == State::QE || status == State::QT; }
+	bool isTerminal()const { return status == State::T; }
 	bool isExpandedAll() { return expanded; }
 	double getT_c()const;
 private:
@@ -75,9 +75,13 @@ private:
 public:
 	std::vector<SearchNode*> children;
 	Move move;
-	std::atomic<State> state;
-	std::atomic<double> eval;
-	std::atomic<double> mass;
+	std::atomic<State> status;
 private:
 	bool expanded;
+	std::int32_t origin_eval;
+	size_t visit_count;
+public:
+	std::atomic<double> eval;
+	std::atomic<double> mass;
+
 };

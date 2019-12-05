@@ -58,7 +58,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		if (evals.empty()) {
-			node->state = SearchNode::State::Terminal;
+			node->status = SearchNode::State::Terminal;
 			return 0;
 		}
 		const double T_c = node->getT_c();
@@ -131,11 +131,11 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		std::vector<SearchNode*> gennodes;
-		switch (node->state)
+		switch (node->status)
 		{
 		case SearchNode::State::N:
 			gennodes = MoveGenerator::genMove(node, player.kyokumen);
-			node->state = SearchNode::State::QE;
+			node->status = SearchNode::State::QE;
 			break;
 		case SearchNode::State::QE:
 		case SearchNode::State::QT:
@@ -189,7 +189,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}
 		node->setEvaluation(E);
 		node->setMass(1);
-		node->state = SearchNode::State::E;
+		node->status = SearchNode::State::E;
 	}//展開評価ここまで
 
 	//バックアップ
@@ -262,7 +262,7 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 				}
 			}
 			if (evals.empty()) {
-				node->state = SearchNode::State::QT;
+				node->status = SearchNode::State::QT;
 				failnum++;
 				goto looptail;
 			}
@@ -298,12 +298,12 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 					goto backup;
 				}
 				else {
-					node->state = SearchNode::State::QT;
+					node->status = SearchNode::State::QT;
 					failnum++;
 					goto looptail;
 				}
 			}
-			node->state = SearchNode::State::QE;
+			node->status = SearchNode::State::QE;
 			Evaluator::evaluate(gennodes, player);
 			double emin = std::numeric_limits<double>::max();
 			std::vector<double> evals;
@@ -444,5 +444,5 @@ void SearchAgent::nodeCopy(const SearchNode* const origin, SearchNode* const cop
 	}
 	copy->setExpandedAll();
 	copy->setMass(1);
-	copy->state = SearchNode::State::E;
+	copy->status = SearchNode::State::E;
 }
