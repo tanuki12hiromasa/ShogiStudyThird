@@ -115,6 +115,8 @@ void Commander::coutOption() {
 	cout << "option name T_choice_children_masses type string default 10" << endl;
 	cout << "option name T_eval type string default 60" << endl;
 	cout << "option name T_depth type string default 120" << endl;
+	cout << "option name Ec_functionCode type spin default 0 min 0 max 6" << endl;
+	cout << "option name Ec_c type string default 400" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -161,6 +163,12 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "T_depth") {
 			SearchNode::setTdepth(std::stod(token[4]));
+		}
+		else if (token[2] == "Ec_functionCode") {
+			SearchNode::setEcFuncCode(std::stoi(token[4]));
+		}
+		else if (token[2] == "Ec_c") {
+			SearchNode::setEcC(std::stod(token[4]));
 		}
 	}
 }

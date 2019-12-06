@@ -44,6 +44,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	SearchPlayer player(tree.getRootPlayer());
 	std::vector<SearchNode*> history = { node };
 	std::vector<std::pair<uint64_t, std::array<uint8_t, 95>>> k_history;
+	node->addVisitCount();
 	//選択
 	while (!node->isLeaf()) {
 		double CE = std::numeric_limits<double>::max();
@@ -76,6 +77,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		//局面を進める
+		node->addVisitCount();
 		k_history.push_back(std::make_pair(player.kyokumen.getHash(), player.kyokumen.getBammen()));
 		player.proceed(node->move);
 		history.push_back(node);
@@ -199,8 +201,10 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			node = history[i];
 			double emin = std::numeric_limits<double>::max();
 			std::vector<dd> emvec;
+			const auto np = node->getVisitCount();
+			const double massp = node->mass;
 			for (const auto& child : node->children) {
-				const double eval = child->eval;
+				const double eval = child->getE_c(np, massp);
 				const double mass = child->mass;
 				emvec.push_back(std::make_pair(eval, mass));
 				if (eval < emin) {
@@ -252,9 +256,11 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 		while (node->isNotExpanded()) {
 			double emin = std::numeric_limits<double>::max();
 			std::vector<dn> evals;
+			const auto np = node->getVisitCount();
+			const double massp = node->mass;
 			for (auto child : node->children) {
 				if (!child->isQSTerminal()) {
-					const double eval = child->getEvaluation();
+					const double eval = child->getE_c(np, massp);
 					evals.emplace_back(std::make_pair(eval, child));
 					if (eval < emin) {
 						emin = eval;
@@ -437,10 +443,8 @@ bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vecto
 
 void SearchAgent::nodeCopy(const SearchNode* const origin, SearchNode* const copy)const {
 	copy->setEvaluation(origin->getEvaluation());
-	copy->move = origin->move;
 	for (auto& child : origin->children) {
-		auto copy_child = copy->addChild(child->move);
-		copy_child->eval = child->getEvaluation();
+		copy->addCopyChild(child);
 	}
 	copy->setExpandedAll();
 	copy->setMass(1);

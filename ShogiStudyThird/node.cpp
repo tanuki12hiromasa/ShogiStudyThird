@@ -16,6 +16,8 @@ bool SearchNode::Tc_mc_expectable_variance = false;
 double SearchNode::T_eval = 40;
 double SearchNode::T_depth = 90;
 double SearchNode::MassMax_QS = 8;
+int SearchNode::Ec_FunctionCode = 0;
+double SearchNode::Ec_c = 200.0;
 
 SearchNode::SearchNode(const Move& move)
 	:move(move), expanded(false)
@@ -23,6 +25,7 @@ SearchNode::SearchNode(const Move& move)
 	status = State::N;
 	eval = 0;
 	mass = 0;
+	visit_count = 0;
 }
 
 size_t SearchNode::deleteTree() {
@@ -46,6 +49,14 @@ size_t SearchNode::deleteTree() {
 
 SearchNode* SearchNode::addChild(const Move& move) {
 	SearchNode* child = new SearchNode(move);
+	children.push_back(child);
+	return child;
+}
+
+SearchNode* SearchNode::addCopyChild(const SearchNode* const origin) {
+	SearchNode* child = new SearchNode(origin->move);
+	child->eval = origin->eval.load();
+	child->origin_eval = origin->origin_eval;
 	children.push_back(child);
 	return child;
 }
@@ -152,5 +163,40 @@ double SearchNode::getTcMcVariance()const {
 			variance += (e.second - mean) * (e.second - mean) * e.first;
 		}
 		return std::sqrt(variance / Z);
+	}
+}
+
+double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
+	switch (Ec_FunctionCode)
+	{
+	case 0:
+		return eval;
+	case 1:
+		return eval + Ec_c * (std::log((double)visitnum_p) / (visit_count+1));
+	case 2:
+		return eval + Ec_c * origin_eval * (double)visitnum_p / (visit_count * visit_count + 1);
+	case 3:
+		return eval + Ec_c * mass_p * std::exp(mass);
+	case 4:
+	{
+		const double m = mass.load();
+		return eval + Ec_c * mass_p / (1 + m * m * m);
+	}
+	case 5:
+	{
+		const double m = mass.load();
+		return eval + Ec_c * origin_eval * mass_p / (1 + m * m * m);
+	}
+	case 6:
+	{
+		const double m = mass.load();
+		return eval * (1 + Ec_c * mass_p / (1 + m * m * m));
+	}
+	case 7:
+		return eval + Ec_c * origin_eval * std::exp(mass_p / 2 - mass);
+	case 8:
+		return eval + Ec_c * origin_eval;
+	default:
+		return eval;
 	}
 }

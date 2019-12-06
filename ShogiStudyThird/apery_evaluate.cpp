@@ -10,7 +10,7 @@ namespace apery {
 		//一局面ずつ全計算している
 		for (auto& node : en.nodes) {
 			apery_feat feat(node.nextKyokumen);
-			node.node->setEvaluation((double)feat.sum.sum(node.nextKyokumen.teban()) / FVScale);
+			node.node->setOriginEval((double)feat.sum.sum(node.nextKyokumen.teban()) / FVScale);
 		}
 #if 0
 		//親局面から差分計算 正直中途半端である パフォーマンス比較には使えるか?
@@ -18,7 +18,7 @@ namespace apery {
 		for (auto& node : en.nodes) {
 			apery_feat cfeat(pfeat);
 			cfeat.proceed(en.kyokumen, node.node->move);
-			node.node->setEvaluation((double)cfeat.sum.sum(node.nextKyokumen.teban()) / FVScale);
+			node.node->setOriginEval((double)cfeat.sum.sum(node.nextKyokumen.teban()) / FVScale);
 		}
 #endif
 	}
@@ -28,7 +28,7 @@ namespace apery {
 		for (auto& node : en.nodes) {
 			apery_feat cfeat(pfeat);
 			cfeat.proceed(en.kyokumen, node->move);
-			node->setEvaluation((double)cfeat.sum.sum(!en.kyokumen.teban()) / FVScale);
+			node->setOriginEval((double)cfeat.sum.sum(!en.kyokumen.teban()) / FVScale);
 		}
 	}
 
@@ -37,11 +37,11 @@ namespace apery {
 		for (auto& node : nodes) {
 			apery_feat cfeat(player.feature);
 			cfeat.proceed(player.kyokumen, node->move);
-			node->setEvaluation((double)cfeat.sum.sum(!player.kyokumen.teban()) / FVScale);
+			node->setOriginEval((double)cfeat.sum.sum(!player.kyokumen.teban()) / FVScale);
 		}
 	}
 
 	void apery_evaluator::evaluate(SearchNode* node, const SearchPlayer& player) {
-		node->setEvaluation((double)player.feature.sum.sum(player.kyokumen.teban()) / FVScale);
+		node->setOriginEval((double)player.feature.sum.sum(player.kyokumen.teban()) / FVScale);
 	}
 }
