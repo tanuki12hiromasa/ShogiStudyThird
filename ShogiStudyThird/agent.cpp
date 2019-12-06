@@ -49,9 +49,11 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	while (!node->isLeaf()) {
 		double CE = std::numeric_limits<double>::max();
 		std::vector<dn> evals;
+		const auto np = node->getVisitCount();
+		const double massp = node->mass;
 		for (const auto& child : node->children) {
 			if (!child->isTerminal()) {
-				double eval = child->getEvaluation();
+				double eval = child->getE_c(np, massp);
 				evals.push_back(std::make_pair(eval,child));
 				if (eval < CE) {
 					CE = eval;
@@ -201,10 +203,8 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			node = history[i];
 			double emin = std::numeric_limits<double>::max();
 			std::vector<dd> emvec;
-			const auto np = node->getVisitCount();
-			const double massp = node->mass;
 			for (const auto& child : node->children) {
-				const double eval = child->getE_c(np, massp);
+				const double eval = child->getEvaluation();
 				const double mass = child->mass;
 				emvec.push_back(std::make_pair(eval, mass));
 				if (eval < emin) {

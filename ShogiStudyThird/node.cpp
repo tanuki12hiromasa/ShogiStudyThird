@@ -172,15 +172,15 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 	case 0:
 		return eval;
 	case 1:
-		return eval + Ec_c * (std::log((double)visitnum_p) / (visit_count+1));
+		return eval - Ec_c * (std::log((double)visitnum_p) / (visit_count+1));
 	case 2:
 		return eval + Ec_c * origin_eval * (double)visitnum_p / (visit_count * visit_count + 1);
 	case 3:
-		return eval + Ec_c * mass_p * std::exp(mass);
+		return eval - Ec_c * mass_p * std::exp(mass);
 	case 4:
 	{
 		const double m = mass.load();
-		return eval + Ec_c * mass_p / (1 + m * m * m);
+		return eval - Ec_c * mass_p / (1 + m * m * m);
 	}
 	case 5:
 	{
