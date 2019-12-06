@@ -27,6 +27,8 @@ private:
 	static double T_eval;
 	static double T_depth;
 	static double MassMax_QS;
+	static int Ec_FunctionCode;
+	static double Ec_c;
 public:
 	static void setMateScore(const double score) { mateScore = score; }
 	static void setMateScoreBound(const double bound) { mateScoreBound = bound; }
@@ -43,7 +45,8 @@ public:
 	static double getTeval() { return T_eval; }
 	static double getTdepth() { return T_depth; }
 	static double getMQS() { return MassMax_QS; }
-
+	static void setEcFuncCode(const int code) { Ec_FunctionCode = code; }
+	static void setEcC(const double c) { Ec_c = c; }
 public:
 	SearchNode(const Move& move);
 	SearchNode(const SearchNode&) = delete;
@@ -51,6 +54,7 @@ public:
 
 	size_t deleteTree();//子孫ノードをすべて消す 自身は消さない
 	SearchNode* addChild(const Move& move);
+	SearchNode* addCopyChild(const SearchNode* const origin);
 
 	void setEvaluation(const double evaluation) { eval = evaluation; }
 	void setMass(const double m) { mass = m; }
@@ -61,23 +65,31 @@ public:
 	void setRepetition(const bool teban);
 	void setRepetitiveCheck();
 	void setExpandedAll() { expanded = true; }
+	void setOriginEval(const double evaluation) { origin_eval = evaluation; eval = evaluation; }
+	void addVisitCount() { visit_count++; }
 
 	double getEvaluation()const { return eval.load(); }
-	bool isNotExpanded()const { return state == State::N; }
-	bool isLimitedExpanded()const { return state == State::QE || state == State::QT; }
-	bool isQSTerminal()const { return state != State::N && state != State::QE; }
-	bool isLeaf()const { return state == State::N || state == State::QE || state == State::QT; }
-	bool isTerminal()const { return state == State::T; }
+	bool isNotExpanded()const { return status == State::N; }
+	bool isLimitedExpanded()const { return status == State::QE || status == State::QT; }
+	bool isQSTerminal()const { return status != State::N && status != State::QE; }
+	bool isLeaf()const { return status == State::N || status == State::QE || status == State::QT; }
+	bool isTerminal()const { return status == State::T; }
 	bool isExpandedAll() { return expanded; }
 	double getT_c()const;
+	size_t getVisitCount()const { return visit_count; }
+	double getE_c(const size_t& visitnum_p, const double& mass_p)const;
 private:
 	double getTcMcVariance()const;
 public:
 	std::vector<SearchNode*> children;
 	Move move;
-	std::atomic<State> state;
-	std::atomic<double> eval;
-	std::atomic<double> mass;
+	std::atomic<State> status;
 private:
 	bool expanded;
+	std::int32_t origin_eval;
+	size_t visit_count;
+public:
+	std::atomic<double> eval;
+	std::atomic<double> mass;
+
 };

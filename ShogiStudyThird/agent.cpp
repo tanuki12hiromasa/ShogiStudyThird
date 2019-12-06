@@ -44,13 +44,16 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	SearchPlayer player(tree.getRootPlayer());
 	std::vector<SearchNode*> history = { node };
 	std::vector<std::pair<uint64_t, std::array<uint8_t, 95>>> k_history;
+	node->addVisitCount();
 	//選択
 	while (!node->isLeaf()) {
 		double CE = std::numeric_limits<double>::max();
 		std::vector<dn> evals;
+		const auto np = node->getVisitCount();
+		const double massp = node->mass;
 		for (const auto& child : node->children) {
 			if (!child->isTerminal()) {
-				double eval = child->getEvaluation();
+				double eval = child->getE_c(np, massp);
 				evals.push_back(std::make_pair(eval,child));
 				if (eval < CE) {
 					CE = eval;
@@ -58,7 +61,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		if (evals.empty()) {
-			node->state = SearchNode::State::Terminal;
+			node->status = SearchNode::State::Terminal;
 			return 0;
 		}
 		const double T_c = node->getT_c();
@@ -76,6 +79,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		//局面を進める
+		node->addVisitCount();
 		k_history.push_back(std::make_pair(player.kyokumen.getHash(), player.kyokumen.getBammen()));
 		player.proceed(node->move);
 		history.push_back(node);
@@ -131,11 +135,11 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		std::vector<SearchNode*> gennodes;
-		switch (node->state)
+		switch (node->status)
 		{
 		case SearchNode::State::N:
 			gennodes = MoveGenerator::genMove(node, player.kyokumen);
-			node->state = SearchNode::State::QE;
+			node->status = SearchNode::State::QE;
 			break;
 		case SearchNode::State::QE:
 		case SearchNode::State::QT:
@@ -189,7 +193,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}
 		node->setEvaluation(E);
 		node->setMass(1);
-		node->state = SearchNode::State::E;
+		node->status = SearchNode::State::E;
 	}//展開評価ここまで
 
 	//バックアップ
@@ -200,7 +204,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			double emin = std::numeric_limits<double>::max();
 			std::vector<dd> emvec;
 			for (const auto& child : node->children) {
-				const double eval = child->eval;
+				const double eval = child->getEvaluation();
 				const double mass = child->mass;
 				emvec.push_back(std::make_pair(eval, mass));
 				if (eval < emin) {
@@ -252,9 +256,11 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 		while (node->isNotExpanded()) {
 			double emin = std::numeric_limits<double>::max();
 			std::vector<dn> evals;
+			const auto np = node->getVisitCount();
+			const double massp = node->mass;
 			for (auto child : node->children) {
 				if (!child->isQSTerminal()) {
-					const double eval = child->getEvaluation();
+					const double eval = child->getE_c(np, massp);
 					evals.emplace_back(std::make_pair(eval, child));
 					if (eval < emin) {
 						emin = eval;
@@ -262,7 +268,7 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 				}
 			}
 			if (evals.empty()) {
-				node->state = SearchNode::State::QT;
+				node->status = SearchNode::State::QT;
 				failnum++;
 				goto looptail;
 			}
@@ -298,12 +304,12 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 					goto backup;
 				}
 				else {
-					node->state = SearchNode::State::QT;
+					node->status = SearchNode::State::QT;
 					failnum++;
 					goto looptail;
 				}
 			}
-			node->state = SearchNode::State::QE;
+			node->status = SearchNode::State::QE;
 			Evaluator::evaluate(gennodes, player);
 			double emin = std::numeric_limits<double>::max();
 			std::vector<double> evals;
@@ -437,12 +443,10 @@ bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vecto
 
 void SearchAgent::nodeCopy(const SearchNode* const origin, SearchNode* const copy)const {
 	copy->setEvaluation(origin->getEvaluation());
-	copy->move = origin->move;
 	for (auto& child : origin->children) {
-		auto copy_child = copy->addChild(child->move);
-		copy_child->eval = child->getEvaluation();
+		copy->addCopyChild(child);
 	}
 	copy->setExpandedAll();
 	copy->setMass(1);
-	copy->state = SearchNode::State::E;
+	copy->status = SearchNode::State::E;
 }
