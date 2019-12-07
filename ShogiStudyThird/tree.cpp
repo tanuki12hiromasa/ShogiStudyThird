@@ -60,7 +60,7 @@ makenewtree:
 		for (auto& usimove : usihis) {
 			SearchNode* rootNode = getRoot();
 			MoveGenerator::genMove(rootNode, rootPlayer.kyokumen);
-			SearchNode* next = rootNode->children.front();
+			SearchNode* next = nullptr;
 			for (const auto& child : rootNode->children) {
 				if (child->move == usimove) {
 					next = child;
