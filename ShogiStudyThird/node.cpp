@@ -214,6 +214,8 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 		const double m = mass.load();
 		return eval - Ec_c * mass_p / (1 + m * m);
 	}
+	case 15:
+		return eval + Ec_c * mass;
 	default:
 		return eval;
 	}

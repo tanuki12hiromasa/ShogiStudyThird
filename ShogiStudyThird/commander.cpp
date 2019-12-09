@@ -107,16 +107,18 @@ void Commander::coutOption() {
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
 	cout << "option name leave_qsearchNode type check default true" << endl;
 	cout << "option name Repetition_score type string default -200" << endl;
-	cout << "option name QSstopper_failnum type spin default 4 min 1 max 64" << endl;
-	cout << "option name QSstopper_mass type string default 3.0" << endl;
+	cout << "option name QSstopper_failnum type spin default 10 min 0 max 64" << endl;
+	cout << "option name QSstopper_mass type string default 7.0" << endl;
 	cout << "option name T_choice_expecrable_variance type check default false" << endl;
-	cout << "option name T_choice_const type string default 60" << endl;
-	cout << "option name T_choice_mass_parent type string default 20" << endl;
-	cout << "option name T_choice_children_masses type string default 10" << endl;
-	cout << "option name T_eval type string default 60" << endl;
-	cout << "option name T_depth type string default 120" << endl;
-	cout << "option name Ec_functionCode type spin default 0 min 0 max 14" << endl;
-	cout << "option name Ec_c type string default 400" << endl;
+	cout << "option name T_choice_const type string default 160" << endl;
+	cout << "option name T_choice_mass_parent type string default 0" << endl;
+	cout << "option name T_choice_children_masses type string default 0" << endl;
+	cout << "option name T_eval type string default 40" << endl;
+	cout << "option name T_depth type string default 200" << endl;
+	cout << "option name Ec_functionCode type spin default 0 min 0 max 15" << endl;
+	cout << "option name Ec_c type string default 10" << endl;
+	cout << "option name NodeMaxNum type spin default 100000000 min 1000 max 5000000000" << endl;
+	cout << "option name PV_xBonus type string default 5" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -170,6 +172,12 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "Ec_c") {
 			SearchNode::setEcC(std::stod(token[4]));
 		}
+		else if (token[2] == "NodeMaxNum") {
+			tree.setNodeMaxsize(std::stoull(token[4]));
+		}
+		else if (token[2] == "PV_xBonus") {
+			tree.setPVMassBonus(std::stod(token[4]));
+		}
 	}
 }
 
@@ -179,7 +187,7 @@ void Commander::paramInit() {
 	SearchNode::setTdepth(100);
 	SearchNode::setTeval(60);
 	SearchNode::setMassmaxInQSearch(5);
-	tree.setNodeMaxsize(100000000);
+	tree.setNodeMaxsize(150000000);
 	SearchNode::setMateScore(34000);
 	SearchNode::setMateOneScore(20);
 	SearchNode::setMateScoreBound(30000);

@@ -80,7 +80,7 @@ SearchNode* SearchTree::getBestMove()const {
 	SearchNode* best = nullptr;
 	double min = std::numeric_limits<double>::max();
 	for (const auto child : rootNode->children) {
-		const double eval = child->eval;
+		const double eval = child->eval - child->mass * PV_massbonus;
 		if (eval <= min) {
 			best = child;
 			min = eval;
@@ -96,7 +96,7 @@ std::vector<SearchNode*> SearchTree::getPV()const {
 		SearchNode* best = node->children.front();
 		double min = std::numeric_limits<double>::max();
 		for (const auto child : node->children) {
-			const double eval = child->eval;
+			const double eval = child->eval - child->mass * PV_massbonus;
 			if (eval <= min) {
 				best = child;
 				min = eval;
