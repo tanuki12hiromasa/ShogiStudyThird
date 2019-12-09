@@ -395,7 +395,7 @@ size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
 			node->setEvaluation(E);
 			node->setMass(M);
 		}
-		newnodecount = 0u;
+		failnum = 0u;
 	looptail:;
 	}
 	if (root->children.empty()) {
