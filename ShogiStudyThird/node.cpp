@@ -205,10 +205,10 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 	case 12:
 	{
 		const double e = eval.load();
-		return e + ((e > 0) ? -(mass - 1) * Ec_c : (mass - 1) * Ec_c);
+		return e + ((e > 0) ? -mass  * Ec_c : mass * Ec_c);
 	}
 	case 13:
-		return eval / (1 + Ec_c * (mass - 1));
+		return eval * (1 - Ec_c * mass);
 	case 14:
 	{
 		const double m = mass.load();
