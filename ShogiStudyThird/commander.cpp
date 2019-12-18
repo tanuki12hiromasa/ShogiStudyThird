@@ -115,7 +115,7 @@ void Commander::coutOption() {
 	cout << "option name T_choice_children_masses type string default 0" << endl;
 	cout << "option name T_eval type string default 40" << endl;
 	cout << "option name T_depth type string default 200" << endl;
-	cout << "option name Ec_functionCode type spin default 0 min 0 max 15" << endl;
+	cout << "option name Ec_functionCode type spin default 0 min 0 max 17" << endl;
 	cout << "option name Ec_c type string default 10" << endl;
 	cout << "option name NodeMaxNum type spin default 100000000 min 1000 max 5000000000" << endl;
 	cout << "option name PV_xBonus type string default 5" << endl;

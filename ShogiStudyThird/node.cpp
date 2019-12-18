@@ -216,6 +216,14 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 	}
 	case 15:
 		return eval + Ec_c * mass;
+	case 16: {
+		double p = Ec_c / (mass + 1);
+		return eval * (1.0 - p) + origin_eval * p;
+	}
+	case 17: {
+		double p = Ec_c / std::sqrt(mass + 1);
+		return eval * (1.0 - p) + origin_eval * p;
+	}
 	default:
 		return eval;
 	}
