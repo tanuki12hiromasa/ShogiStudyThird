@@ -126,7 +126,7 @@ double SearchNode::getT_c() const {
 }
 
 double SearchNode::getTcMcVariance()const {
-	if (setTcmc_expectable_flag) {
+	if (Tc_mc_expectable_variance) {
 		std::vector<double> cmasses;
 		double mean = 0;
 		for (const auto& child : children) {
@@ -222,6 +222,11 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 	}
 	case 17: {
 		double p = Ec_c / std::sqrt(mass + 1);
+		return eval * (1.0 - p) + origin_eval * p;
+	}
+	case 18: {
+		const double x = mass.load();
+		double p = (x >= 1) ? (Ec_c / x) : 1;
 		return eval * (1.0 - p) + origin_eval * p;
 	}
 	default:
