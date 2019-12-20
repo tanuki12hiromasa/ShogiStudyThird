@@ -33,6 +33,20 @@ inline void genGoteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, ko
 		addByBitboard(en, from, kikibb, prom);
 	}
 }
+inline void genSenteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, koma::Koma piece, bool prom, Bitboard frombb, const Bitboard& tomask) {
+	const Bitboard& allBB = kyokumen.getAllBB();
+	for (unsigned from = frombb.pop_first(); from < frombb.size(); from = frombb.pop_first()) {
+		Bitboard kikibb = BBkiki::getKiki(allBB, piece, from) & kyokumen.pinMaskSente(from) & tomask;
+		addByBitboard(en, from, kikibb, prom);
+	}
+}
+inline void genGoteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, koma::Koma piece, bool prom, Bitboard frombb, const Bitboard& tomask) {
+	const Bitboard& allBB = kyokumen.getAllBB();
+	for (unsigned from = frombb.pop_first(); from < frombb.size(); from = frombb.pop_first()) {
+		Bitboard kikibb = BBkiki::getKiki(allBB, piece, from) & kyokumen.pinMaskGote(from) & tomask;
+		addByBitboard(en, from, kikibb, prom);
+	}
+}
 //敵陣から敵陣外に移動して成る手
 inline void genSenteBanMove_fromprom(EvaluatedNodes& en, const Kyokumen& kyokumen, koma::Koma piece, Bitboard mask) {
 	const Bitboard& allBB = kyokumen.getAllBB();
