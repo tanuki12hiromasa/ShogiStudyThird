@@ -126,7 +126,7 @@ double SearchNode::getT_c() const {
 }
 
 double SearchNode::getTcMcVariance()const {
-	if (setTcmc_expectable_flag) {
+	if (Tc_mc_expectable_variance) {
 		std::vector<double> cmasses;
 		double mean = 0;
 		for (const auto& child : children) {
@@ -176,7 +176,7 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 	case 2:
 		return eval + Ec_c * origin_eval * (double)visitnum_p / (visit_count * visit_count + 1);
 	case 3:
-		return eval - Ec_c * mass_p * std::exp(mass);
+		return eval - Ec_c * mass_p / std::exp(mass);
 	case 4:
 	{
 		const double m = mass.load();
@@ -195,7 +195,40 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 	case 7:
 		return eval + Ec_c * origin_eval * std::exp(mass_p / 2 - mass);
 	case 8:
+		return eval - Ec_c * std::exp(mass_p / 2 - mass);
+	case 9:
 		return eval + Ec_c * origin_eval;
+	case 10:
+		return eval * (1 + Ec_c * std::exp(mass_p / 2 - mass));
+	case 11:
+		return eval * (1 + Ec_c * (double)visitnum_p / (visit_count * visit_count + 1));
+	case 12:
+	{
+		const double e = eval.load();
+		return e + ((e > 0) ? -mass  * Ec_c : mass * Ec_c);
+	}
+	case 13:
+		return eval * (1 - Ec_c * mass);
+	case 14:
+	{
+		const double m = mass.load();
+		return eval - Ec_c * mass_p / (1 + m * m);
+	}
+	case 15:
+		return eval + Ec_c * mass;
+	case 16: {
+		double p = Ec_c / (mass + 1);
+		return eval * (1.0 - p) + origin_eval * p;
+	}
+	case 17: {
+		double p = Ec_c / std::sqrt(mass + 1);
+		return eval * (1.0 - p) + origin_eval * p;
+	}
+	case 18: {
+		const double x = mass.load();
+		double p = Ec_c * ((x >= 1) ? (1 / x) : 1);
+		return eval * (1.0 - p) + origin_eval * p;
+	}
 	default:
 		return eval;
 	}

@@ -60,7 +60,7 @@ makenewtree:
 		for (auto& usimove : usihis) {
 			SearchNode* rootNode = getRoot();
 			MoveGenerator::genMove(rootNode, rootPlayer.kyokumen);
-			SearchNode* next = rootNode->children.front();
+			SearchNode* next = nullptr;
 			for (const auto& child : rootNode->children) {
 				if (child->move == usimove) {
 					next = child;
@@ -80,7 +80,7 @@ SearchNode* SearchTree::getBestMove()const {
 	SearchNode* best = nullptr;
 	double min = std::numeric_limits<double>::max();
 	for (const auto child : rootNode->children) {
-		const double eval = child->eval;
+		const double eval = child->eval - child->mass * PV_massbonus;
 		if (eval <= min) {
 			best = child;
 			min = eval;
@@ -92,11 +92,11 @@ SearchNode* SearchTree::getBestMove()const {
 std::vector<SearchNode*> SearchTree::getPV()const {
 	SearchNode* node = getRoot();
 	std::vector<SearchNode*> pv = { node };
-	while (node != nullptr && !node->children.empty()) {
-		SearchNode* best = nullptr;
+	while (!node->isLeaf() && !node->isTerminal() && !node->children.empty()) {
+		SearchNode* best = node->children.front();
 		double min = std::numeric_limits<double>::max();
 		for (const auto child : node->children) {
-			const double eval = child->eval;
+			const double eval = child->eval - child->mass * PV_massbonus;
 			if (eval <= min) {
 				best = child;
 				min = eval;
