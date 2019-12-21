@@ -443,6 +443,7 @@ bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vecto
 
 void SearchAgent::nodeCopy(const SearchNode* const origin, SearchNode* const copy)const {
 	copy->setEvaluation(origin->getEvaluation());
+	copy->move.setOute(origin->move.isOute());
 	for (auto& child : origin->children) {
 		copy->addCopyChild(child);
 	}
