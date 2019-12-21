@@ -109,7 +109,7 @@ void Commander::coutOption() {
 	cout << "option name Repetition_score type string default -200" << endl;
 	cout << "option name QSstopper_failnum type spin default 10 min 0 max 64" << endl;
 	cout << "option name QSstopper_mass type string default 7.0" << endl;
-	cout << "option name T_choice_expecrable_variance type check default false" << endl;
+	cout << "option name Tc_functionCode type spin default 0 min 0 max 4" << endl;
 	cout << "option name T_choice_const type string default 160" << endl;
 	cout << "option name T_choice_mass_parent type string default 0" << endl;
 	cout << "option name T_choice_children_masses type string default 0" << endl;
@@ -157,8 +157,8 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "T_choice_children_masses") {
 			SearchNode::setTcmc(std::stod(token[4]));
 		}
-		else if (token[2] == "T_choice_expecrable_variance") {
-			SearchNode::setTcmc_expectable_flag(token[4] == "true");
+		else if (token[2] == "Tc_functionCode") {
+			SearchNode::setTcFuncCode(std::stoi(token[4]));
 		}
 		else if (token[2] == "T_eval") {
 			SearchNode::setTeval(std::stod(token[4]));

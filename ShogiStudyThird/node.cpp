@@ -12,12 +12,12 @@ double SearchNode::repetitionScore = -100;//先手側のscore（千日手のscor
 double SearchNode::Tc_const = 60;
 double SearchNode::Tc_mp = 30;
 double SearchNode::Tc_mc = 20;
-bool SearchNode::Tc_mc_expectable_variance = false;
+int SearchNode::Tc_FunctionCode = 0;
 double SearchNode::T_eval = 40;
 double SearchNode::T_depth = 90;
 double SearchNode::MassMax_QS = 8;
 int SearchNode::Ec_FunctionCode = 0;
-double SearchNode::Ec_c = 200.0;
+double SearchNode::Ec_c = 1.0;
 
 SearchNode::SearchNode(const Move& move)
 	:move(move), expanded(false)
@@ -107,63 +107,59 @@ void SearchNode::setRepetitiveCheck() {
 }
 
 double SearchNode::getT_c() const {
-	if (Tc_mp != 0) {
-		if (Tc_mc != 0) {
-			return Tc_const + Tc_mp * (mass - 1) * Tc_mc * getTcMcVariance();
-		}
-		else {
-			return Tc_const + Tc_mp * (mass - 1);
-		}
-	}
-	else {
-		if (Tc_mc != 0) {
-			return Tc_const + Tc_mc * getTcMcVariance();
-		}
-		else {
-			return Tc_const;
-		}
+	switch (Tc_FunctionCode)
+	{
+	case 0:
+	default:
+		return Tc_const;
+	case 1:
+		return Tc_const + Tc_mp * (mass - 1);
+	case 2:
+		return Tc_const + Tc_mc * getTcMcVariance();
+	case 3:
+		return Tc_const + Tc_mp * (mass - 1) * Tc_mc * getTcMcVariance();
+	case 4:
+		return Tc_const / ((mass - 1) / Tc_mc + 1);
 	}
 }
 
 double SearchNode::getTcMcVariance()const {
-	if (Tc_mc_expectable_variance) {
-		std::vector<double> cmasses;
-		double mean = 0;
-		for (const auto& child : children) {
-			const double m = child->mass;
-			cmasses.push_back(m);
-			mean += m;
-		}
-		mean /= cmasses.size();
-		double variance = 0;
-		for (const auto& m : cmasses) {
-			variance += (m - mean) * (m - mean);
-		}
-		return std::sqrt(variance / cmasses.size());
+	std::vector<double> cmasses;
+	double mean = 0;
+	for (const auto& child : children) {
+		const double m = child->mass;
+		cmasses.push_back(m);
+		mean += m;
 	}
-	else {
-		std::vector<std::pair<double,double>> ems;
-		double min = std::numeric_limits<double>::max();
-		for (const auto& child : children) {
-			const double e = child->eval;
-			ems.push_back(std::make_pair(e, child->mass.load()));
-			if (e < min) {
-				min = e;
-			}
-		}
-		double Z = 0;
-		for (auto& e : ems) {
-			const double exp = std::exp(-(e.first - min) / T_depth);
-			Z += exp;
-			e.first = exp;
-		}
-		const double mean = mass - 1;
-		double variance = 0;
-		for (const auto& e : ems) {
-			variance += (e.second - mean) * (e.second - mean) * e.first;
-		}
-		return std::sqrt(variance / Z);
+	mean /= cmasses.size();
+	double variance = 0;
+	for (const auto& m : cmasses) {
+		variance += (m - mean) * (m - mean);
 	}
+	return std::sqrt(variance / cmasses.size());
+}
+double SearchNode::getTcMcVarianceExpection()const {
+	std::vector<std::pair<double, double>> ems;
+	double min = std::numeric_limits<double>::max();
+	for (const auto& child : children) {
+		const double e = child->eval;
+		ems.push_back(std::make_pair(e, child->mass.load()));
+		if (e < min) {
+			min = e;
+		}
+	}
+	double Z = 0;
+	for (auto& e : ems) {
+		const double exp = std::exp(-(e.first - min) / T_depth);
+		Z += exp;
+		e.first = exp;
+	}
+	const double mean = mass - 1;
+	double variance = 0;
+	for (const auto& e : ems) {
+		variance += (e.second - mean) * (e.second - mean) * e.first;
+	}
+	return std::sqrt(variance / Z);
 }
 
 double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
