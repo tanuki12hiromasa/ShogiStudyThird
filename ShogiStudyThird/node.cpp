@@ -119,7 +119,7 @@ double SearchNode::getT_c() const {
 	case 3:
 		return Tc_const + Tc_mp * (mass - 1) * Tc_mc * getTcMcVariance();
 	case 4:
-		return Tc_const / ((mass - 1) / Tc_mc + 1);
+		return std::max(Tc_const / ((mass - 1) / Tc_mc + 1), Tc_mp);
 	}
 }
 

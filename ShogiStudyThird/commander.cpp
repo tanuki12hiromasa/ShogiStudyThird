@@ -105,14 +105,14 @@ void Commander::coutOption() {
 	//cout << "option name kppt_filepath type string default ./data/kppt_apery" << endl; //隠しオプション
 	cout << "option name leave_branchNode type check default false" << endl;
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
-	cout << "option name leave_qsearchNode type check default true" << endl;
-	cout << "option name Repetition_score type string default -200" << endl;
-	cout << "option name QSstopper_failnum type spin default 10 min 0 max 64" << endl;
-	cout << "option name QSstopper_mass type string default 7.0" << endl;
+	cout << "option name leave_qsearchNode type check default false" << endl;
+	cout << "option name Repetition_score type string default 0" << endl;
+	cout << "option name QSstopper_failnum type spin default 0 min 0 max 64" << endl;
+	cout << "option name QSstopper_mass type string default 0.0" << endl;
 	cout << "option name Tc_functionCode type spin default 0 min 0 max 4" << endl;
 	cout << "option name T_choice_const type string default 160" << endl;
-	cout << "option name T_choice_mass_parent type string default 0" << endl;
-	cout << "option name T_choice_children_masses type string default 0" << endl;
+	cout << "option name T_choice_mass_parent type string default 1" << endl;
+	cout << "option name T_choice_children_masses type string default 1" << endl;
 	cout << "option name T_eval type string default 40" << endl;
 	cout << "option name T_depth type string default 200" << endl;
 	cout << "option name Ec_functionCode type spin default 0 min 0 max 18" << endl;
