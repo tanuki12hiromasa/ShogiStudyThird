@@ -109,7 +109,7 @@ void Commander::coutOption() {
 	cout << "option name Repetition_score type string default 0" << endl;
 	cout << "option name QSstopper_failnum type spin default 0 min 0 max 64" << endl;
 	cout << "option name QSstopper_mass type string default 0.0" << endl;
-	cout << "option name Tc_functionCode type spin default 0 min 0 max 4" << endl;
+	cout << "option name Tc_functionCode type spin default 0 min 0 max 6" << endl;
 	cout << "option name T_choice_const type string default 160" << endl;
 	cout << "option name T_choice_mass_parent type string default 1" << endl;
 	cout << "option name T_choice_children_masses type string default 1" << endl;

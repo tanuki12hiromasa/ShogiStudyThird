@@ -120,6 +120,15 @@ double SearchNode::getT_c() const {
 		return Tc_const + Tc_mp * (mass - 1) * Tc_mc * getTcMcVariance();
 	case 4:
 		return std::max(Tc_const / ((mass - 1) / Tc_mc + 1), Tc_mp);
+	case 5:
+	{
+		const double x = mass;
+		if (x <= 3)return 120;
+		else if (x <= 7)return 165 - 15 * x;
+		else return 60;
+	}
+	case 6:
+		return std::max(Tc_const - Tc_mc * (mass - 1), Tc_mp);
 	}
 }
 
