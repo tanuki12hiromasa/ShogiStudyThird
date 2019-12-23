@@ -234,6 +234,8 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 		double p = Ec_c * ((x >= 1) ? (1 / x) : 1);
 		return eval * (1.0 - p) + origin_eval * p;
 	}
+	case 19:
+		return eval * (1 - Ec_c) + origin_eval * Ec_c;
 	default:
 		return eval;
 	}
