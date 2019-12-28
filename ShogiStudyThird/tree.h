@@ -12,7 +12,8 @@ public:
 	void set(const std::vector<std::string>& usitokens);
 
 	void setNodeMaxsize(const size_t s) { nodesMaxCount = s; }
-	void setPVMassBonus(const double b) { PV_massbonus = b; }
+	void setPVFuncCode(const int code) { PV_FuncCode = code; }
+	void setPVConst(const double b) { PV_c = b; }
 
 	void permitSearch() { search_enable = true; }
 	void prohibitSearch() { search_enable = false; }
@@ -38,7 +39,8 @@ private:
 	SearchPlayer rootPlayer;
 	std::atomic_uint64_t nodecount;
 	std::uint64_t nodesMaxCount;
-	double PV_massbonus = 5;
+	int PV_FuncCode = 0;
+	double PV_c = 5;
 
 	bool leave_branchNode;
 	std::vector<std::uint8_t> lastRefRootByThread;

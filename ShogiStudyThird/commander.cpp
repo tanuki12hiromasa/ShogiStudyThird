@@ -118,7 +118,8 @@ void Commander::coutOption() {
 	cout << "option name Ec_functionCode type spin default 0 min 0 max 19" << endl;
 	cout << "option name Ec_c type string default 10" << endl;
 	cout << "option name NodeMaxNum type spin default 100000000 min 1000 max 5000000000" << endl;
-	cout << "option name PV_xBonus type string default 5" << endl;
+	cout << "option name PV_functionCode type spin default 0 min 0 max 1" << endl;
+	cout << "option name PV_const type string default 5" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -175,8 +176,11 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "NodeMaxNum") {
 			tree.setNodeMaxsize(std::stoull(token[4]));
 		}
-		else if (token[2] == "PV_xBonus") {
-			tree.setPVMassBonus(std::stod(token[4]));
+		else if (token[2] == "PV_functionCode") {
+			tree.setPVFuncCode(std::stoi(token[4]));
+		}
+		else if (token[2] == "PV_const") {
+			tree.setPVConst(std::stod(token[4]));
 		}
 	}
 }
