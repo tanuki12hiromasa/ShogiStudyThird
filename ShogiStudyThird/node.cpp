@@ -243,7 +243,43 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 	}
 }
 
-const SearchNode* SearchNode::getBestChild()const {
-
-
+SearchNode* SearchNode::getBestChild()const {
+	SearchNode* best = nullptr;
+	if (children.empty())return nullptr;
+	switch (PV_FuncCode) {
+		default:
+		case 0: {
+			double min = std::numeric_limits<double>::max();
+			for (const auto child : children) {
+				const double e = child->eval - child->mass;
+				if (e <= min) {
+					best = child;
+					min = e;
+				}
+			}
+			return best;
+		}
+		case 1: {
+			using ddn = std::tuple<double, double, SearchNode*>;
+			double emin = std::numeric_limits<double>::max();
+			std::vector<ddn> emnvec;
+			for (const auto& child : children) {
+				const double e = child->eval;
+				const double m = child->mass;
+				emnvec.push_back(std::make_tuple(e, m, child));
+				if (e < emin) {
+					emin = e;
+				}
+			}
+			double bestMass = -1;
+			for (const auto& emn : emnvec) {
+				const double score = (std::get<1>(emn) + 1) * std::exp(-(std::get<0>(emn) - emin) / PV_c);
+				if (score > bestMass) {
+					bestMass = score;
+					best = std::get<2>(emn);
+				}
+			}
+			return best;
+		}
+	}
 }

@@ -77,98 +77,16 @@ makenewtree:
 
 SearchNode* SearchTree::getBestMove()const {
 	SearchNode* const rootNode = getRoot();
-	SearchNode* best = nullptr;
-	if (rootNode->children.empty())return nullptr;
-	switch (PV_FuncCode) {
-	default:
-	case 0: {
-		double min = std::numeric_limits<double>::max();
-		for (const auto child : rootNode->children) {
-			const double eval = child->eval - child->mass;
-			if (eval <= min) {
-				best = child;
-				min = eval;
-			}
-		}
-		break;
-	}
-	case 1: {
-		using ddn = std::tuple<double, double, SearchNode*>;
-		double emin = std::numeric_limits<double>::max();
-		std::vector<ddn> emnvec;
-		for (const auto& child : rootNode->children) {
-			const double e = child->eval;
-			const double m = child->mass;
-			emnvec.push_back(std::make_tuple(e, m, child));
-			if (e < emin) {
-				emin = e;
-			}
-		}
-		double bestMass = -1;
-		for (const auto& emn : emnvec) {
-			const double score = (std::get<1>(emn) + 1) * std::exp(-(std::get<0>(emn) - emin) / PV_c);
-			if (score > bestMass) {
-				bestMass = score;
-				best = std::get<2>(emn);
-			}
-		}
-		break;
-	}
-	}
-	return best;
+	return rootNode->getBestChild();
 }
 
 std::vector<SearchNode*> SearchTree::getPV()const {
 	SearchNode* node = getRoot();
 	std::vector<SearchNode*> pv = { node };
-	switch (PV_FuncCode)
-	{
-	default:
-	case 0: {
-		while (!node->isLeaf() && !node->isTerminal() && !node->children.empty()) {
-			SearchNode* best = node->children.front();
-			double min = std::numeric_limits<double>::max();
-			for (const auto child : node->children) {
-				const double eval = child->eval - child->mass * PV_c;
-				if (eval <= min) {
-					best = child;
-					min = eval;
-				}
-			}
-			node = best;
-			pv.push_back(best);
-		}
-		break;
-	}
-	case 1: {
-		while (!node->isLeaf() && !node->isTerminal() && !node->children.empty()) {
-			SearchNode* best = node->children.front();
-			for (const auto child : node->children) {
-				using ddn = std::tuple<double, double, SearchNode*>;
-				double emin = std::numeric_limits<double>::max();
-				std::vector<ddn> emnvec;
-				for (const auto& child : node->children) {
-					const double e = child->eval;
-					const double m = child->mass;
-					emnvec.push_back(std::make_tuple(e, m, child));
-					if (e < emin) {
-						emin = e;
-					}
-				}
-				double bestMass = -1;
-				for (const auto& emn : emnvec) {
-					const double score = (std::get<1>(emn) + 1) * std::exp(-(std::get<0>(emn) - emin) / PV_c);
-					if (score > bestMass) {
-						bestMass = score;
-						best = std::get<2>(emn);
-					}
-				}
-			}
-			node = best;
-			pv.push_back(best);
-		}
-		break;
-	}
+	while (!node->isLeaf()){
+		node = node->getBestChild();
+		if (node == nullptr)break;
+		pv.push_back(node);
 	}
 	return pv;
 }

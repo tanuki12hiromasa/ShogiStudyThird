@@ -82,7 +82,7 @@ public:
 	double getT_c()const;
 	size_t getVisitCount()const { return visit_count; }
 	double getE_c(const size_t& visitnum_p, const double& mass_p)const;
-	const SearchNode* getBestChild()const;
+	SearchNode* getBestChild()const;
 private:
 	double getTcMcVariance()const;
 	double getTcMcVarianceExpection()const;

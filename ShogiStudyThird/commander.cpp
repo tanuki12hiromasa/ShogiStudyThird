@@ -177,10 +177,10 @@ void Commander::setOption(const std::vector<std::string>& token) {
 			tree.setNodeMaxsize(std::stoull(token[4]));
 		}
 		else if (token[2] == "PV_functionCode") {
-			tree.setPVFuncCode(std::stoi(token[4]));
+			SearchNode::setPVFuncCode(std::stoi(token[4]));
 		}
 		else if (token[2] == "PV_const") {
-			tree.setPVConst(std::stod(token[4]));
+			SearchNode::setPVConst(std::stod(token[4]));
 		}
 	}
 }
