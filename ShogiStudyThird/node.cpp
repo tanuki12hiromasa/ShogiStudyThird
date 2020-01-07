@@ -18,6 +18,8 @@ double SearchNode::T_depth = 90;
 double SearchNode::MassMax_QS = 8;
 int SearchNode::Ec_FunctionCode = 0;
 double SearchNode::Ec_c = 1.0;
+int SearchNode::PV_FuncCode = 0;
+double SearchNode::PV_c = 5;
 
 SearchNode::SearchNode(const Move& move)
 	:move(move), expanded(false)
@@ -239,4 +241,9 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 	default:
 		return eval;
 	}
+}
+
+const SearchNode* SearchNode::getBestChild()const {
+
+
 }

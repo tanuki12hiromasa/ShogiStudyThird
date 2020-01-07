@@ -29,6 +29,8 @@ private:
 	static double MassMax_QS;
 	static int Ec_FunctionCode;
 	static double Ec_c;
+	static int PV_FuncCode;
+	static double PV_c;
 public:
 	static void setMateScore(const double score) { mateScore = score; }
 	static void setMateScoreBound(const double bound) { mateScoreBound = bound; }
@@ -47,6 +49,8 @@ public:
 	static double getMQS() { return MassMax_QS; }
 	static void setEcFuncCode(const int code) { Ec_FunctionCode = code; }
 	static void setEcC(const double c) { Ec_c = c; }
+	static void setPVFuncCode(const int code) { PV_FuncCode = code; }
+	static void setPVConst(const double b) { PV_c = b; }
 public:
 	SearchNode(const Move& move);
 	SearchNode(const SearchNode&) = delete;
@@ -78,6 +82,7 @@ public:
 	double getT_c()const;
 	size_t getVisitCount()const { return visit_count; }
 	double getE_c(const size_t& visitnum_p, const double& mass_p)const;
+	const SearchNode* getBestChild()const;
 private:
 	double getTcMcVariance()const;
 	double getTcMcVarianceExpection()const;
