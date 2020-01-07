@@ -251,7 +251,7 @@ SearchNode* SearchNode::getBestChild()const {
 		case 0: {
 			double min = std::numeric_limits<double>::max();
 			for (const auto child : children) {
-				const double e = child->eval - child->mass;
+				const double e = child->eval - child->mass * PV_c;
 				if (e <= min) {
 					best = child;
 					min = e;
@@ -281,5 +281,19 @@ SearchNode* SearchNode::getBestChild()const {
 			}
 			return best;
 		}
+		case 2: {
+			double min = std::numeric_limits<double>::max();
+			for (const auto child : children) {
+				const double x = child->mass.load();
+				double p = PV_c * ((x >= 1) ? (1 / x) : 1);
+				const double e = child->eval * (1.0 - p) + origin_eval * p;
+				if (e <= min) {
+					best = child;
+					min = e;
+				}
+			}
+			return best;
+		}
+
 	}
 }
