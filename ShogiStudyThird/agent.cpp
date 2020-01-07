@@ -157,20 +157,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		for (auto child : node->children) {
 			SearchPlayer p = player;
 			p.proceed(child->move);
-//#if 0 //静止探索ノードを残す場合
-			if (leave_QsearchNode) {
-				newnodecount += qsimulate(child, p);
-				child->setMass(0);//静止探索の探索指標は別物なので0に戻す
-			}
-//#else //静止探索ノードを残さない場合
-			else {
-				qsimulate(child, p);
-				if (!child->isTerminal()) {
-					child->setMass(0);//
-					child->deleteTree();
-				}
-			}
-//#endif
+			qsimulate(child, p);
 		}
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
@@ -239,171 +226,38 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	return newnodecount;
 }
 
+double alphabeta(SearchNode* node, SearchPlayer player, double alpha, double beta) {
+	MoveGenerator::genCapMove(node, player.kyokumen);
+	if (node->children.empty()) {
+		if (node->isExpandedAll()) {
+			node->setMate();
+			return node->eval;
+		}
+		else {
+			return Evaluator::evaluate(player);
+		}
+	}
+	alpha = std::max(Evaluator::evaluate(player), alpha);
+	if (alpha >= beta) {
+		return alpha;
+	}
+	for (auto& child : node->children) {
+		SearchPlayer next(player);
+		next.proceed(child->move);
+		alpha = std::max(-alphabeta(child, next, -beta, -alpha), alpha);
+		if (alpha >= beta) {
+			return alpha;
+		}
+	}
+	return alpha;
+}
+
 size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
-	using dn = std::pair<double, SearchNode*>;
-	using dd = std::pair<double, double>;
-	size_t newnodecount = 0u;
-	unsigned failnum = 0u;
-	const double Mmax = SearchNode::getMQS();
-	const double T_d = SearchNode::getTdepth();
-	const double T_e = SearchNode::getTeval();
-	const double MateScoreBound = SearchNode::getMateScoreBound();
-	while (root->isQSTerminal() && root->mass < Mmax && failnum < maxfailnum) {
-		SearchNode* node = root;
-		SearchPlayer player = p;
-		std::vector<SearchNode*> history = { node };
-		//選択
-		while (node->isNotExpanded()) {
-			double emin = std::numeric_limits<double>::max();
-			std::vector<dn> evals;
-			const auto np = node->getVisitCount();
-			const double massp = node->mass;
-			for (auto child : node->children) {
-				if (!child->isQSTerminal()) {
-					const double eval = child->getE_c(np, massp);
-					evals.emplace_back(std::make_pair(eval, child));
-					if (eval < emin) {
-						emin = eval;
-					}
-				}
-			}
-			if (evals.empty()) {
-				node->status = SearchNode::State::QT;
-				failnum++;
-				goto looptail;
-			}
-			const double T_c = node->getT_c();
-			double Z = 0;
-			for (const auto& dn : evals) {
-				Z += std::exp(-(dn.first - emin) / T_c);
-			}
-			double pip = Z * random(engine);
-			node = evals.front().second;
-			for (const auto& dn : evals) {
-				pip -= std::exp(-(dn.first - emin) / T_c);
-				if (pip <= 0) {
-					node = dn.second;
-					break;
-				}
-			}
-			player.proceed(node->move);
-			history.push_back(node);
-		}
-		//展開
-		{
-			if (player.kyokumen.isDeclarable()) {
-				node->setDeclare();
-				goto backup;
-			}
-			std::vector<SearchNode*> gennodes;
-			gennodes = MoveGenerator::genCapMove(node, player.kyokumen);
-			newnodecount += gennodes.size();
-			if (gennodes.empty()) {
-				if (node->isExpandedAll()) {
-					node->setMate();
-					goto backup;
-				}
-				else {
-					node->status = SearchNode::State::QT;
-					failnum++;
-					goto looptail;
-				}
-			}
-			node->status = SearchNode::State::QE;
-			Evaluator::evaluate(gennodes, player);
-			double emin = std::numeric_limits<double>::max();
-			std::vector<double> evals;
-			for (const auto& child : node->children) {
-				const double eval = child->getEvaluation();
-				evals.push_back(eval);
-				if (eval < emin) {
-					emin = eval;
-				}
-			}
-			double Z_e = 0;
-			for (const auto& eval : evals) {
-				Z_e += std::exp(-(eval - emin) / T_e);
-			}
-			double E = 0;
-			for (const auto& eval : evals) {
-				E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
-			}
-			node->setEvaluation(E);
-			node->setMass(1);
-		}
-		backup:
-		//バックアップ
-		for (int i = history.size() - 2; i >= 0; i--) {
-			node = history[i];
-			//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
-			double emin = std::numeric_limits<double>::max();
-			std::vector<dd> emvec;
-			for (const auto child : node->children) {
-				const double eval = child->eval;
-				const double mass = child->mass;
-				emvec.push_back(std::make_pair(eval, mass));
-				if (eval < emin) {
-					emin = eval;
-				}
-			}
-			if (emin >= MateScoreBound) {
-				if (node->isExpandedAll()) {
-					node->setMateVariation(emin);
-					continue;
-				}
-				else {
-					SearchPlayer qp2(player);
-					for (size_t j = 1; j <= i; j++) {
-						qp2.proceed(history[j]->move);
-					}
-					std::vector<SearchNode*> gennodes;
-					gennodes = MoveGenerator::genNocapMove(node, qp2.kyokumen);
-					newnodecount += gennodes.size();
-					if (gennodes.empty()) {
-						node->setMateVariation(emin);
-						continue;
-					}
-					else {
-						Evaluator::evaluate(gennodes, qp2);
-						for (const auto n : gennodes) {
-							const double eval = n->eval;
-							const double mass = n->mass;
-							emvec.push_back(std::make_pair(eval, mass));
-							if (eval < emin) {
-								emin = eval;
-							}
-						}
-					}
-				}
-			}
-			else if (emin <= -MateScoreBound) {
-				node->setMateVariation(emin);
-				continue;
-			}
-			double Z_e = 0;
-			double Z_d = 0;
-			for (const auto em : emvec) {
-				Z_e += std::exp(-(em.first - emin) / T_e);
-				Z_d += std::exp(-(em.first - emin) / T_d);
-			}
-			double E = 0;
-			double M = 1;
-			for (const auto& em : emvec) {
-				E -= em.first * std::exp(-(em.first - emin) / T_e) / Z_e;
-				M += em.second * std::exp(-(em.first - emin) / T_d) / Z_d;
-			}
-			node->setEvaluation(E);
-			node->setMass(M);
-		}
-		failnum = 0u;
-	looptail:;
-	}
-	if (root->children.empty()) {
-		if (!root->isExpandedAll()){
-			Evaluator::evaluate(root, p);
-		}
-	}
-	return newnodecount;
+	root->setOriginEval(alphabeta(root, p, std::numeric_limits<double>::min(), std::numeric_limits<double>::max()));
+	root->deleteTree();
+	root->status = SearchNode::State::N;
+	root->setMass(0);
+	return 0;
 }
 
 bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vector<SearchNode*>& searchhis, const SearchNode* const repnode)const {
