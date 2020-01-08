@@ -99,6 +99,7 @@ void SearchTree::proceed(SearchNode* node) {
 	history.push_back(node);
 }
 
+#pragma optimize("",off)
 SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
 	std::lock_guard<std::mutex> lock(thmutex);
 	lastRefRootByThread[threadNo] = history.size() - 1;
@@ -110,7 +111,7 @@ SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
 		return nullptr;
 	}
 }
-
+#pragma optimize("",off)
 void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved, uint8_t oldhisnum) {
 	if (leave_branchNode) return;
 	std::thread th([this,base,saved,oldhisnum]() 
@@ -157,6 +158,7 @@ void SearchTree::deleteTreeParallel(SearchNode* root,uint8_t oldhisnum) {
 	);
 	th.detach();
 }
+#pragma optimize("",on)
 
 std::pair<unsigned, SearchNode*> SearchTree::findRepetition(const Kyokumen& kyokumen)const {
 	auto range = historymap.equal_range(kyokumen.getHash());

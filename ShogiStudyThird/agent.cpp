@@ -253,7 +253,7 @@ double alphabeta(SearchNode* node, const SearchPlayer& player, double alpha, dou
 }
 
 size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
-	root->setOriginEval(alphabeta(root, p, std::numeric_limits<double>::min(), std::numeric_limits<double>::max()));
+	root->setOriginEval(alphabeta(root, p, std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()));
 	root->deleteTree();
 	root->status = SearchNode::State::N;
 	root->setMass(0);
