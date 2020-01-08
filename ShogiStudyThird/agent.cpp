@@ -226,7 +226,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	return newnodecount;
 }
 
-double alphabeta(SearchNode* node, SearchPlayer player, double alpha, double beta) {
+double alphabeta(SearchNode* node, const SearchPlayer& player, double alpha, double beta) {
 	MoveGenerator::genCapMove(node, player.kyokumen);
 	if (node->children.empty()) {
 		if (node->isExpandedAll()) {
