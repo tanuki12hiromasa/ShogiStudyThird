@@ -4,6 +4,7 @@
 #include "evaluator.h"
 #include "player.h"
 #include <unordered_map>
+#include <fstream>
 
 class SearchTree {
 public:
@@ -27,6 +28,7 @@ public:
 	SearchNode* getRoot(unsigned threadNo, size_t increaseNodes);
 	SearchNode* getRoot() const { return history.back(); }
 
+	void logBM();
 	void foutTree()const;
 private:
 	void deleteTreeParallel(SearchNode* root,uint8_t oldhisnum);//rootを含め子孫を全消去する
@@ -42,6 +44,8 @@ private:
 	std::vector<std::uint8_t> lastRefRootByThread;
 	std::atomic_bool search_enable;
 	std::mutex thmutex;
+	std::mutex logmutex;
+	std::fstream logstream;
 
 	friend class Commander;
 	friend class ShogiTest;

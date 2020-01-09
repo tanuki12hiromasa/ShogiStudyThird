@@ -81,7 +81,7 @@ public:
 	bool isExpandedAll() { return expanded; }
 	double getT_c()const;
 	size_t getVisitCount()const { return visit_count; }
-	double getE_c(const size_t& visitnum_p, const double& mass_p)const;
+	double getE_c(const uint32_t& visitnum_p, const double& mass_p)const;
 	SearchNode* getBestChild()const;
 private:
 	double getTcMcVariance()const;
@@ -93,8 +93,9 @@ public:
 private:
 	bool expanded;
 	std::int32_t origin_eval;
-	size_t visit_count;
+	std::uint32_t visit_count;
 public:
+	std::atomic_uint32_t pv_depth;
 	std::atomic<double> eval;
 	std::atomic<double> mass;
 

@@ -193,6 +193,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}
 		node->setEvaluation(E);
 		node->setMass(1);
+		node->pv_depth = 1;
 		node->status = SearchNode::State::E;
 	}//展開評価ここまで
 
@@ -202,6 +203,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	for (int i = history.size() - 2; i >= 0; i--) {
 			node = history[i];
 			double emin = std::numeric_limits<double>::max();
+			uint32_t pv_depth = 1;
 			std::vector<dd> emvec;
 			for (const auto& child : node->children) {
 				const double eval = child->getEvaluation();
@@ -209,6 +211,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				emvec.push_back(std::make_pair(eval, mass));
 				if (eval < emin) {
 					emin = eval;
+					pv_depth = child->pv_depth + 1;
 				}
 			}
 			if (std::abs(emin) > MateScoreBound) {
@@ -232,10 +235,11 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				}
 				node->setEvaluation(E);
 				node->setMass(M);
+				node->pv_depth = pv_depth;
 			}
 		}
 	}
-
+	tree.logBM();
 	return newnodecount;
 }
 

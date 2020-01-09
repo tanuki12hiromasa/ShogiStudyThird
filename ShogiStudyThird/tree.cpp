@@ -10,6 +10,7 @@ SearchTree::SearchTree()
 	leave_branchNode = false;
 	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
 	nodecount = 0;
+	logstream.open("depthlog.csv");
 }
 
 void SearchTree::set(const std::vector<std::string>& usitokens) {
@@ -97,6 +98,7 @@ void SearchTree::proceed(SearchNode* node) {
 	rootPlayer.feature.set(rootPlayer.kyokumen);
 	deleteBranchParallel(getRoot(), node, history.size() - 1);
 	history.push_back(node);
+	logstream << std::endl;
 }
 
 SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
@@ -173,6 +175,15 @@ std::pair<unsigned, SearchNode*> SearchTree::findRepetition(const Kyokumen& kyok
 		}
 	}
 	return std::make_pair(num, latestNode);
+}
+
+void SearchTree::logBM(){
+	const SearchNode* const root = getRoot();
+	const auto pv_depth = root->pv_depth.load();
+	const auto mass = root->mass.load();
+	const auto bm = root->getBestChild()->move;
+	std::lock_guard<std::mutex> lock(logmutex);
+	logstream << bm.toUSI() << "," << mass << "," << pv_depth << "\n";
 }
 
 void SearchTree::foutTree()const {

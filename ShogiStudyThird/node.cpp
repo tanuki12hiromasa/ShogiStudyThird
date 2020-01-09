@@ -28,6 +28,7 @@ SearchNode::SearchNode(const Move& move)
 	eval = 0;
 	mass = 0;
 	visit_count = 0;
+	pv_depth = 0;
 }
 
 size_t SearchNode::deleteTree() {
@@ -173,7 +174,7 @@ double SearchNode::getTcMcVarianceExpection()const {
 	return std::sqrt(variance / Z);
 }
 
-double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
+double SearchNode::getE_c(const uint32_t& visitnum_p, const double& mass_p)const {
 	switch (Ec_FunctionCode)
 	{
 	case 0:
