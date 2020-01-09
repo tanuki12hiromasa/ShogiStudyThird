@@ -226,8 +226,11 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	return newnodecount;
 }
 
-double alphabeta(SearchNode* node, const SearchPlayer& player, double alpha, double beta) {
+double alphabeta(SearchNode* node, const SearchPlayer& player, int depth, double alpha, double beta) {
 	MoveGenerator::genCapMove(node, player.kyokumen);
+	if (depth <= 0) {
+		return Evaluator::evaluate(player);
+	}
 	if (node->children.empty()) {
 		if (node->isExpandedAll()) {
 			node->setMate();
@@ -244,7 +247,7 @@ double alphabeta(SearchNode* node, const SearchPlayer& player, double alpha, dou
 	for (auto& child : node->children) {
 		SearchPlayer next(player);
 		next.proceed(child->move);
-		alpha = std::max(-alphabeta(child, next, -beta, -alpha), alpha);
+		alpha = std::max(-alphabeta(child, next, depth - 1, -beta, -alpha), alpha);
 		if (alpha >= beta) {
 			return alpha;
 		}
@@ -253,7 +256,7 @@ double alphabeta(SearchNode* node, const SearchPlayer& player, double alpha, dou
 }
 
 size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
-	root->setOriginEval(alphabeta(root, p, std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()));
+	root->setOriginEval(alphabeta(root, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()));
 	root->deleteTree();
 	root->status = SearchNode::State::N;
 	root->setMass(0);
