@@ -45,7 +45,7 @@ private:
 	std::atomic_bool search_enable;
 	std::mutex thmutex;
 	std::mutex logmutex;
-	std::fstream logstream;
+	std::ofstream logstream;
 
 	friend class Commander;
 	friend class ShogiTest;

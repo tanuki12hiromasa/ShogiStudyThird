@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "commander.h"
 #include "usi.h" 
 #include <iostream>
@@ -35,6 +35,9 @@ void Commander::execute() {
 		else if (tokens[0] == "debugsetup") {
 			auto setLeaveNodeCommand = usi::split("setoption name leave_branchNode value true", ' ');
 			commander.setOption(setLeaveNodeCommand);
+			SearchNode::setEcFuncCode(18);
+			SearchNode::setEcC(0.5);
+			SearchNode::setMassmaxInQSearch(0);
 			commander.gameInit();
 			std::cout << "readyok" << std::endl;
 		}
