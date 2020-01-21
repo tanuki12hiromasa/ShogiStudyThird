@@ -11,22 +11,24 @@ private:
 	static unsigned maxfailnum;
 	static bool leave_QsearchNode;
 public:
-	SearchAgent(SearchTree& tree, unsigned threadid, int seed);
-	SearchAgent(SearchTree& tree, unsigned threadid) :SearchAgent(tree, threadid, threadid){}
+	SearchAgent(SearchTree& tree, int seed);
 	SearchAgent(SearchAgent&&)noexcept;
 	SearchAgent() = delete;
 	SearchAgent(const SearchAgent&) = delete;
 
+	void start();
 	void loop();
-	void terminate() { alive = false; }
+	void terminate() { alive = false; th.join(); }
 private:
 	size_t simulate(SearchNode* const root);
 	size_t qsimulate(SearchNode* const root, const SearchPlayer& player);
 	bool checkRepetitiveCheck(const Kyokumen& k,const std::vector<SearchNode*>& searchhis, const SearchNode* const latestRepnode)const;
 	void nodeCopy(const SearchNode* const origin, SearchNode* const copy)const;
 	SearchTree& tree;
-	unsigned ID;
+	SearchNode* const root;
+	SearchPlayer player;
 	std::atomic_bool alive;//生きているかどうか
+	std::thread th;
 
 	//値域 [0,1.0) のランダムな値
 	std::uniform_real_distribution<double> random{ 0, 1.0 };

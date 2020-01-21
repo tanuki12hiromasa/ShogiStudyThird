@@ -6,30 +6,30 @@
 unsigned SearchAgent::maxfailnum = 5u;
 bool SearchAgent::leave_QsearchNode = false;
 
-SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)
-	:tree(tree), ID(threadid),engine(seed)
+SearchAgent::SearchAgent(SearchTree& tree,int seed)
+	:tree(tree),engine(seed),root(tree.getRoot())
 {
-	alive = true;
+	
+	if (root != nullptr)
+		alive = true;
+	else 
+		alive = false;
+
 }
 
 SearchAgent::SearchAgent(SearchAgent&& agent) noexcept
-	: tree(agent.tree), ID(agent.ID),
-	engine(std::move(agent.engine))
+	: tree(agent.tree), th(std::move(agent.th)),
+	root(agent.root), engine(std::move(agent.engine))
 {
 	alive = agent.alive.load();
 }
 
+
+
 void SearchAgent::loop() {
 	size_t newnodecount = 0;
 	while (alive) {
-		SearchNode* root = tree.getRoot(ID, newnodecount);
-		if (root != nullptr) {
-			newnodecount = simulate(root);
-		}
-		else {
-			newnodecount = 0;
-			std::this_thread::sleep_for(std::chrono::microseconds(200));
-		}
+		newnodecount = simulate(root);
 	}
 }
 
@@ -41,7 +41,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	const double MateScoreBound = SearchNode::getMateScoreBound();
 	size_t newnodecount = 0;
 	SearchNode* node = root;
-	SearchPlayer player(tree.getRootPlayer());
+	player = tree.getRootPlayer();
 	std::vector<SearchNode*> history = { node };
 	std::vector<std::pair<uint64_t, std::array<uint8_t, 95>>> k_history;
 	node->addVisitCount();
