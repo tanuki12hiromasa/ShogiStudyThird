@@ -16,7 +16,6 @@ public:
 	SearchAgent() = delete;
 	SearchAgent(const SearchAgent&) = delete;
 
-	void start();
 	void loop();
 	void terminate() { alive = false; th.join(); }
 private:

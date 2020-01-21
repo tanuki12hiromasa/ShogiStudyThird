@@ -13,16 +13,16 @@ private:
 	void paramInit();
 	void gameInit();
 
+	void startAgent();
 	void go(const std::vector<std::string>& tokens);
 	void info();
 	bool chakushu();
 
 	SearchTree tree;
-	std::vector<SearchAgent> agents;
+	std::vector<std::unique_ptr<SearchAgent>> agents;
 	unsigned agentNum = 6;
 	bool permitPonder;
 
-	std::vector<std::thread> agent_threads;
 	std::thread go_thread;
 	std::thread info_thread;
 	std::atomic_bool go_alive;

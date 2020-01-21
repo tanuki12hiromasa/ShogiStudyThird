@@ -205,24 +205,19 @@ void Commander::gameInit() {
 		Evaluator::init();
 		tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
 	}
-	else {
-		for (auto& ag : agents) {
-			ag.terminate();
-		}
-		for (auto& th : agent_threads) {
-			th.join();
+	info();
+}
+
+void Commander::startAgent() {
+	if (!agents.empty()) {
+		for (auto& agent : agents) {
+			agent->terminate();
 		}
 		agents.clear();
-		agent_threads.clear();
 	}
-	tree.lastRefRootByThread.assign(agentNum, 0);
-	for (unsigned i = 0; i < agentNum; i++) {
-		agents.emplace_back(SearchAgent(tree, i));
+	for (int i = 0; i < agentNum; i++) {
+		agents.push_back(std::unique_ptr<SearchAgent>(new SearchAgent(tree, i)));
 	}
-	for (auto& ag : agents) {
-		agent_threads.emplace_back(std::thread(&SearchAgent::loop, &ag));
-	}
-	info();
 }
 
 void Commander::go(const std::vector<std::string>& tokens) {

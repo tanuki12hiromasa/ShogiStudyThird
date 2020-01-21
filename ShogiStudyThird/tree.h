@@ -8,8 +8,8 @@
 class SearchTree {
 public:
 	SearchTree();
-	void set(const Kyokumen& startpos,const std::vector<Move>& moves);
-	void set(const std::vector<std::string>& usitokens);
+	bool set(const Kyokumen& startpos,const std::vector<Move>& moves);//返値は探索木を使えればtrue 作り直したらfalse
+	bool set(const std::vector<std::string>& usitokens);
 
 	void setNodeMaxsize(const size_t s) { nodesMaxCount = s; }
 
@@ -18,18 +18,17 @@ public:
 	SearchNode* getBestMove()const;//最もevalの高いrootのchildを返す
 	std::vector<SearchNode*> getPV()const;//rootからのpvの連なりを返す
 	void proceed(SearchNode* node);
-	void deleteBranchParallel(SearchNode* base, SearchNode* saved, uint8_t oldhisnum);//baseのsaved以下以外の探索木を子ノードを残して消去する
+	void deleteBranch(SearchNode* base, SearchNode* saved, uint8_t oldhisnum);//baseのsaved以下以外の探索木を子ノードを残して消去する
 
 	const uint64_t getNodeCount() const { return nodecount; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
 	const SearchPlayer& getRootPlayer()const { return rootPlayer; }
 	std::pair<unsigned,SearchNode*> findRepetition(const Kyokumen& kyokumen)const;//過去に同一局面が無かったか検索する なければ-1を返す
-	SearchNode* getRoot(unsigned threadNo, size_t increaseNodes);
 	SearchNode* getRoot() const { return history.back(); }
 
 	void foutTree()const;
 private:
-	void deleteTreeParallel(SearchNode* root,uint8_t oldhisnum);//rootを含め子孫を全消去する
+	void deleteTree(SearchNode* root,uint8_t oldhisnum);//rootを含め子孫を全消去する
 
 	std::unordered_multimap<std::uint64_t, std::pair<std::array<uint8_t, 95>, uint16_t>> historymap;
 	std::vector<SearchNode*> history;
@@ -39,7 +38,6 @@ private:
 	std::uint64_t nodesMaxCount;
 
 	bool leave_branchNode;
-	std::vector<std::uint8_t> lastRefRootByThread;
 	std::atomic_bool search_enable;
 	std::mutex thmutex;
 

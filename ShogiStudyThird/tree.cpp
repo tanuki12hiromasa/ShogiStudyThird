@@ -12,12 +12,12 @@ SearchTree::SearchTree()
 	nodecount = 0;
 }
 
-void SearchTree::set(const std::vector<std::string>& usitokens) {
+bool SearchTree::set(const std::vector<std::string>& usitokens) {
 	const auto moves = Move::usiToMoves(usitokens);
-	set(Kyokumen(usitokens), moves);
+	return set(Kyokumen(usitokens), moves);
 }
 
-void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
+bool SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
 	if (!history.empty() && (history.size() <= usihis.size()) && startKyokumen == startpos)	{
 		int i;
 		for (i = 0; i < history.size() - 1; i++) {
@@ -48,7 +48,7 @@ void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
 			}
 			proceed(nextNode);
 		}
-		return;
+		return true;
 	}
 makenewtree:
 	{
@@ -72,6 +72,7 @@ makenewtree:
 			}
 			proceed(next);
 		}
+		return false;
 	}
 }
 
@@ -99,44 +100,17 @@ void SearchTree::proceed(SearchNode* node) {
 	history.push_back(node);
 }
 
-SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
-	std::lock_guard<std::mutex> lock(thmutex);
-	lastRefRootByThread[threadNo] = history.size() - 1;
-	nodecount += increaseNodes;
-	if (search_enable/* && nodecount < nodesMaxCount*/) {//nodecountを減らす処理が書けてないので一時的に無効化している
-		return getRoot();
-	}
-	else {
-		return nullptr;
-	}
-}
-
-void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved, uint8_t oldhisnum) {
+void SearchTree::deleteBranch(SearchNode* base, SearchNode* saved, uint8_t oldhisnum) {
 	if (leave_branchNode) return;
-	std::thread th([this,base,saved,oldhisnum]() 
-		{
-			bool immigrated;
-			do {
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-				immigrated = true;
-				std::lock_guard<std::mutex> lock(thmutex);
-				for (uint8_t hnum : lastRefRootByThread) {
-					if (hnum <= oldhisnum)
-						immigrated = false;
-				}
-			} while (!immigrated);
-			for (auto node : base->children) {
-				if (node != saved) {
-					const size_t delnum = node->deleteTree();
-					nodecount -= delnum;
-				}
-			}
+	for (auto node : base->children) {
+		if (node != saved) {
+			const size_t delnum = node->deleteTree();
+			nodecount -= delnum;
 		}
-	);
-	th.detach();
+	}
 }
 
-void SearchTree::deleteTreeParallel(SearchNode* root,uint8_t oldhisnum) {
+void SearchTree::deleteTree(SearchNode* root,uint8_t oldhisnum) {
 	std::thread th([this,root,oldhisnum]()
 		{
 			bool immigrated;

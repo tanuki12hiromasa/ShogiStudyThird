@@ -14,7 +14,7 @@ SearchAgent::SearchAgent(SearchTree& tree,int seed)
 		alive = true;
 	else 
 		alive = false;
-
+	th = std::thread(&loop, this);
 }
 
 SearchAgent::SearchAgent(SearchAgent&& agent) noexcept
