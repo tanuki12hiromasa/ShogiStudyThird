@@ -40,8 +40,7 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "position") {
 			commander.go_alive = false;
-			commander.tree.prohibitSearch();
-			commander.tree.set(tokens);
+			commander.position(tokens);
 		}
 		else if (tokens[0] == "go") {
 			if (tokens[1] == "mate") {
@@ -52,11 +51,7 @@ void Commander::execute() {
 			commander.go(tokens);
 		}
 		else if (tokens[0] == "stop") {
-			bool saseta = false;
-			while (!saseta) {
-				saseta = commander.chakushu();
-				if (!saseta)std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			}
+			commander.chakushu();
 		}
 		else if (tokens[0] == "fouttree") {
 			commander.tree.foutTree();
@@ -68,7 +63,7 @@ void Commander::execute() {
 		else if (tokens[0] == "gameover") {
 			commander.go_alive = false;
 			commander.info_alive = false;
-			commander.tree.prohibitSearch();
+			commander.stopAgent();
 		}
 		else if (tokens[0] == "quit") {
 			return;
@@ -86,13 +81,13 @@ Commander::Commander():
 }
 
 Commander::~Commander() {
-	tree.prohibitSearch();
 	go_alive = false;
 	info_enable = false;
 	info_alive = false;
 	for (auto& ag : agents) {
 		ag->terminate();
 	}
+	if (deleteThread != nullptr && deleteThread->joinable())deleteThread->detach();
 	if(go_thread.joinable()) go_thread.join();
 	if(info_thread.joinable())info_thread.join();
 }
@@ -213,7 +208,7 @@ void Commander::startAgent() {
 }
 void Commander::stopAgent() {
 	for (auto& ag : agents) {
-		ag->stop;
+		ag->stop();
 	}
 }
 
@@ -224,7 +219,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove win" << std::endl;
 		return;
 	}
-	tree.permitSearch();
+	startAgent();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
 	if(go_thread.joinable()) go_thread.join();
@@ -238,11 +233,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		else {
 			std::this_thread::sleep_for(5s);
 		}
-		while (go_alive) {
-			bool saseta = chakushu();
-			if (saseta) return;
-			std::this_thread::sleep_for(100ms);
-		}
+		chakushu();
 	});
 	info_enable = true;
 }
@@ -275,25 +266,26 @@ void Commander::info() {
 	}
 }
 
-bool Commander::chakushu() {
+void Commander::chakushu() {
 	std::lock_guard<std::mutex> lock(coutmtx);
 	stopAgent();
 	info_enable = false;
 	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
 	if (kyokumen.isDeclarable()) {
 		std::cout << "bestmove win" << std::endl;
-		return true;
+		return;
 	}
 	SearchNode* const root = tree.getRoot();
 	if (root->eval < -33000) {
 		std::cout << "info score cp " << root->eval << std::endl;
 		std::cout << "bestmove resign" << std::endl;
-		return true;
+		return;
 	}
 	const auto bestchild = tree.getBestMove();
 	if (bestchild == nullptr) {
-		tree.permitSearch();
-		return false;
+		std::cout << "info string error no children" << std::endl;
+		std::cout << "bestmove resign" << std::endl;
+		return;
 	}
 	std::cout << "info pv " << bestchild->move.toUSI() << " depth " << bestchild->mass.load() <<
 		" score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
@@ -303,7 +295,7 @@ bool Commander::chakushu() {
 	if (permitPonder) {
 		startAgent();
 	}
-	return true;
+	return;
 }
 
 void Commander::position(const std::vector<std::string>& tokens) {

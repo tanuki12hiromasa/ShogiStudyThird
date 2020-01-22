@@ -14,7 +14,7 @@ SearchAgent::SearchAgent(SearchTree& tree,int seed)
 		alive = true;
 	else 
 		alive = false;
-	th = std::thread(&loop, this);
+	th = std::thread(&SearchAgent::loop, this);
 }
 
 SearchAgent::SearchAgent(SearchAgent&& agent) noexcept
@@ -30,6 +30,7 @@ void SearchAgent::loop() {
 	size_t newnodecount = 0;
 	while (alive) {
 		newnodecount = simulate(root);
+		tree.addNodeCount(newnodecount);
 	}
 }
 

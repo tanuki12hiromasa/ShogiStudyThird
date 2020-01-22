@@ -14,9 +14,8 @@ public:
 	void makeNewTree(const std::vector<std::string>& usitokens);
 
 	void setNodeMaxsize(const size_t s) { nodesMaxCount = s; }
+	void addNodeCount(const size_t n) { nodecount += n; }
 
-	void permitSearch() { search_enable = true; }
-	void prohibitSearch() { search_enable = false; }
 	SearchNode* getBestMove()const;//最もevalの高いrootのchildを返す
 	std::vector<SearchNode*> getPV()const;//rootからのpvの連なりを返す
 	void proceed(SearchNode* node);
@@ -40,8 +39,6 @@ private:
 	std::uint64_t nodesMaxCount;
 
 	bool leave_branchNode;
-	std::atomic_bool search_enable;
-	std::mutex thmutex;
 
 	friend class Commander;
 	friend class ShogiTest;

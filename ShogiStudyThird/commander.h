@@ -17,7 +17,7 @@ private:
 	void stopAgent();
 	void go(const std::vector<std::string>& tokens);
 	void info();
-	bool chakushu();
+	void chakushu();
 	void position(const std::vector<std::string>& tokens);
 	void releaseAgentAndBranch(SearchNode* const prevRoot,SearchNode* const nextRoot);
 	void releaseAgentAndTree(SearchNode* const root);

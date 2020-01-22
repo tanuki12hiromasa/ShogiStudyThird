@@ -9,7 +9,7 @@ SearchTree::SearchTree()
 {
 	leave_branchNode = false;
 	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
-	nodecount = 0;
+	nodecount = 1;
 }
 
 bool SearchTree::set(const std::vector<std::string>& usitokens) {
@@ -54,6 +54,7 @@ bool SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) 
 		}
 		return true;
 	}
+	return false;
 }
 
 void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& usihis) {
