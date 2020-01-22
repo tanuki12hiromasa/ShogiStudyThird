@@ -91,13 +91,10 @@ Commander::~Commander() {
 	info_enable = false;
 	info_alive = false;
 	for (auto& ag : agents) {
-		ag.terminate();
+		ag->terminate();
 	}
 	if(go_thread.joinable()) go_thread.join();
 	if(info_thread.joinable())info_thread.join();
-	for (auto& th : agent_threads) {
-		if(th.joinable())th.join();
-	}
 }
 
 void Commander::coutOption() {
@@ -209,14 +206,14 @@ void Commander::gameInit() {
 }
 
 void Commander::startAgent() {
-	if (!agents.empty()) {
-		for (auto& agent : agents) {
-			agent->terminate();
-		}
-		agents.clear();
-	}
+	assert(agents.empty());
 	for (int i = 0; i < agentNum; i++) {
 		agents.push_back(std::unique_ptr<SearchAgent>(new SearchAgent(tree, i)));
+	}
+}
+void Commander::stopAgent() {
+	for (auto& ag : agents) {
+		ag->stop;
 	}
 }
 
@@ -280,14 +277,14 @@ void Commander::info() {
 
 bool Commander::chakushu() {
 	std::lock_guard<std::mutex> lock(coutmtx);
-	tree.prohibitSearch();
+	stopAgent();
 	info_enable = false;
 	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
 	if (kyokumen.isDeclarable()) {
 		std::cout << "bestmove win" << std::endl;
 		return true;
 	}
-	const SearchNode* const root = tree.getRoot();
+	SearchNode* const root = tree.getRoot();
 	if (root->eval < -33000) {
 		std::cout << "info score cp " << root->eval << std::endl;
 		std::cout << "bestmove resign" << std::endl;
@@ -302,8 +299,51 @@ bool Commander::chakushu() {
 		" score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
+	releaseAgentAndBranch(root, bestchild);
 	if (permitPonder) {
-		tree.permitSearch();
+		startAgent();
 	}
 	return true;
+}
+
+void Commander::position(const std::vector<std::string>& tokens) {
+	stopAgent();
+	const auto prevRoot = tree.getRoot();
+	bool result = tree.set(tokens);
+	if (result) {
+		const auto nextRoot = tree.getRoot();
+		releaseAgentAndBranch(prevRoot, nextRoot);
+	}
+	else {
+		tree.makeNewTree(tokens);
+		releaseAgentAndTree(prevRoot);
+	}
+}
+
+void Commander::releaseAgentAndBranch(SearchNode* const prevRoot, SearchNode* const nextRoot) {
+	auto tmpthread = std::move(deleteThread);
+	deleteThread = std::unique_ptr<std::thread>( new std::thread(
+		[&tree=tree,prevThread = std::move(tmpthread), prevAgents = std::move(agents), prevRoot, nextRoot]
+		{
+			if(prevThread != nullptr && prevThread->joinable()) prevThread->join();
+			for (auto& ag : prevAgents) {
+				ag->terminate();
+			}
+			tree.deleteBranch(prevRoot, nextRoot);
+		}));
+	agents.clear();
+}
+
+void Commander::releaseAgentAndTree(SearchNode* const root) {
+	auto tmpthread = std::move(deleteThread);
+	deleteThread = std::unique_ptr<std::thread>(new std::thread(
+		[&tree = tree, prevThread = std::move(tmpthread), prevAgents = std::move(agents), root]
+		{
+			if (prevThread != nullptr && prevThread->joinable()) prevThread->join();
+			for (auto& ag : prevAgents) {
+				ag->terminate();
+			}
+			tree.deleteTree(root);
+		}));
+	agents.clear();
 }

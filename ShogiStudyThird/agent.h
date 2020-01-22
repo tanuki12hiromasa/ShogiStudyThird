@@ -15,8 +15,10 @@ public:
 	SearchAgent(SearchAgent&&)noexcept;
 	SearchAgent() = delete;
 	SearchAgent(const SearchAgent&) = delete;
+	SearchAgent& operator=(const SearchAgent&) = delete;
 
 	void loop();
+	void stop() { alive = false; }
 	void terminate() { alive = false; th.join(); }
 private:
 	size_t simulate(SearchNode* const root);
