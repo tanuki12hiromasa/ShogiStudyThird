@@ -77,33 +77,16 @@ makenewtree:
 
 SearchNode* SearchTree::getBestMove()const {
 	SearchNode* const rootNode = getRoot();
-	SearchNode* best = nullptr;
-	double min = std::numeric_limits<double>::max();
-	for (const auto child : rootNode->children) {
-		const double eval = child->eval - child->mass * PV_massbonus;
-		if (eval <= min) {
-			best = child;
-			min = eval;
-		}
-	}
-	return best;
+	return rootNode->getBestChild();
 }
 
 std::vector<SearchNode*> SearchTree::getPV()const {
 	SearchNode* node = getRoot();
 	std::vector<SearchNode*> pv = { node };
-	while (!node->isLeaf() && !node->isTerminal() && !node->children.empty()) {
-		SearchNode* best = node->children.front();
-		double min = std::numeric_limits<double>::max();
-		for (const auto child : node->children) {
-			const double eval = child->eval - child->mass * PV_massbonus;
-			if (eval <= min) {
-				best = child;
-				min = eval;
-			}
-		}
-		node = best;
-		pv.push_back(best);
+	while (!node->isLeaf()){
+		node = node->getBestChild();
+		if (node == nullptr)break;
+		pv.push_back(node);
 	}
 	return pv;
 }

@@ -23,12 +23,14 @@ private:
 	static double Tc_const;
 	static double Tc_mp;
 	static double Tc_mc;
-	static bool Tc_mc_expectable_variance;//探索指標の分散を期待値で重みづけするかどうかのフラグ
+	static int Tc_FunctionCode;//探索指標の分散を期待値で重みづけするかどうかのフラグ
 	static double T_eval;
 	static double T_depth;
 	static double MassMax_QS;
 	static int Ec_FunctionCode;
 	static double Ec_c;
+	static int PV_FuncCode;
+	static double PV_c;
 public:
 	static void setMateScore(const double score) { mateScore = score; }
 	static void setMateScoreBound(const double bound) { mateScoreBound = bound; }
@@ -38,7 +40,7 @@ public:
 	static void setTcConst(const double Tc) { Tc_const = Tc; }
 	static void setTcmp(const double Tc) { Tc_mp = Tc; }
 	static void setTcmc(const double Tc) { Tc_mc = Tc; }
-	static void setTcmc_expectable_flag(bool b) { Tc_mc_expectable_variance = b; }
+	static void setTcFuncCode(int c) { Tc_FunctionCode = c; }
 	static void setTeval(const double Te) { T_eval = Te; }
 	static void setTdepth(const double Td) { T_depth = Td; }
 	static void setMassmaxInQSearch(const double mmqs) { MassMax_QS = mmqs; }
@@ -47,6 +49,8 @@ public:
 	static double getMQS() { return MassMax_QS; }
 	static void setEcFuncCode(const int code) { Ec_FunctionCode = code; }
 	static void setEcC(const double c) { Ec_c = c; }
+	static void setPVFuncCode(const int code) { PV_FuncCode = code; }
+	static void setPVConst(const double b) { PV_c = b; }
 public:
 	SearchNode(const Move& move);
 	SearchNode(const SearchNode&) = delete;
@@ -78,8 +82,10 @@ public:
 	double getT_c()const;
 	size_t getVisitCount()const { return visit_count; }
 	double getE_c(const size_t& visitnum_p, const double& mass_p)const;
+	SearchNode* getBestChild()const;
 private:
 	double getTcMcVariance()const;
+	double getTcMcVarianceExpection()const;
 public:
 	std::vector<SearchNode*> children;
 	Move move;

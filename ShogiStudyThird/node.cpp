@@ -12,12 +12,14 @@ double SearchNode::repetitionScore = -100;//先手側のscore（千日手のscor
 double SearchNode::Tc_const = 60;
 double SearchNode::Tc_mp = 30;
 double SearchNode::Tc_mc = 20;
-bool SearchNode::Tc_mc_expectable_variance = false;
+int SearchNode::Tc_FunctionCode = 0;
 double SearchNode::T_eval = 40;
 double SearchNode::T_depth = 90;
 double SearchNode::MassMax_QS = 8;
 int SearchNode::Ec_FunctionCode = 0;
-double SearchNode::Ec_c = 200.0;
+double SearchNode::Ec_c = 1.0;
+int SearchNode::PV_FuncCode = 0;
+double SearchNode::PV_c = 5;
 
 SearchNode::SearchNode(const Move& move)
 	:move(move), expanded(false)
@@ -107,63 +109,68 @@ void SearchNode::setRepetitiveCheck() {
 }
 
 double SearchNode::getT_c() const {
-	if (Tc_mp != 0) {
-		if (Tc_mc != 0) {
-			return Tc_const + Tc_mp * (mass - 1) * Tc_mc * getTcMcVariance();
-		}
-		else {
-			return Tc_const + Tc_mp * (mass - 1);
-		}
+	switch (Tc_FunctionCode)
+	{
+	case 0:
+	default:
+		return Tc_const;
+	case 1:
+		return Tc_const + Tc_mp * (mass - 1);
+	case 2:
+		return Tc_const + Tc_mc * getTcMcVariance();
+	case 3:
+		return Tc_const + Tc_mp * (mass - 1) * Tc_mc * getTcMcVariance();
+	case 4:
+		return std::max(Tc_const / ((mass - 1) / Tc_mc + 1), Tc_mp);
+	case 5:
+	{
+		const double x = mass;
+		if (x <= 3)return 120;
+		else if (x <= 7)return 165 - 15 * x;
+		else return 60;
 	}
-	else {
-		if (Tc_mc != 0) {
-			return Tc_const + Tc_mc * getTcMcVariance();
-		}
-		else {
-			return Tc_const;
-		}
+	case 6:
+		return std::max(Tc_const - Tc_mc * (mass - 1), Tc_mp);
 	}
 }
 
 double SearchNode::getTcMcVariance()const {
-	if (Tc_mc_expectable_variance) {
-		std::vector<double> cmasses;
-		double mean = 0;
-		for (const auto& child : children) {
-			const double m = child->mass;
-			cmasses.push_back(m);
-			mean += m;
-		}
-		mean /= cmasses.size();
-		double variance = 0;
-		for (const auto& m : cmasses) {
-			variance += (m - mean) * (m - mean);
-		}
-		return std::sqrt(variance / cmasses.size());
+	std::vector<double> cmasses;
+	double mean = 0;
+	for (const auto& child : children) {
+		const double m = child->mass;
+		cmasses.push_back(m);
+		mean += m;
 	}
-	else {
-		std::vector<std::pair<double,double>> ems;
-		double min = std::numeric_limits<double>::max();
-		for (const auto& child : children) {
-			const double e = child->eval;
-			ems.push_back(std::make_pair(e, child->mass.load()));
-			if (e < min) {
-				min = e;
-			}
-		}
-		double Z = 0;
-		for (auto& e : ems) {
-			const double exp = std::exp(-(e.first - min) / T_depth);
-			Z += exp;
-			e.first = exp;
-		}
-		const double mean = mass - 1;
-		double variance = 0;
-		for (const auto& e : ems) {
-			variance += (e.second - mean) * (e.second - mean) * e.first;
-		}
-		return std::sqrt(variance / Z);
+	mean /= cmasses.size();
+	double variance = 0;
+	for (const auto& m : cmasses) {
+		variance += (m - mean) * (m - mean);
 	}
+	return std::sqrt(variance / cmasses.size());
+}
+double SearchNode::getTcMcVarianceExpection()const {
+	std::vector<std::pair<double, double>> ems;
+	double min = std::numeric_limits<double>::max();
+	for (const auto& child : children) {
+		const double e = child->eval;
+		ems.push_back(std::make_pair(e, child->mass.load()));
+		if (e < min) {
+			min = e;
+		}
+	}
+	double Z = 0;
+	for (auto& e : ems) {
+		const double exp = std::exp(-(e.first - min) / T_depth);
+		Z += exp;
+		e.first = exp;
+	}
+	const double mean = mass - 1;
+	double variance = 0;
+	for (const auto& e : ems) {
+		variance += (e.second - mean) * (e.second - mean) * e.first;
+	}
+	return std::sqrt(variance / Z);
 }
 
 double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
@@ -229,7 +236,64 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 		double p = Ec_c * ((x >= 1) ? (1 / x) : 1);
 		return eval * (1.0 - p) + origin_eval * p;
 	}
+	case 19:
+		return eval * (1 - Ec_c) + origin_eval * Ec_c;
 	default:
 		return eval;
+	}
+}
+
+SearchNode* SearchNode::getBestChild()const {
+	SearchNode* best = nullptr;
+	if (children.empty())return nullptr;
+	switch (PV_FuncCode) {
+		default:
+		case 0: {
+			double min = std::numeric_limits<double>::max();
+			for (const auto child : children) {
+				const double e = child->eval - child->mass * PV_c;
+				if (e <= min) {
+					best = child;
+					min = e;
+				}
+			}
+			return best;
+		}
+		case 1: {
+			using ddn = std::tuple<double, double, SearchNode*>;
+			double emin = std::numeric_limits<double>::max();
+			std::vector<ddn> emnvec;
+			for (const auto& child : children) {
+				const double e = child->eval;
+				const double m = child->mass;
+				emnvec.push_back(std::make_tuple(e, m, child));
+				if (e < emin) {
+					emin = e;
+				}
+			}
+			double bestMass = -1;
+			for (const auto& emn : emnvec) {
+				const double score = (std::get<1>(emn) + 1) * std::exp(-(std::get<0>(emn) - emin) / PV_c);
+				if (score > bestMass) {
+					bestMass = score;
+					best = std::get<2>(emn);
+				}
+			}
+			return best;
+		}
+		case 2: {
+			double min = std::numeric_limits<double>::max();
+			for (const auto child : children) {
+				const double x = child->mass.load();
+				double p = PV_c * ((x >= 1) ? (1 / x) : 1);
+				const double e = child->eval * (1.0 - p) + origin_eval * p;
+				if (e <= min) {
+					best = child;
+					min = e;
+				}
+			}
+			return best;
+		}
+
 	}
 }
