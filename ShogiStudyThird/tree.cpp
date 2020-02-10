@@ -118,6 +118,7 @@ void SearchTree::deleteTree(SearchNode* const root) {
 	delete(root);
 	nodecount--;
 }
+#pragma optimize("",on)
 
 std::pair<unsigned, SearchNode*> SearchTree::findRepetition(const Kyokumen& kyokumen)const {
 	auto range = historymap.equal_range(kyokumen.getHash());
