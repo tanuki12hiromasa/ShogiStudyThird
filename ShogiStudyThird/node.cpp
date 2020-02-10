@@ -131,6 +131,8 @@ double SearchNode::getT_c() const {
 	}
 	case 6:
 		return std::max(Tc_const - Tc_mc * (mass - 1), Tc_mp);
+	case 7:
+		return Tc_const * std::pow(Tc_mp, mass.load());
 	}
 }
 
