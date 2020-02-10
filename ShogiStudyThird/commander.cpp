@@ -233,16 +233,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		else {
 			std::this_thread::sleep_for(5s);
 		}
-		while (go_alive) {
-			size_t fails = 0;
-			bool saseta = chakushu();
-			if (saseta) return;
-			fails++;
-			if (fails > 10) {
-				std::cout << "bestmove resign by agent died" << std::endl;
-			}
-			std::this_thread::sleep_for(100ms);
-		}
+		chakushu();
 	});
 	info_enable = true;
 }
