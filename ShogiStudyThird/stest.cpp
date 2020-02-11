@@ -66,7 +66,7 @@ void ShogiTest::coutStringsDiff(const strv& cor,const strv& s) {
 bool ShogiTest::genMoveCheck(std::string parent_sfen, std::string child_moves) {
 	strv ans = usi::split(child_moves, ' ');
 	Kyokumen k(usi::split(parent_sfen, ' '));
-	const auto moves = MoveGenerator::genMove(new SearchNode(Move()), k);
+	const auto moves = MoveGenerator::genAllMove(new SearchNode(Move()), k);
 	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
 	if (checkStrings(ans, msv)) return true;
 	else {
@@ -79,7 +79,7 @@ bool ShogiTest::genMoveCheck(std::string parent_sfen, std::string child_moves) {
 bool ShogiTest::genMoveCheck(std::string parent_sfen, Move pmove, std::string child_moves) {
 	strv ans = usi::split(child_moves, ' ');
 	Kyokumen k(usi::split(parent_sfen, ' '));
-	const auto moves = MoveGenerator::genMove(new SearchNode(pmove), k);
+	const auto moves = MoveGenerator::genAllMove(new SearchNode(pmove), k);
 	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
 	if (checkStrings(ans, msv)) return true;
 	else {
