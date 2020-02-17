@@ -1,22 +1,28 @@
 ﻿#include "stdafx.h"
 #include "move_gen.h"
 
-class EvaluatedNodes {
-public:
-	EvaluatedNodes(SearchNode* parent):parent(parent){}
+struct EvaluatedParent {
+	EvaluatedParent(SearchNode* const parent):parent(parent){}
 	void add(Move move) {
-		nodes.push_back(parent->addChild(move));
+		parent->addChild(move);
 	}
-	SearchNode* parent;
-	std::vector<SearchNode*> nodes;
+	SearchNode* const parent;
+};
+struct GeneratedMoves {
+	void add(Move move) {
+		moves.push_back(move);
+	}
+	std::vector<Move> moves;
 };
 
+template<class EvaluatedNodes>
 inline void addByBitboard(EvaluatedNodes& en, unsigned from, Bitboard toBB, bool prom) {
 	for (unsigned to = toBB.pop_first(); to < toBB.size(); to = toBB.pop_first()) {
 		en.add(Move(from, to, prom));
 	}
 }
 
+template<class EvaluatedNodes>
 inline void genSenteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, koma::Koma piece, bool prom, const Bitboard& mask) {
 	const Bitboard& allBB = kyokumen.getAllBB();
 	Bitboard komabb = kyokumen.getEachBB(piece);
@@ -25,6 +31,8 @@ inline void genSenteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, k
 		addByBitboard(en, from, kikibb, prom);
 	}
 }
+
+template<class EvaluatedNodes>
 inline void genGoteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, koma::Koma piece, bool prom, const Bitboard& mask) {
 	const Bitboard& allBB = kyokumen.getAllBB();
 	Bitboard komabb = kyokumen.getEachBB(piece);
@@ -33,6 +41,8 @@ inline void genGoteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, ko
 		addByBitboard(en, from, kikibb, prom);
 	}
 }
+
+template<class EvaluatedNodes>
 inline void genSenteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, koma::Koma piece, bool prom, Bitboard frombb, const Bitboard& tomask) {
 	const Bitboard& allBB = kyokumen.getAllBB();
 	for (unsigned from = frombb.pop_first(); from < frombb.size(); from = frombb.pop_first()) {
@@ -40,6 +50,7 @@ inline void genSenteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, k
 		addByBitboard(en, from, kikibb, prom);
 	}
 }
+template<class EvaluatedNodes>
 inline void genGoteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, koma::Koma piece, bool prom, Bitboard frombb, const Bitboard& tomask) {
 	const Bitboard& allBB = kyokumen.getAllBB();
 	for (unsigned from = frombb.pop_first(); from < frombb.size(); from = frombb.pop_first()) {
@@ -48,6 +59,7 @@ inline void genGoteBanMove_koma(EvaluatedNodes& en, const Kyokumen& kyokumen, ko
 	}
 }
 
+template<class EvaluatedNodes>
 inline void genSenteOuMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& mask) {
 	using namespace koma;
 	const unsigned oupos = kyokumen.sOuPos();
@@ -63,6 +75,7 @@ inline void genSenteOuMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const B
 	addByBitboard(en, oupos, kikibb, false);
 }
 
+template<class EvaluatedNodes>
 inline void genGoteOuMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& mask) {
 	using namespace koma;
 	const unsigned oupos = kyokumen.gOuPos();
@@ -78,6 +91,7 @@ inline void genGoteOuMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bi
 	addByBitboard(en, oupos, kikibb, false);
 }
 
+template<class EvaluatedNodes>
 void genAllSenteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& toMaskBB) {
 	using namespace koma;
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Fu, false, toMaskBB & bbmask::Dan2to9);
@@ -106,6 +120,7 @@ void genAllSenteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitb
 	genSenteBanMove_koma(en, kyokumen, Koma::s_nHi, false, toMaskBB);
 }
 
+template<class EvaluatedNodes>
 void genAllGoteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& toMaskBB) {
 	using namespace koma;
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Fu, false, toMaskBB & bbmask::Dan1to8);
@@ -133,6 +148,8 @@ void genAllGoteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitbo
 	genGoteBanMove_koma(en, kyokumen, Koma::g_nKaku, false, toMaskBB);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_nHi, false, toMaskBB);
 }
+
+template<class EvaluatedNodes>
 void genSenteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& toMaskBB) {//不要な不成(歩,香2段目,角,飛)を生成しない
 	using namespace koma;
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Fu, false, kyokumen.getEachBB(Koma::s_Fu) & bbmask::Dan5to9, toMaskBB);
@@ -161,6 +178,7 @@ void genSenteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboar
 	genSenteBanMove_koma(en, kyokumen, Koma::s_nHi, false, toMaskBB);
 }
 
+template<class EvaluatedNodes>
 void genGoteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& toMaskBB) {
 	using namespace koma;
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Fu, false, kyokumen.getEachBB(Koma::g_Fu) & bbmask::Dan1to5, toMaskBB);
@@ -190,6 +208,7 @@ void genGoteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard
 	genGoteBanMove_koma(en, kyokumen, Koma::g_nHi, false, toMaskBB);
 }
 
+template<class EvaluatedNodes>
 void genSenteUchiMove(EvaluatedNodes& en, const Kyokumen& kyokumen,const Bitboard& blanks) {
 	using namespace koma;
 	Bitboard invAllBB = ~kyokumen.getAllBB();
@@ -210,6 +229,7 @@ void genSenteUchiMove(EvaluatedNodes& en, const Kyokumen& kyokumen,const Bitboar
 	}
 }
 
+template<class EvaluatedNodes>
 void genGoteUchiMove(EvaluatedNodes& en, const Kyokumen& kyokumen,const Bitboard& blanks) {
 	using namespace koma;
 	Bitboard invAllBB = ~kyokumen.getAllBB();
@@ -230,9 +250,8 @@ void genGoteUchiMove(EvaluatedNodes& en, const Kyokumen& kyokumen,const Bitboard
 	}
 }
 
-std::vector<SearchNode*> MoveGenerator::genMove(SearchNode* parent, const Kyokumen& kyokumen) {
-	EvaluatedNodes en(parent);
-	parent->setExpandedAll();
+void MoveGenerator::genMove(SearchNode* parent, const Kyokumen& kyokumen) {
+	EvaluatedParent en(parent);
 	if (kyokumen.teban()) {
 		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
 		if (kusemono.size() > 0) {
@@ -265,16 +284,16 @@ std::vector<SearchNode*> MoveGenerator::genMove(SearchNode* parent, const Kyokum
 			genGoteOuMove(en, kyokumen, ~kyokumen.getGoteBB());
 		}
 	}
-	return en.nodes;
+	return;
 }
 
-std::vector<SearchNode*> MoveGenerator::genCapMove(SearchNode* parent, const Kyokumen& kyokumen) {
-	EvaluatedNodes en(parent);
+const std::pair<std::vector<Move>, bool> MoveGenerator::genCapMove(const Move move, const Kyokumen& kyokumen) {
+	GeneratedMoves en;
+	bool isoute = false;
 	if (kyokumen.teban()) {
-		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
+		auto kusemono = kyokumen.getSenteOuCheck(move);
 		if (kusemono.size() > 0) {
-			parent->move.setOute(true);
-			parent->setExpandedAll();
+			isoute = true;
 			if (kusemono.size() == 1) {
 				genSenteBanMove(en, kyokumen, kusemono[0]);
 				genSenteUchiMove(en, kyokumen, kusemono[0] & ~kyokumen.getAllBB());
@@ -287,10 +306,9 @@ std::vector<SearchNode*> MoveGenerator::genCapMove(SearchNode* parent, const Kyo
 		}
 	}
 	else {
-		auto kusemono = kyokumen.getGoteOuCheck(parent->move);
+		auto kusemono = kyokumen.getGoteOuCheck(move);
 		if (kusemono.size() > 0) {
-			parent->move.setOute(true);
-			parent->setExpandedAll();
+			isoute = true;
 			if (kusemono.size() == 1) {
 				genGoteBanMove(en, kyokumen, kusemono[0]);
 				genGoteUchiMove(en, kyokumen, kusemono[0] & ~kyokumen.getAllBB());
@@ -302,12 +320,11 @@ std::vector<SearchNode*> MoveGenerator::genCapMove(SearchNode* parent, const Kyo
 			genGoteOuMove(en, kyokumen, kyokumen.getSenteBB());
 		}
 	}
-	return en.nodes;
+	return std::make_pair(en.moves,isoute);
 }
 
-std::vector<SearchNode*> MoveGenerator::genNocapMove(SearchNode* parent, const Kyokumen& kyokumen) {
-	EvaluatedNodes en(parent);
-	parent->setExpandedAll();
+std::vector<Move> MoveGenerator::genNocapMove(SearchNode* parent, const Kyokumen& kyokumen) {
+	GeneratedMoves en;
 	if (kyokumen.teban()) {
 		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
 		if (kusemono.size() == 0){
@@ -324,12 +341,11 @@ std::vector<SearchNode*> MoveGenerator::genNocapMove(SearchNode* parent, const K
 			genGoteOuMove(en, kyokumen, ~kyokumen.getAllBB());
 		}
 	}
-	return en.nodes;
+	return en.moves;
 }
 
-std::vector<SearchNode*> MoveGenerator::genAllMove(SearchNode* parent, const Kyokumen& kyokumen) {
-	EvaluatedNodes en(parent);
-	parent->setExpandedAll();
+void MoveGenerator::genAllMove(SearchNode* parent, const Kyokumen& kyokumen) {
+	EvaluatedParent en(parent);
 	if (kyokumen.teban()) {
 		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
 		if (kusemono.size() > 0) {
@@ -362,5 +378,5 @@ std::vector<SearchNode*> MoveGenerator::genAllMove(SearchNode* parent, const Kyo
 			genGoteOuMove(en, kyokumen, ~kyokumen.getGoteBB());
 		}
 	}
-	return en.nodes;
+	return;
 }

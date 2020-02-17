@@ -160,10 +160,10 @@ std::string Kyokumen::toSfen()const {
 	return usi;
 }
 
-koma::Position Kyokumen::proceed(const Move move) {
+koma::Koma Kyokumen::proceed(const Move move) {
 	const unsigned from = move.from(), to = move.to();
 	const bool prom = move.promote();
-	Position captured = Position::SQm_Num;
+	Koma captured = Koma::None;
 	//sente,gote,allBB
 	if (teban()) { //先手
 		if (koma::isInside(from)) { //元位置が盤内ならそのビットを消す
@@ -201,7 +201,8 @@ koma::Position Kyokumen::proceed(const Move move) {
 		if (toKoma != Koma::None) {//駒を取っていた場合 
 			Bitboard& toKomaBB = eachKomaBB[static_cast<size_t>(toKoma)];
 			toKomaBB.reset(to);//BB cap
-			Position capMpos = captured = KomaToMpos(toKoma);
+			captured = toKoma;
+			Position capMpos = KomaToMpos(toKoma);
 			bammen[capMpos]++;//mban cap
 			//bammen[to]は後で更新される
 		}

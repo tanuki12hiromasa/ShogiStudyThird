@@ -11,8 +11,8 @@ using p_lock = std::lock_guard<std::shared_mutex>;
 class SearchNode {
 public:
 	enum class State : std::int8_t {
-		NotExpanded, QuiescenceExpanded, QuiescenceTerminal, Expanded, Terminal,
-		N = NotExpanded, QE = QuiescenceExpanded, QT = QuiescenceTerminal, E = Expanded, T = Terminal
+		NotExpanded, Expanded, Terminal,
+		N = NotExpanded, E = Expanded, T = Terminal
 	};
 private:
 	static double mateMass;
@@ -37,6 +37,7 @@ public:
 	static void setMateOneScore(const double score) { mateOneScore = score; }
 	static void setRepScore(const double score) { repetitionScore = score; }
 	static double getMateScoreBound() { return mateScoreBound; }
+	static double getMateScore() { return mateScore; }
 	static void setTcConst(const double Tc) { Tc_const = Tc; }
 	static void setTcmp(const double Tc) { Tc_mp = Tc; }
 	static void setTcmc(const double Tc) { Tc_mc = Tc; }
@@ -68,17 +69,12 @@ public:
 	void setDeclare();
 	void setRepetition(const bool teban);
 	void setRepetitiveCheck();
-	void setExpandedAll() { expanded = true; }
 	void setOriginEval(const double evaluation) { origin_eval = evaluation; eval = evaluation; }
 	void addVisitCount() { visit_count++; }
 
 	double getEvaluation()const { return eval.load(); }
-	bool isNotExpanded()const { return status == State::N; }
-	bool isLimitedExpanded()const { return status == State::QE || status == State::QT; }
-	bool isQSTerminal()const { return status != State::N && status != State::QE; }
-	bool isLeaf()const { return status == State::N || status == State::QE || status == State::QT; }
+	bool isLeaf()const { return status == State::N; }
 	bool isTerminal()const { return status == State::T; }
-	bool isExpandedAll() { return expanded; }
 	double getT_c()const;
 	size_t getVisitCount()const { return visit_count; }
 	double getE_c(const size_t& visitnum_p, const double& mass_p)const;
@@ -91,7 +87,6 @@ public:
 	Move move;
 	std::atomic<State> status;
 private:
-	bool expanded;
 	std::int32_t origin_eval;
 	size_t visit_count;
 public:

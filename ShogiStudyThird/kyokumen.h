@@ -14,7 +14,8 @@ public:
 	Kyokumen(const std::vector<std::string>& usitokens);
 	std::string toSfen()const;
 	
-	koma::Position proceed(const Move);
+	koma::Koma proceed(const Move);
+	void back(const Move m, const koma::Koma cap);
 
 	const std::array<std::uint8_t, 95>& getBammen()const { return bammen; }
 	std::uint64_t getHash()const;

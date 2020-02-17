@@ -135,30 +135,15 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				goto backup;
 			}
 		}
-		std::vector<SearchNode*> gennodes;
-		switch (node->status)
-		{
-		case SearchNode::State::N:
-			gennodes = MoveGenerator::genMove(node, player.kyokumen);
-			node->status = SearchNode::State::QE;
-			break;
-		case SearchNode::State::QE:
-		case SearchNode::State::QT:
-			if (!node->isExpandedAll()) {
-				gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
-			}
-			break;
-		}
+		MoveGenerator::genMove(node, player.kyokumen);
 		if (node->children.empty()) {
 			node->setMate();
 			goto backup;
 		}
-		newnodecount += gennodes.size();
+		newnodecount += node->children.size();
 		//Evaluator::evaluate(gennodes, player);下のforループ内で評価するので不要になった
 		for (auto child : node->children) {
-			SearchPlayer p = player;
-			p.proceed(child->move);
-			qsimulate(child, p);
+			qsimulate(child, player);
 		}
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
@@ -227,15 +212,14 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	return newnodecount;
 }
 
-double alphabeta(SearchNode* node, const SearchPlayer& player, int depth, double alpha, double beta) {
-	MoveGenerator::genCapMove(node, player.kyokumen);
+double alphabeta(const Move& pmove,SearchPlayer& player, int depth, double alpha, double beta) {
 	if (depth <= 0) {
 		return Evaluator::evaluate(player);
 	}
-	if (node->children.empty()) {
-		if (node->isExpandedAll()) {
-			node->setMate();
-			return node->eval;
+	const auto moves = MoveGenerator::genCapMove(pmove, player.kyokumen);
+	if (moves.first.empty()) {
+		if (moves.second) {
+			SearchNode::getMateScore();
 		}
 		else {
 			return Evaluator::evaluate(player);
@@ -245,23 +229,28 @@ double alphabeta(SearchNode* node, const SearchPlayer& player, int depth, double
 	if (alpha >= beta) {
 		return alpha;
 	}
-	for (auto& child : node->children) {
-		SearchPlayer next(player);
-		next.proceed(child->move);
-		alpha = std::max(-alphabeta(child, next, depth - 1, -beta, -alpha), alpha);
+	for (auto& m : moves.first) {
+		const FeaureCache cache = player.feature.getCache();
+		const koma::Koma captured = player.proceed(m);
+		alpha = std::max(-alphabeta(m, player, depth - 1, -beta, -alpha), alpha);
 		if (alpha >= beta) {
 			return alpha;
 		}
+		player.back(m, captured, cache);
 	}
 	return alpha;
 }
 
-size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
-	root->setOriginEval(alphabeta(root, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()));
-	root->deleteTree();
-	root->status = SearchNode::State::N;
-	root->setMass(0);
-	return 0;
+void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
+#ifdef _DEBUG
+	SearchPlayer pcopy(p);
+#endif
+	const FeaureCache cache = player.feature.getCache();
+	const koma::Koma captured = player.proceed(root->move);
+	root->setOriginEval(alphabeta(root->move, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()));
+	player.back(root->move, captured, cache);
+	assert(pcopy.kyokumen == p.kyokumen && pcopy.feature.idlist.list0 == p.feature.idlist.list0 && pcopy.feature.idlist.list1 == p.feature.idlist.list1 && p.feature.idlist.material == pcopy.feature.idlist.material);
+	return;
 }
 
 bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vector<SearchNode*>& searchhis, const SearchNode* const repnode)const {
@@ -305,7 +294,6 @@ void SearchAgent::nodeCopy(const SearchNode* const origin, SearchNode* const cop
 	for (auto& child : origin->children) {
 		copy->addCopyChild(child);
 	}
-	copy->setExpandedAll();
 	copy->setMass(1);
 	copy->status = SearchNode::State::E;
 }

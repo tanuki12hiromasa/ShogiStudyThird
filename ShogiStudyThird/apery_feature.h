@@ -73,5 +73,7 @@ namespace apery {
 		EvalSum sum;
 		void set(const Kyokumen& kyokumen);
 		void proceed(const Kyokumen& before, const Move& move);
+		void back(const Kyokumen& after, const Move move, const EvalSum& cache);
+		EvalSum getCache() { return sum; }
 	};
 }

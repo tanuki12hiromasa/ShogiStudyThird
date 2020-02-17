@@ -22,7 +22,7 @@ public:
 	void terminate() { alive = false; th.join(); }
 private:
 	size_t simulate(SearchNode* const root);
-	size_t qsimulate(SearchNode* const root, const SearchPlayer& player);
+	void qsimulate(SearchNode* const root, SearchPlayer& player);
 	bool checkRepetitiveCheck(const Kyokumen& k,const std::vector<SearchNode*>& searchhis, const SearchNode* const latestRepnode)const;
 	void nodeCopy(const SearchNode* const origin, SearchNode* const copy)const;
 	SearchTree& tree;

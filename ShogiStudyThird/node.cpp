@@ -22,7 +22,7 @@ int SearchNode::PV_FuncCode = 0;
 double SearchNode::PV_c = 5;
 
 SearchNode::SearchNode(const Move& move)
-	:move(move), expanded(false)
+	:move(move)
 {
 	status = State::N;
 	eval = 0;
@@ -37,7 +37,6 @@ size_t SearchNode::deleteTree() {
 	std::vector<SearchNode*> nodes = children;
 	children.clear();
 	status = State::N;
-	expanded = false;
 	size_t delnum = nodes.size();
 	while (!nodes.empty()) {
 		SearchNode* node = nodes.back();
