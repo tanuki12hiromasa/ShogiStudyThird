@@ -10,6 +10,7 @@ namespace apery {
 		material = 0;
 #define Mochi(index0,index1,koma,teban) \
  for(int32_t i=kyokumen.getMochigomaNum(teban, koma); i>0; --i) {\
+	 assert(nlist < 38);\
 	 list0[nlist]=index0+i; list1[nlist]=index1+i;\
 	 material+= teban ? PieceScore(koma) : -PieceScore(koma);\
 	 ++nlist; \
@@ -28,11 +29,11 @@ namespace apery {
 		Mochi(e_hand_bishop, f_hand_bishop, Mochigoma::Kaku, false);
 		Mochi(f_hand_rook, e_hand_rook, Mochigoma::Hi, true);
 		Mochi(e_hand_rook, f_hand_rook, Mochigoma::Hi, false);
-		assert(nlist <= 38);
 #undef Mochi
 		Bitboard bb = kyokumen.getAllBB();
 		bb &= ~(kyokumen.getEachBB(Koma::s_Ou) | kyokumen.getEachBB(Koma::g_Ou));
 		for (int i = bb.find_first(); i < bb.size(); i = bb.find_next(i)) {
+			assert(nlist < 38);
 			Koma koma = kyokumen.getKoma(i);
 			list0[nlist] = komaToIndex(koma) + i;
 			list1[nlist] = komaToIndex(sgInv(koma)) + inverse(i);
@@ -119,7 +120,7 @@ namespace apery {
 			Mochigoma m = MposToMochi(from);
 			Koma k = MposToKoma(from);
 			int mNum = before.getMochigomaNum(before.teban(), m);
-			EvalIndex bIndex0 = mochiToIndex(m, before.teban()) + mNum;
+			EvalIndex bIndex0 = mochiToIndex(m, before.teban()) + mNum;//b:before, a:after, 0:先手視点, 1:後手視点
 			EvalIndex bIndex1 = mochiToIndex(m, !before.teban()) + mNum;
 			EvalIndex aIndex0 = komaToIndex(k) + to;
 			EvalIndex aIndex1 = komaToIndex(sgInv(k)) + inverse(to);
@@ -352,5 +353,57 @@ namespace apery {
 			}
 		}
 #undef Replace
+	}
+
+	void apery_feat::recede(const Kyokumen& before, const koma::Koma moved, const koma::Koma captured, const Move move, const EvalSum& cache) {
+		using namespace koma;
+#define Replace(before,after,list) {int i=0;for(;i<EvalList::EvalListSize;i++){if(list[i]==after){list[i]=before;break;}}assert(i<38);}
+		const bool teban = before.teban();
+		const Position from = move.from();
+		const Position to = move.to();
+		const bool prom = move.promote();
+		if (isInside(from)) {//移動による手
+			if (moved != Koma::s_Ou && moved != Koma::g_Ou) {//動かした駒が玉以外ならlistを更新（玉はlistに含まれない）
+				const EvalIndex aIndex0 = komaToIndex(moved) + to;
+				const EvalIndex aIndex1 = komaToIndex(sgInv(moved)) + inverse(to);
+				if (promote) {
+					const Koma movedDisprom = dispromote(moved);
+					const EvalIndex bIndex0 = komaToIndex(movedDisprom) + from;
+					const EvalIndex bIndex1 = komaToIndex(sgInv(movedDisprom)) + inverse(from);
+					Replace(bIndex0, aIndex0, idlist.list0);
+					Replace(bIndex1, aIndex1, idlist.list1);
+					idlist.material = -PieceScore(moved) + PieceScore(movedDisprom); //駒価値
+				}
+				else {
+					const EvalIndex bIndex0 = komaToIndex(moved) + from;
+					const EvalIndex bIndex1 = komaToIndex(sgInv(moved)) + inverse(from);
+					Replace(bIndex0, aIndex0, idlist.list0);
+					Replace(bIndex1, aIndex1, idlist.list1);
+				}
+			}
+			if (captured != Koma::None) {//駒を取っていた
+				const Mochigoma capMochi = KomaToMochi(captured);
+				const int mNum = before.getMochigomaNum(teban, capMochi) + 1;
+				const EvalIndex acIndex0 = mochiToIndex(capMochi, teban) + mNum;
+				const EvalIndex acIndex1 = mochiToIndex(capMochi, !teban) + mNum;
+				const EvalIndex bcIndex0 = komaToIndex(captured) + to;
+				const EvalIndex bcIndex1 = komaToIndex(sgInv(captured)) + inverse(to);
+				Replace(bcIndex0, acIndex0, idlist.list0);
+				Replace(bcIndex1, acIndex1, idlist.list1);
+				idlist.material = -PieceScore(capMochi, teban) + PieceScore(captured); //駒価値
+			}
+		}
+		else {//打ち駒による手
+			const EvalIndex aIndex0 = komaToIndex(moved) + to;
+			const EvalIndex aIndex1 = komaToIndex(sgInv(moved)) + inverse(to);
+			const Mochigoma fromMochi = MposToMochi(from);
+			const int mNum = before.getMochigomaNum(from);
+			const EvalIndex bIndex0 = mochiToIndex(fromMochi, teban) + mNum;
+			const EvalIndex bIndex1 = mochiToIndex(fromMochi, !teban) + mNum;
+			Replace(bIndex0, aIndex0, idlist.list0);
+			Replace(bIndex1, aIndex1, idlist.list1);
+		}
+#undef Replace
+		sum = cache;
 	}
 }

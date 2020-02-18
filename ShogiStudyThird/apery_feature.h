@@ -73,7 +73,10 @@ namespace apery {
 		EvalSum sum;
 		void set(const Kyokumen& kyokumen);
 		void proceed(const Kyokumen& before, const Move& move);
-		void back(const Kyokumen& after, const Move move, const EvalSum& cache);
+		void recede(const Kyokumen& before,const koma::Koma moved,const koma::Koma captured, const Move move, const EvalSum& cache);
 		EvalSum getCache() { return sum; }
+		bool operator==(const apery_feat& rhs)const {
+			return idlist.list0 == rhs.idlist.list0 && idlist.list1 == rhs.idlist.list1 && idlist.material == idlist.material && sum.p == rhs.sum.p;
+		}
 	};
 }

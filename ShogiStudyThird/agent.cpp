@@ -236,7 +236,7 @@ double alphabeta(const Move& pmove,SearchPlayer& player, int depth, double alpha
 		if (alpha >= beta) {
 			return alpha;
 		}
-		player.back(m, captured, cache);
+		player.recede(m, captured, cache);
 	}
 	return alpha;
 }
@@ -248,8 +248,8 @@ void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
 	const FeaureCache cache = player.feature.getCache();
 	const koma::Koma captured = player.proceed(root->move);
 	root->setOriginEval(alphabeta(root->move, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()));
-	player.back(root->move, captured, cache);
-	assert(pcopy.kyokumen == p.kyokumen && pcopy.feature.idlist.list0 == p.feature.idlist.list0 && pcopy.feature.idlist.list1 == p.feature.idlist.list1 && p.feature.idlist.material == pcopy.feature.idlist.material);
+	player.recede(root->move, captured, cache);
+	assert(pcopy == p);
 	return;
 }
 

@@ -163,7 +163,7 @@ std::string Kyokumen::toSfen()const {
 koma::Koma Kyokumen::proceed(const Move move) {
 	const unsigned from = move.from(), to = move.to();
 	const bool prom = move.promote();
-	Koma captured = Koma::None;
+	const Koma captured = getKoma(to);
 	//sente,gote,allBB
 	if (teban()) { //先手
 		if (koma::isInside(from)) { //元位置が盤内ならそのビットを消す
@@ -184,7 +184,6 @@ koma::Koma Kyokumen::proceed(const Move move) {
 	//eachKomaBB,bammen
 	if (koma::isInside(from)) {//盤上の駒を動かす場合
 		const Koma fromKoma = getKoma(from);
-		const Koma toKoma = getKoma(to);
 		Bitboard& fromKomaBB = eachKomaBB[static_cast<size_t>(fromKoma)];
 		fromKomaBB.reset(from);	//BB from
 		bammen[from] = static_cast<std::uint8_t>(Koma::None);	//ban from
@@ -198,12 +197,10 @@ koma::Koma Kyokumen::proceed(const Move move) {
 			fromKomaBB.set(to);		//BB to
 			bammen[to] = static_cast<std::uint8_t>(fromKoma);	//ban to
 		}
-		if (toKoma != Koma::None) {//駒を取っていた場合 
-			Bitboard& toKomaBB = eachKomaBB[static_cast<size_t>(toKoma)];
+		if (captured != Koma::None) {//駒を取っていた場合 
+			Bitboard& toKomaBB = eachKomaBB[static_cast<size_t>(captured)];
 			toKomaBB.reset(to);//BB cap
-			captured = toKoma;
-			Position capMpos = KomaToMpos(toKoma);
-			bammen[capMpos]++;//mban cap
+			bammen[KomaToMpos(captured)]++;//mban cap
 			//bammen[to]は後で更新される
 		}
 	}
@@ -216,6 +213,60 @@ koma::Koma Kyokumen::proceed(const Move move) {
 	}
 	isSente = !isSente;
 	return captured;
+}
+
+koma::Koma Kyokumen::recede(const Move move, const koma::Koma captured) {
+	using namespace koma;
+	const unsigned from = move.from(), to = move.to();
+	const bool prom = move.promote();
+	const Koma fromKoma = getKoma(to);
+	//手番を戻す
+	isSente = !isSente;
+	//senteBB,goteBB
+	if (teban()) {
+		if (captured != Koma::None) {
+			goteKomaBB.set(to);
+		}
+		senteKomaBB.reset(to);
+		if (isInside(from)) {
+			senteKomaBB.set(from);
+		}
+	}
+	else {
+		if (captured != Koma::None) {
+			senteKomaBB.set(to);
+		}
+		goteKomaBB.reset(to);
+		if (isInside(from)) {
+			goteKomaBB.set(from);
+		}
+	}
+	allKomaBB = senteKomaBB | goteKomaBB;
+
+	//eachBB,bammen
+	if (koma::isInside(move.from())) {
+		Bitboard& fromKomaBB = eachKomaBB[static_cast<size_t>(fromKoma)];
+		fromKomaBB.reset(to);
+		if (prom) {//成った場合,成りを戻す
+			const Koma fromDispromKoma = dispromote(fromKoma);
+			eachKomaBB[static_cast<size_t>(fromDispromKoma)].set(from);
+			bammen[from] = static_cast<size_t>(fromDispromKoma);
+		}
+		else {//成らなかった場合
+			fromKomaBB.set(from);
+			bammen[from] = static_cast<size_t>(fromKoma);
+		}
+		if (captured != Koma::None) {//駒を取っていた場合
+			eachKomaBB[static_cast<size_t>(captured)].set(to);
+			bammen[KomaToMpos(captured)]--;
+		}
+	}
+	else {//持ち駒から打っていた場合
+		eachKomaBB[static_cast<size_t>(fromKoma)].reset(to);
+		bammen[from]++;
+	}
+	bammen[to] = static_cast<uint8_t>(captured);
+	return fromKoma;
 }
 
 std::uint64_t Kyokumen::getHash()const {
