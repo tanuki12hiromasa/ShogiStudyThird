@@ -33,13 +33,8 @@ bool SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) 
 			SearchNode* root = getRoot();
 			const Move nextmove = usihis[i];
 			SearchNode* nextNode = nullptr;
-			if (!root->isExpandedAll()) {
-				if (root->isLimitedExpanded()) {
-					MoveGenerator::genNocapMove(root, rootPlayer.kyokumen);
-				}
-				else {
-					MoveGenerator::genMove(root, rootPlayer.kyokumen);
-				}
+			if (root->isLeaf()) {
+				MoveGenerator::genAllMove(root, rootPlayer.kyokumen);
 			}
 			for (SearchNode* child : root->children) {
 				if (child->move == nextmove) {
@@ -64,9 +59,10 @@ void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& 
 	rootPlayer = SearchPlayer(startKyokumen);
 	for (auto& usimove : usihis) {
 		SearchNode* rootNode = getRoot();
-		MoveGenerator::genMove(rootNode, rootPlayer.kyokumen);
+		MoveGenerator::genAllMove(rootNode, rootPlayer.kyokumen);
 		SearchNode* next = nullptr;
 		for (const auto& child : rootNode->children) {
+			assert(child != nullptr);
 			if (child->move == usimove) {
 				next = child;
 				break;

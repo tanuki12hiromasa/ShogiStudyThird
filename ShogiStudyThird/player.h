@@ -16,7 +16,7 @@ public:
 	}
 	void recede(Move m, koma::Koma captured, FeaureCache cache) {
 		const auto moved = kyokumen.recede(m, captured);
-		feature.recede(moved, captured, m, cache);
+		feature.recede(kyokumen, moved, captured, m, cache);
 	}
 	bool operator==(const SearchPlayer& rhs) const {
 		return kyokumen == rhs.kyokumen && feature == rhs.feature;

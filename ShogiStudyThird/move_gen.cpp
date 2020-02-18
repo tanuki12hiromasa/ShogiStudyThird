@@ -323,10 +323,10 @@ const std::pair<std::vector<Move>, bool> MoveGenerator::genCapMove(const Move mo
 	return std::make_pair(en.moves,isoute);
 }
 
-std::vector<Move> MoveGenerator::genNocapMove(SearchNode* parent, const Kyokumen& kyokumen) {
+std::vector<Move> MoveGenerator::genNocapMove(const Move move, const Kyokumen& kyokumen) {
 	GeneratedMoves en;
 	if (kyokumen.teban()) {
-		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
+		auto kusemono = kyokumen.getSenteOuCheck(move);
 		if (kusemono.size() == 0){
 			genSenteBanMove(en, kyokumen, ~kyokumen.getAllBB());
 			genSenteUchiMove(en, kyokumen, ~kyokumen.getAllBB());
@@ -334,7 +334,7 @@ std::vector<Move> MoveGenerator::genNocapMove(SearchNode* parent, const Kyokumen
 		}
 	}
 	else {
-		auto kusemono = kyokumen.getGoteOuCheck(parent->move);
+		auto kusemono = kyokumen.getGoteOuCheck(move);
 		if (kusemono.size() == 0) {
 			genGoteBanMove(en, kyokumen, ~kyokumen.getAllBB());
 			genGoteUchiMove(en, kyokumen, ~kyokumen.getAllBB());

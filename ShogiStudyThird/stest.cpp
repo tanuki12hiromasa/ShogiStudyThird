@@ -66,7 +66,9 @@ void ShogiTest::coutStringsDiff(const strv& cor,const strv& s) {
 bool ShogiTest::genMoveCheck(std::string parent_sfen, std::string child_moves) {
 	strv ans = usi::split(child_moves, ' ');
 	Kyokumen k(usi::split(parent_sfen, ' '));
-	const auto moves = MoveGenerator::genAllMove(new SearchNode(Move()), k);
+	SearchNode* const root = new SearchNode(Move());
+	MoveGenerator::genAllMove(root, k);
+	const auto& moves = root->children;
 	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
 	if (checkStrings(ans, msv)) return true;
 	else {
@@ -79,7 +81,9 @@ bool ShogiTest::genMoveCheck(std::string parent_sfen, std::string child_moves) {
 bool ShogiTest::genMoveCheck(std::string parent_sfen, Move pmove, std::string child_moves) {
 	strv ans = usi::split(child_moves, ' ');
 	Kyokumen k(usi::split(parent_sfen, ' '));
-	const auto moves = MoveGenerator::genAllMove(new SearchNode(pmove), k);
+	SearchNode* const root = new SearchNode(pmove);
+	MoveGenerator::genAllMove(root, k);
+	const auto& moves = root->children;
 	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
 	if (checkStrings(ans, msv)) return true;
 	else {
@@ -91,12 +95,14 @@ bool ShogiTest::genMoveCheck(std::string parent_sfen, Move pmove, std::string ch
 
 bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 	Kyokumen k(usi::split(parent_sfen, ' '));
-	const auto moves = MoveGenerator::genMove(new SearchNode(Move()), k);
+	SearchNode* const root = new SearchNode(Move());
+	MoveGenerator::genMove(root, k);
+	const auto& moves = root->children;
 	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
-	const auto cmoves = MoveGenerator::genCapMove(new SearchNode(Move()), k);
-	strv cmsv; for (const auto& m : cmoves)cmsv.push_back(m->move.toUSI());
-	const auto nmoves = MoveGenerator::genNocapMove(new SearchNode(Move()), k);
-	strv nmsv; for (const auto& m : nmoves)nmsv.push_back(m->move.toUSI());
+	const auto cmoves = MoveGenerator::genCapMove(Move(), k);
+	strv cmsv; for (const auto& m : cmoves.first)cmsv.push_back(m.toUSI());
+	const auto nmoves = MoveGenerator::genNocapMove(Move(), k);
+	strv nmsv; for (const auto& m : nmoves)nmsv.push_back(m.toUSI());
 
 	if (checkStringsUnion(msv, cmsv, nmsv)) { 
 		std::cout << "gencapmove test ok" << std::endl;
