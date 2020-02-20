@@ -78,5 +78,8 @@ namespace apery {
 		bool operator==(const apery_feat& rhs)const {
 			return idlist.list0 == rhs.idlist.list0 && idlist.list1 == rhs.idlist.list1 && idlist.material == idlist.material && sum.p == rhs.sum.p;
 		}
+		bool operator!=(const apery_feat& rhs)const {
+			return !operator==(rhs);
+		}
 	};
 }

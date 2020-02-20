@@ -233,10 +233,10 @@ double alphabeta(const Move& pmove,SearchPlayer& player, int depth, double alpha
 		const FeaureCache cache = player.feature.getCache();
 		const koma::Koma captured = player.proceed(m);
 		alpha = std::max(-alphabeta(m, player, depth - 1, -beta, -alpha), alpha);
+		player.recede(m, captured, cache);
 		if (alpha >= beta) {
 			return alpha;
 		}
-		player.recede(m, captured, cache);
 	}
 	return alpha;
 }

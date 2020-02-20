@@ -6,6 +6,7 @@
 
 class Kyokumen {
 	friend class MoveGenerator;
+	friend class ShogiTest;
 public:
 	Kyokumen();
 	Kyokumen(const std::array<koma::Koma, 81>&, const std::array<unsigned,7>&, const std::array<unsigned, 7>&, bool);
@@ -13,6 +14,7 @@ public:
 	Kyokumen(std::array<std::uint8_t, 95>&&, bool);
 	Kyokumen(const std::vector<std::string>& usitokens);
 	std::string toSfen()const;
+	std::string toBanFigure()const;
 	
 	koma::Koma proceed(const Move);//返り値は取られた駒(captured)
 	koma::Koma recede(const Move m, const koma::Koma cap);//返り値は動かした駒(to=>fromに動いた駒)

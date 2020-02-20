@@ -72,6 +72,7 @@ bool ShogiTest::genMoveCheck(std::string parent_sfen, std::string child_moves) {
 	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
 	if (checkStrings(ans, msv)) return true;
 	else {
+		std::cout << k.toBanFigure() << std::endl;
 		coutStringsDiff(ans, msv);
 		assert(0);
 		return false;
@@ -87,6 +88,7 @@ bool ShogiTest::genMoveCheck(std::string parent_sfen, Move pmove, std::string ch
 	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
 	if (checkStrings(ans, msv)) return true;
 	else {
+		std::cout << k.toBanFigure() << std::endl;
 		coutStringsDiff(ans, msv);
 		assert(0);
 		return false;
@@ -109,6 +111,7 @@ bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 		return true; 
 	}
 	else {
+		std::cout << k.toBanFigure() << std::endl;
 		std::cout << "genfull: ";
 		for (const auto& s : msv)std::cout << s << ' ';
 		std::cout << std::endl;
@@ -123,9 +126,79 @@ bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 	}
 }
 
+bool ShogiTest::checkRecede(std::string sfen,const int depth) {
+	Kyokumen k(usi::split(sfen,' '));
+	Feature f(k);
+	SearchNode* const root = new SearchNode(Move());
+	const Kyokumen ck = k;
+	const Feature cf = f;
+	bool result = checkRecedeR(k, f, root, depth);
+	if (result) {
+		std::cout << "recede test ok" << std::endl;
+		root->deleteTree();
+		delete root;
+		return true;
+	}
+	else {
+		std::cout << "recede test ng" << std::endl;
+		root->deleteTree();
+		delete root;
+		return false;
+	}
+}
+
+bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int depth) {
+	MoveGenerator::genMove(p, k);
+	const Kyokumen ck = k;
+	const Feature cf = f;
+	for (const auto& c : p->children) {
+		const auto cache = f.getCache();
+		f.proceed(k, c->move);
+		const auto cap = k.proceed(c->move);
+		if (depth > 0) {
+			bool result = checkRecedeR(k, f, c, depth - 1);
+			if (!result) {
+				return false;
+			}
+		}
+		const auto moved = k.recede(c->move, cap);
+		if (k != ck && k.eachKomaBB == ck.eachKomaBB) {
+			std::cout << "error: kyokumen recede" << std::endl;
+			std::cout << "correct:\n" << ck.toBanFigure() << std::endl;
+			std::cout << "kyokumen:\n" << k.toBanFigure() << std::endl;
+			assert(k == ck);
+			return false;
+		}
+		f.recede(k, moved, cap, c->move, cache);
+		if (f != cf) {
+			std::cout << "error: feature recede" << std::endl;
+			std::cout << "kyokumen:\nposition " << k.toSfen() << "\n" << k.toBanFigure() << std::endl;
+			std::cout << "move: " << c->move.toUSI() << std::endl;
+			std::cout << "feature diff:" << std::endl;
+			for (int i = 0; i < 38; i++) {
+				if (f.idlist.list0[i] != cf.idlist.list0[i]) {
+					std::cout << "list0[" << i << "] " << f.idlist.list0[i] << " " << cf.idlist.list0[i] << std::endl;
+				}
+				if (f.idlist.list1[i] != cf.idlist.list1[i]) {
+					std::cout << "list1[" << i << "] " << f.idlist.list1[i] << " " << cf.idlist.list1[i] << std::endl;
+				}
+			}
+			if (f.idlist.material != cf.idlist.material) {
+				std::cout << "material " << f.idlist.material << " " << cf.idlist.material << std::endl;
+			}
+			assert(f == cf);
+			return false;
+		}
+	}
+	return true;
+}
+
 void ShogiTest::test() {
 	using namespace std;
+	std::cout << "now initializing..." << std::endl;
 	BBkiki::init();
+	Evaluator::init();
+	std::cout << "initialized." << std::endl;
 #if 1
 	{
 		std::string sfen = "position sfen 4k4/5+p3/5P3/9/9/9/9/9/4K4 b 2r2b4g4s4n4l16p 1";
@@ -215,6 +288,16 @@ void ShogiTest::test() {
 		string moves2 = "P*5b P*5d P*5e P*5h P*8a P*8b P*8c P*8e P*8f P*8h N*1b N*1c N*1e N*1g N*2d N*2e N*2f N*2g N*3a N*3d N*3e N*3f N*4a N*4d N*4e N*4f N*5b N*5d N*5e N*6a N*6b N*6d N*6e N*6f N*7a N*7c N*7e N*7g N*8a N*8b N*8c N*8e N*8f N*9b N*9c N*9e N*9f B*1b B*1c B*1e B*1g B*1h B*2d B*2e B*2f B*2g B*2h B*3a B*3d B*3e B*3f B*3i B*4a B*4d B*4e B*4f B*4h B*5b B*5d B*5e B*5h B*6a B*6b B*6d B*6e B*6f B*6h B*6i B*7a B*7c B*7e B*7g B*8a B*8b B*8c B*8e B*8f B*8h B*8i B*9b B*9c B*9e B*9f B*9h 1d1e 2c2d 3c3d 4c4d 6c6d 7d7e 9d9e 2a1c 4b3a 4b5c 3b3a 7b6b 7b7a 7b7c 7b8b 7b8c 5a4a 5a6a 1a1b 1a1c 9a9b 9a9c 2b1c 2b3a 8d8a 8d8b 8d8c 8d8e 8d8f 8d8g 8d8g+";
 		ShogiTest::genMoveCheck(str2, moves2);
 		ShogiTest::genCapMoveCheck(str2);
+	}
+	{
+		string str4 = "position sfen 1r3g3/l2gk3l/3p4p/2p1+B1p2/p4s3/2P1P1Pb1/1+p1PSP2P/L2S3GL/1NGKNsr2 b N3Pn3p 1";
+		checkRecede(str4, 1);
+		string str3 = "position sfen ln1gk1gnl/2s6/p1p1ppppp/3p3R1/4B4/2P5P/P2PPPP2/L3K4/1+rSG1GSNL w BSPn2p 1";
+		checkRecede(str3, 0);
+		string str2 = "position sfen ln1gk1gnl/2s6/p1p1ppppp/3p3R1/4B4/2P6/P2PPPP1P/L3K4/1+rSG1GSNL b BSPn2p 1";
+		checkRecede(str2, 2);
+		string str1 = "position sfen l3k2nl/2g3gb1/3psppp1/prp5p/9/2P1R3P/PP1PPPP2/2G3S2/L1S1KG1NL b S2Pb2np 1";
+		checkRecede(str1, 2);
 	}
 #if 0
 	{

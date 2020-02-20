@@ -366,7 +366,7 @@ namespace apery {
 			if (moved != Koma::s_Ou && moved != Koma::g_Ou) {//動かした駒が玉以外ならlistを更新（玉はlistに含まれない）
 				const EvalIndex aIndex0 = komaToIndex(moved) + to;
 				const EvalIndex aIndex1 = komaToIndex(sgInv(moved)) + inverse(to);
-				if (promote) {
+				if (prom) {
 					const Koma movedDisprom = dispromote(moved);
 					const EvalIndex bIndex0 = komaToIndex(movedDisprom) + from;
 					const EvalIndex bIndex1 = komaToIndex(sgInv(movedDisprom)) + inverse(from);
@@ -404,6 +404,6 @@ namespace apery {
 			Replace(bIndex1, aIndex1, idlist.list1);
 		}
 #undef Replace
-		sum = cache;
+		sum.p = cache.p;
 	}
 }

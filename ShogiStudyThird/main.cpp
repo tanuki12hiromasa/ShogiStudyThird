@@ -9,7 +9,6 @@
 
 int main()
 {
-	std::cout << sizeof(Feature) << std::endl;
 	Commander::execute();
 	//ShogiTest::test();
 }

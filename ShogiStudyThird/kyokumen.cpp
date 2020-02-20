@@ -538,10 +538,7 @@ Bitboard Kyokumen::pinMaskGote(const unsigned pos)const {
 }
 
 bool Kyokumen::operator==(const Kyokumen& rhs) const {
-	if (senteKomaBB == rhs.senteKomaBB && goteKomaBB == rhs.goteKomaBB && bammen == rhs.bammen)
-		return true;
-	else 
-		return false;
+	return (senteKomaBB == rhs.senteKomaBB && goteKomaBB == rhs.goteKomaBB && bammen == rhs.bammen);
 }
 
 void Kyokumen::reflectBitboard() {
@@ -562,4 +559,37 @@ void Kyokumen::reflectBitboard() {
 		goteKomaBB |= eachKomaBB[i]; //後手の駒をすべて集めたbb
 	}
 	allKomaBB = senteKomaBB | goteKomaBB;//全体のbbは先後のものを合成する
+}
+
+std::string Kyokumen::toBanFigure()const {
+	std::string fig;
+	fig += "teban: "; 
+	fig += (teban() ? "sente\n" : "gote\n");
+	for (int y = 0; y < 9; y++) {
+		for (int x = 9 - 1; x >= 0; x--) {
+			Koma k = getKoma(static_cast<Position>(x * 9 + y));
+			auto s = (k != koma::Koma::None) ? usi::komaToUsi(k) : "-";
+			if (s.length() == 1) {
+				s = ' ' + s;
+			}
+			fig += s + ' ';
+		}
+		fig += '\n';
+	}
+	fig += "SenteMochi: ";
+	for (Mochigoma m = Mochigoma::Fu; m != Mochigoma::MochigomaNum; m = static_cast<Mochigoma>(static_cast<uint8_t>(m) + 1)) {
+		int mNum = getMochigomaNum(true, m);
+		if (mNum > 0) {
+			fig += usi::mochigomaToUsi(true, m) + std::to_string(mNum) + " ";
+		}
+	}
+	fig += '\n';
+	fig += "GoteMochi: ";
+	for (Mochigoma m = Mochigoma::Fu; m != Mochigoma::MochigomaNum; m = static_cast<Mochigoma>(static_cast<uint8_t>(m) + 1)) {
+		int mNum = getMochigomaNum(false, m);
+		if (mNum > 0) {
+			fig += usi::mochigomaToUsi(false, m) + std::to_string(mNum) + " ";
+		}
+	}
+	return fig;
 }
