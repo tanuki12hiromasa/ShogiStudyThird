@@ -12,7 +12,7 @@ SearchTree::SearchTree()
 	nodecount = 1;
 }
 
-bool SearchTree::set(const std::vector<std::string>& usitokens) {
+std::pair<bool, std::vector<SearchNode*>> SearchTree::set(const std::vector<std::string>& usitokens) {
 	const auto moves = Move::usiToMoves(usitokens);
 	return set(Kyokumen(usitokens), moves);
 }
@@ -21,12 +21,13 @@ void SearchTree::makeNewTree(const std::vector<std::string>& usitokens) {
 	makeNewTree(Kyokumen(usitokens), moves);
 }
 
-bool SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) {
+std::pair<bool, std::vector<SearchNode*>> SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) {
+	std::vector<SearchNode*> newNodes;
 	if (!history.empty() && (history.size() <= usihis.size()) && startKyokumen == startpos) {
 		int i;
 		for (i = 0; i < history.size() - 1; i++) {
 			if (history[i + 1ull]->move != usihis[i]) {
-				return false;
+				return std::make_pair(false, newNodes);
 			}
 		}
 		for (; i < usihis.size(); i++) {
@@ -45,11 +46,12 @@ bool SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) 
 			if (nextNode == nullptr) {
 				nextNode = root->addChild(nextmove);
 			}
+			newNodes.push_back(nextNode);
 			proceed(nextNode);
 		}
-		return true;
+		return std::make_pair(true, newNodes);
 	}
-	return false;
+	return std::make_pair(false, newNodes);
 }
 
 void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& usihis) {
@@ -98,13 +100,16 @@ void SearchTree::proceed(SearchNode* node) {
 	history.push_back(node);
 }
 
-void SearchTree::deleteBranch(SearchNode* const base, SearchNode* const saved) {
+void SearchTree::deleteBranch(SearchNode* base, const std::vector<SearchNode*>& savedNodes) {
 	if (leave_branchNode) return;
-	for (auto node : base->children) {
-		if (node != saved) {
-			const size_t delnum = node->deleteTree();
-			nodecount -= delnum;
+	for (auto saved : savedNodes) {
+		for (auto node : base->children) {
+			if (node != saved) {
+				const size_t delnum = node->deleteTree();
+				nodecount -= delnum;
+			}
 		}
+		base = saved;
 	}
 }
 

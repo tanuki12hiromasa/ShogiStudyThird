@@ -69,7 +69,7 @@ public:
 	void setDeclare();
 	void setRepetition(const bool teban);
 	void setRepetitiveCheck();
-	void setOriginEval(const double evaluation) { origin_eval = evaluation; eval = evaluation; }
+	void setOriginEval(const double evaluation) { origin_eval = evaluation; }
 	void addVisitCount() { visit_count++; }
 
 	double getEvaluation()const { return eval.load(); }

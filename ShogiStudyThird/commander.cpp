@@ -99,19 +99,18 @@ void Commander::coutOption() {
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
 	cout << "option name leave_qsearchNode type check default false" << endl;
 	cout << "option name Repetition_score type string default 0" << endl;
-	cout << "option name QSstopper_failnum type spin default 0 min 0 max 64" << endl;
-	cout << "option name QSstopper_mass type string default 0.0" << endl;
+	cout << "option name QSstopper_mass type string default 5" << endl;
 	cout << "option name Tc_functionCode type spin default 0 min 0 max 6" << endl;
-	cout << "option name T_choice_const type string default 160" << endl;
+	cout << "option name T_choice_const type string default 120" << endl;
 	cout << "option name T_choice_mass_parent type string default 1" << endl;
 	cout << "option name T_choice_children_masses type string default 1" << endl;
 	cout << "option name T_eval type string default 40" << endl;
-	cout << "option name T_depth type string default 200" << endl;
-	cout << "option name Ec_functionCode type spin default 0 min 0 max 19" << endl;
-	cout << "option name Ec_c type string default 10" << endl;
+	cout << "option name T_depth type string default 100" << endl;
+	cout << "option name Ec_functionCode type spin default 18 min 0 max 19" << endl;
+	cout << "option name Ec_c type string default 0.5" << endl;
 	cout << "option name NodeMaxNum type spin default 100000000 min 1000 max 5000000000" << endl;
 	cout << "option name PV_functionCode type spin default 0 min 0 max 2" << endl;
-	cout << "option name PV_const type string default 5" << endl;
+	cout << "option name PV_const type string default 0" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -134,9 +133,6 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "Repetition_score") {
 			SearchNode::setRepScore(std::stod(token[4]));
-		}
-		else if (token[2] == "QSstopper_failnum") {
-			SearchAgent::setFailnum(std::stoi(token[4]));
 		}
 		else if (token[2] == "QSstopper_mass") {
 			SearchNode::setMassmaxInQSearch(std::stod(token[4]));
@@ -291,7 +287,7 @@ void Commander::chakushu() {
 		" score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
-	releaseAgentAndBranch(root, bestchild);
+	releaseAgentAndBranch(root, {bestchild});
 	if (permitPonder) {
 		startAgent();
 	}
@@ -301,10 +297,9 @@ void Commander::chakushu() {
 void Commander::position(const std::vector<std::string>& tokens) {
 	stopAgent();
 	const auto prevRoot = tree.getRoot();
-	bool result = tree.set(tokens);
-	if (result) {
-		const auto nextRoot = tree.getRoot();
-		releaseAgentAndBranch(prevRoot, nextRoot);
+	auto result = tree.set(tokens);
+	if (result.first) {
+		releaseAgentAndBranch(prevRoot, std::move(result.second));
 	}
 	else {
 		tree.makeNewTree(tokens);
@@ -312,16 +307,16 @@ void Commander::position(const std::vector<std::string>& tokens) {
 	}
 }
 
-void Commander::releaseAgentAndBranch(SearchNode* const prevRoot, SearchNode* const nextRoot) {
+void Commander::releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes) {
 	auto tmpthread = std::move(deleteThread);
 	deleteThread = std::unique_ptr<std::thread>( new std::thread(
-		[&tree=tree,prevThread = std::move(tmpthread), prevAgents = std::move(agents), prevRoot, nextRoot]
+		[&tree=tree,prevThread = std::move(tmpthread), prevAgents = std::move(agents), prevRoot, savedNodes = std::move(newNodes)]
 		{
 			if(prevThread != nullptr && prevThread->joinable()) prevThread->join();
 			for (auto& ag : prevAgents) {
 				ag->terminate();
 			}
-			tree.deleteBranch(prevRoot, nextRoot);
+			tree.deleteBranch(prevRoot, savedNodes);
 		}));
 	agents.clear();
 }

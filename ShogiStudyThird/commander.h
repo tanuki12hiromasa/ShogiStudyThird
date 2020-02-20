@@ -19,7 +19,7 @@ private:
 	void info();
 	void chakushu();
 	void position(const std::vector<std::string>& tokens);
-	void releaseAgentAndBranch(SearchNode* const prevRoot,SearchNode* const nextRoot);
+	void releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes);
 	void releaseAgentAndTree(SearchNode* const root);
 
 	SearchTree tree;

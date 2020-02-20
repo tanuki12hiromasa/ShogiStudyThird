@@ -3,7 +3,6 @@
 #include "leaf_guard.h"
 #include <algorithm>
 
-unsigned SearchAgent::maxfailnum = 5u;
 bool SearchAgent::leave_QsearchNode = false;
 
 SearchAgent::SearchAgent(SearchTree& tree,int seed)
@@ -247,7 +246,9 @@ void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
 #endif
 	const FeaureCache cache = player.feature.getCache();
 	const koma::Koma captured = player.proceed(root->move);
-	root->setOriginEval(alphabeta(root->move, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max()));
+	const double eval = alphabeta(root->move, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
+	root->setOriginEval(eval);
+	root->setEvaluation(eval);
 	player.recede(root->move, captured, cache);
 	assert(pcopy == p);
 	return;

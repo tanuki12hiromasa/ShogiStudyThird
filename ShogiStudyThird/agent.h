@@ -5,10 +5,8 @@
 
 class SearchAgent {
 public:
-	static void setFailnum(unsigned num) { maxfailnum = num; }
 	static void setLeaveQSNode(bool b) { leave_QsearchNode = b; }
 private:
-	static unsigned maxfailnum;
 	static bool leave_QsearchNode;
 public:
 	SearchAgent(SearchTree& tree, int seed);
