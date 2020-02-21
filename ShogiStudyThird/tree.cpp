@@ -9,33 +9,33 @@ SearchTree::SearchTree()
 {
 	leave_branchNode = false;
 	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
-	nodecount = 0;
+	nodecount = 1;
 }
 
-void SearchTree::set(const std::vector<std::string>& usitokens) {
+std::pair<bool, std::vector<SearchNode*>> SearchTree::set(const std::vector<std::string>& usitokens) {
 	const auto moves = Move::usiToMoves(usitokens);
-	set(Kyokumen(usitokens), moves);
+	return set(Kyokumen(usitokens), moves);
+}
+void SearchTree::makeNewTree(const std::vector<std::string>& usitokens) {
+	const auto moves = Move::usiToMoves(usitokens);
+	makeNewTree(Kyokumen(usitokens), moves);
 }
 
-void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
-	if (!history.empty() && (history.size() <= usihis.size()) && startKyokumen == startpos)	{
+std::pair<bool, std::vector<SearchNode*>> SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) {
+	std::vector<SearchNode*> newNodes;
+	if (!history.empty() && (history.size() <= usihis.size()) && startKyokumen == startpos) {
 		int i;
 		for (i = 0; i < history.size() - 1; i++) {
-			if (history[i+1ull]->move != usihis[i]) {
-				goto makenewtree;
+			if (history[i + 1ull]->move != usihis[i]) {
+				return std::make_pair(false, newNodes);
 			}
 		}
 		for (; i < usihis.size(); i++) {
 			SearchNode* root = getRoot();
 			const Move nextmove = usihis[i];
 			SearchNode* nextNode = nullptr;
-			if (!root->isExpandedAll()) {
-				if (root->isLimitedExpanded()) {
-					MoveGenerator::genNocapMove(root, rootPlayer.kyokumen);
-				}
-				else {
-					MoveGenerator::genMove(root, rootPlayer.kyokumen);
-				}
+			if (root->isLeaf()) {
+				MoveGenerator::genAllMove(root, rootPlayer.kyokumen);
 			}
 			for (SearchNode* child : root->children) {
 				if (child->move == nextmove) {
@@ -46,32 +46,34 @@ void SearchTree::set(const Kyokumen& startpos,const std::vector<Move>& usihis) {
 			if (nextNode == nullptr) {
 				nextNode = root->addChild(nextmove);
 			}
+			newNodes.push_back(nextNode);
 			proceed(nextNode);
 		}
-		return;
+		return std::make_pair(true, newNodes);
 	}
-makenewtree:
-	{
-		if (!history.empty()) deleteTreeParallel(history.front(), history.size() - 1);
-		history.clear();
-		startKyokumen = startpos;
-		history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
-		rootPlayer = SearchPlayer(startKyokumen);
-		for (auto& usimove : usihis) {
-			SearchNode* rootNode = getRoot();
-			MoveGenerator::genMove(rootNode, rootPlayer.kyokumen);
-			SearchNode* next = nullptr;
-			for (const auto& child : rootNode->children) {
-				if (child->move == usimove) {
-					next = child;
-					break;
-				}
+	return std::make_pair(false, newNodes);
+}
+
+void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& usihis) {
+	history.clear();
+	startKyokumen = startpos;
+	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
+	rootPlayer = SearchPlayer(startKyokumen);
+	for (auto& usimove : usihis) {
+		SearchNode* rootNode = getRoot();
+		MoveGenerator::genAllMove(rootNode, rootPlayer.kyokumen);
+		SearchNode* next = nullptr;
+		for (const auto& child : rootNode->children) {
+			assert(child != nullptr);
+			if (child->move == usimove) {
+				next = child;
+				break;
 			}
-			if (next == nullptr) {
-				next = rootNode->addChild(usimove);
-			}
-			proceed(next);
 		}
+		if (next == nullptr) {
+			next = rootNode->addChild(usimove);
+		}
+		proceed(next);
 	}
 }
 
@@ -95,68 +97,29 @@ void SearchTree::proceed(SearchNode* node) {
 	historymap.emplace(rootPlayer.kyokumen.getHash(), std::make_pair(rootPlayer.kyokumen.getBammen(), history.size() - 1));
 	rootPlayer.kyokumen.proceed(node->move);
 	rootPlayer.feature.set(rootPlayer.kyokumen);
-	deleteBranchParallel(getRoot(), node, history.size() - 1);
 	history.push_back(node);
 }
 
-SearchNode* SearchTree::getRoot(unsigned threadNo, size_t increaseNodes) {
-	std::lock_guard<std::mutex> lock(thmutex);
-	lastRefRootByThread[threadNo] = history.size() - 1;
-	nodecount += increaseNodes;
-	if (search_enable/* && nodecount < nodesMaxCount*/) {//nodecountを減らす処理が書けてないので一時的に無効化している
-		return getRoot();
-	}
-	else {
-		return nullptr;
-	}
-}
-
-void SearchTree::deleteBranchParallel(SearchNode* base, SearchNode* saved, uint8_t oldhisnum) {
+void SearchTree::deleteBranch(SearchNode* base, const std::vector<SearchNode*>& savedNodes) {
 	if (leave_branchNode) return;
-	std::thread th([this,base,saved,oldhisnum]() 
-		{
-			bool immigrated;
-			do {
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
-				immigrated = true;
-				std::lock_guard<std::mutex> lock(thmutex);
-				for (uint8_t hnum : lastRefRootByThread) {
-					if (hnum <= oldhisnum)
-						immigrated = false;
-				}
-			} while (!immigrated);
-			for (auto node : base->children) {
-				if (node != saved) {
-					const size_t delnum = node->deleteTree();
-					nodecount -= delnum;
-				}
+	for (auto saved : savedNodes) {
+		for (auto node : base->children) {
+			if (node != saved) {
+				const size_t delnum = node->deleteTree();
+				nodecount -= delnum;
 			}
 		}
-	);
-	th.detach();
+		base = saved;
+	}
 }
 
-void SearchTree::deleteTreeParallel(SearchNode* root,uint8_t oldhisnum) {
-	std::thread th([this,root,oldhisnum]()
-		{
-			bool immigrated;
-			do {
-				std::this_thread::sleep_for(std::chrono::milliseconds(200));
-				immigrated = true;
-				std::lock_guard<std::mutex> lock(thmutex);
-				for (uint8_t hnum : lastRefRootByThread) {
-					if (hnum == oldhisnum)
-						immigrated = false;
-				}
-			} while (!immigrated);
-			const size_t delnum = root->deleteTree();
-			nodecount -= delnum;
-			delete(root);
-			nodecount--;
-		}
-	);
-	th.detach();
+void SearchTree::deleteTree(SearchNode* const root) {
+	const size_t delnum = root->deleteTree();
+	nodecount -= delnum;
+	delete(root);
+	nodecount--;
 }
+#pragma optimize("",on)
 
 std::pair<unsigned, SearchNode*> SearchTree::findRepetition(const Kyokumen& kyokumen)const {
 	auto range = historymap.equal_range(kyokumen.getHash());

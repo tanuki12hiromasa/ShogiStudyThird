@@ -160,10 +160,10 @@ std::string Kyokumen::toSfen()const {
 	return usi;
 }
 
-koma::Position Kyokumen::proceed(const Move move) {
+koma::Koma Kyokumen::proceed(const Move move) {
 	const unsigned from = move.from(), to = move.to();
 	const bool prom = move.promote();
-	Position captured = Position::SQm_Num;
+	const Koma captured = getKoma(to);
 	//sente,gote,allBB
 	if (teban()) { //先手
 		if (koma::isInside(from)) { //元位置が盤内ならそのビットを消す
@@ -184,7 +184,6 @@ koma::Position Kyokumen::proceed(const Move move) {
 	//eachKomaBB,bammen
 	if (koma::isInside(from)) {//盤上の駒を動かす場合
 		const Koma fromKoma = getKoma(from);
-		const Koma toKoma = getKoma(to);
 		Bitboard& fromKomaBB = eachKomaBB[static_cast<size_t>(fromKoma)];
 		fromKomaBB.reset(from);	//BB from
 		bammen[from] = static_cast<std::uint8_t>(Koma::None);	//ban from
@@ -198,11 +197,10 @@ koma::Position Kyokumen::proceed(const Move move) {
 			fromKomaBB.set(to);		//BB to
 			bammen[to] = static_cast<std::uint8_t>(fromKoma);	//ban to
 		}
-		if (toKoma != Koma::None) {//駒を取っていた場合 
-			Bitboard& toKomaBB = eachKomaBB[static_cast<size_t>(toKoma)];
+		if (captured != Koma::None) {//駒を取っていた場合 
+			Bitboard& toKomaBB = eachKomaBB[static_cast<size_t>(captured)];
 			toKomaBB.reset(to);//BB cap
-			Position capMpos = captured = KomaToMpos(toKoma);
-			bammen[capMpos]++;//mban cap
+			bammen[KomaToMpos(captured)]++;//mban cap
 			//bammen[to]は後で更新される
 		}
 	}
@@ -215,6 +213,60 @@ koma::Position Kyokumen::proceed(const Move move) {
 	}
 	isSente = !isSente;
 	return captured;
+}
+
+koma::Koma Kyokumen::recede(const Move move, const koma::Koma captured) {
+	using namespace koma;
+	const unsigned from = move.from(), to = move.to();
+	const bool prom = move.promote();
+	const Koma fromKoma = getKoma(to);
+	//手番を戻す
+	isSente = !isSente;
+	//senteBB,goteBB
+	if (teban()) {
+		if (captured != Koma::None) {
+			goteKomaBB.set(to);
+		}
+		senteKomaBB.reset(to);
+		if (isInside(from)) {
+			senteKomaBB.set(from);
+		}
+	}
+	else {
+		if (captured != Koma::None) {
+			senteKomaBB.set(to);
+		}
+		goteKomaBB.reset(to);
+		if (isInside(from)) {
+			goteKomaBB.set(from);
+		}
+	}
+	allKomaBB = senteKomaBB | goteKomaBB;
+
+	//eachBB,bammen
+	if (koma::isInside(move.from())) {
+		Bitboard& fromKomaBB = eachKomaBB[static_cast<size_t>(fromKoma)];
+		fromKomaBB.reset(to);
+		if (prom) {//成った場合,成りを戻す
+			const Koma fromDispromKoma = dispromote(fromKoma);
+			eachKomaBB[static_cast<size_t>(fromDispromKoma)].set(from);
+			bammen[from] = static_cast<size_t>(fromDispromKoma);
+		}
+		else {//成らなかった場合
+			fromKomaBB.set(from);
+			bammen[from] = static_cast<size_t>(fromKoma);
+		}
+		if (captured != Koma::None) {//駒を取っていた場合
+			eachKomaBB[static_cast<size_t>(captured)].set(to);
+			bammen[KomaToMpos(captured)]--;
+		}
+	}
+	else {//持ち駒から打っていた場合
+		eachKomaBB[static_cast<size_t>(fromKoma)].reset(to);
+		bammen[from]++;
+	}
+	bammen[to] = static_cast<uint8_t>(captured);
+	return fromKoma;
 }
 
 std::uint64_t Kyokumen::getHash()const {
@@ -486,10 +538,7 @@ Bitboard Kyokumen::pinMaskGote(const unsigned pos)const {
 }
 
 bool Kyokumen::operator==(const Kyokumen& rhs) const {
-	if (senteKomaBB == rhs.senteKomaBB && goteKomaBB == rhs.goteKomaBB && bammen == rhs.bammen)
-		return true;
-	else 
-		return false;
+	return (senteKomaBB == rhs.senteKomaBB && goteKomaBB == rhs.goteKomaBB && bammen == rhs.bammen);
 }
 
 void Kyokumen::reflectBitboard() {
@@ -510,4 +559,43 @@ void Kyokumen::reflectBitboard() {
 		goteKomaBB |= eachKomaBB[i]; //後手の駒をすべて集めたbb
 	}
 	allKomaBB = senteKomaBB | goteKomaBB;//全体のbbは先後のものを合成する
+}
+
+std::string Kyokumen::toBanFigure()const {
+	std::string fig;
+	fig += "teban: "; 
+	fig += (teban() ? "sente\n" : "gote\n");
+	for (int y = 0; y < 9; y++) {
+		for (int x = 9 - 1; x >= 0; x--) {
+			Koma k = getKoma(static_cast<Position>(x * 9 + y));
+			auto s = (k != koma::Koma::None) ? usi::komaToUsi(k) : "-";
+			if (s.length() == 1) {
+				s = ' ' + s;
+			}
+			fig += s + ' ';
+		}
+		fig += '\n';
+	}
+	fig += "SenteMochi: ";
+	std::string smochistr;
+	for (Mochigoma m = Mochigoma::Fu; m != Mochigoma::MochigomaNum; m = static_cast<Mochigoma>(static_cast<uint8_t>(m) + 1)) {
+		int mNum = getMochigomaNum(true, m);
+		if (mNum > 0) {
+			smochistr += usi::mochigomaToUsi(true, m) + std::to_string(mNum) + " ";
+		}
+	}
+	if (smochistr == "") smochistr = "none";
+	fig += smochistr;
+	fig += '\n';
+	fig += "GoteMochi: ";
+	std::string gmochistr;
+	for (Mochigoma m = Mochigoma::Fu; m != Mochigoma::MochigomaNum; m = static_cast<Mochigoma>(static_cast<uint8_t>(m) + 1)) {
+		int mNum = getMochigomaNum(false, m);
+		if (mNum > 0) {
+			gmochistr += usi::mochigomaToUsi(false, m) + std::to_string(mNum) + " ";
+		}
+	}
+	if (gmochistr == "") gmochistr = "none";
+	fig += gmochistr;
+	return fig;
 }

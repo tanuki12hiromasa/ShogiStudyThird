@@ -3,33 +3,34 @@
 #include "leaf_guard.h"
 #include <algorithm>
 
-unsigned SearchAgent::maxfailnum = 5u;
 bool SearchAgent::leave_QsearchNode = false;
+bool SearchAgent::use_original_kyokumen_eval = true;
 
-SearchAgent::SearchAgent(SearchTree& tree, unsigned threadid, int seed)
-	:tree(tree), ID(threadid),engine(seed)
+SearchAgent::SearchAgent(SearchTree& tree,int seed)
+	:tree(tree),engine(seed),root(tree.getRoot())
 {
-	alive = true;
+	
+	if (root != nullptr)
+		alive = true;
+	else 
+		alive = false;
+	th = std::thread(&SearchAgent::loop, this);
 }
 
 SearchAgent::SearchAgent(SearchAgent&& agent) noexcept
-	: tree(agent.tree), ID(agent.ID),
-	engine(std::move(agent.engine))
+	: tree(agent.tree), th(std::move(agent.th)),
+	root(agent.root), engine(std::move(agent.engine))
 {
 	alive = agent.alive.load();
 }
 
+
+
 void SearchAgent::loop() {
 	size_t newnodecount = 0;
 	while (alive) {
-		SearchNode* root = tree.getRoot(ID, newnodecount);
-		if (root != nullptr) {
-			newnodecount = simulate(root);
-		}
-		else {
-			newnodecount = 0;
-			std::this_thread::sleep_for(std::chrono::microseconds(200));
-		}
+		newnodecount = simulate(root);
+		tree.addNodeCount(newnodecount);
 	}
 }
 
@@ -41,7 +42,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	const double MateScoreBound = SearchNode::getMateScoreBound();
 	size_t newnodecount = 0;
 	SearchNode* node = root;
-	SearchPlayer player(tree.getRootPlayer());
+	player = tree.getRootPlayer();
 	std::vector<SearchNode*> history = { node };
 	std::vector<std::pair<uint64_t, std::array<uint8_t, 95>>> k_history;
 	node->addVisitCount();
@@ -134,43 +135,15 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				goto backup;
 			}
 		}
-		std::vector<SearchNode*> gennodes;
-		switch (node->status)
-		{
-		case SearchNode::State::N:
-			gennodes = MoveGenerator::genMove(node, player.kyokumen);
-			node->status = SearchNode::State::QE;
-			break;
-		case SearchNode::State::QE:
-		case SearchNode::State::QT:
-			if (!node->isExpandedAll()) {
-				gennodes = MoveGenerator::genNocapMove(node, player.kyokumen);
-			}
-			break;
-		}
+		MoveGenerator::genMove(node, player.kyokumen);
 		if (node->children.empty()) {
 			node->setMate();
 			goto backup;
 		}
-		newnodecount += gennodes.size();
+		newnodecount += node->children.size();
 		//Evaluator::evaluate(gennodes, player);下のforループ内で評価するので不要になった
 		for (auto child : node->children) {
-			SearchPlayer p = player;
-			p.proceed(child->move);
-//#if 0 //静止探索ノードを残す場合
-			if (leave_QsearchNode) {
-				newnodecount += qsimulate(child, p);
-				child->setMass(0);//静止探索の探索指標は別物なので0に戻す
-			}
-//#else //静止探索ノードを残さない場合
-			else {
-				qsimulate(child, p);
-				if (!child->isTerminal()) {
-					child->setMass(0);//
-					child->deleteTree();
-				}
-			}
-//#endif
+			qsimulate(child, player);
 		}
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
@@ -239,171 +212,48 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	return newnodecount;
 }
 
-size_t SearchAgent::qsimulate(SearchNode* const root, const SearchPlayer& p) {
-	using dn = std::pair<double, SearchNode*>;
-	using dd = std::pair<double, double>;
-	size_t newnodecount = 0u;
-	unsigned failnum = 0u;
-	const double Mmax = SearchNode::getMQS();
-	const double T_d = SearchNode::getTdepth();
-	const double T_e = SearchNode::getTeval();
-	const double MateScoreBound = SearchNode::getMateScoreBound();
-	while (root->isQSTerminal() && root->mass < Mmax && failnum < maxfailnum) {
-		SearchNode* node = root;
-		SearchPlayer player = p;
-		std::vector<SearchNode*> history = { node };
-		//選択
-		while (node->isNotExpanded()) {
-			double emin = std::numeric_limits<double>::max();
-			std::vector<dn> evals;
-			const auto np = node->getVisitCount();
-			const double massp = node->mass;
-			for (auto child : node->children) {
-				if (!child->isQSTerminal()) {
-					const double eval = child->getE_c(np, massp);
-					evals.emplace_back(std::make_pair(eval, child));
-					if (eval < emin) {
-						emin = eval;
-					}
-				}
-			}
-			if (evals.empty()) {
-				node->status = SearchNode::State::QT;
-				failnum++;
-				goto looptail;
-			}
-			const double T_c = node->getT_c();
-			double Z = 0;
-			for (const auto& dn : evals) {
-				Z += std::exp(-(dn.first - emin) / T_c);
-			}
-			double pip = Z * random(engine);
-			node = evals.front().second;
-			for (const auto& dn : evals) {
-				pip -= std::exp(-(dn.first - emin) / T_c);
-				if (pip <= 0) {
-					node = dn.second;
-					break;
-				}
-			}
-			player.proceed(node->move);
-			history.push_back(node);
-		}
-		//展開
-		{
-			if (player.kyokumen.isDeclarable()) {
-				node->setDeclare();
-				goto backup;
-			}
-			std::vector<SearchNode*> gennodes;
-			gennodes = MoveGenerator::genCapMove(node, player.kyokumen);
-			newnodecount += gennodes.size();
-			if (gennodes.empty()) {
-				if (node->isExpandedAll()) {
-					node->setMate();
-					goto backup;
-				}
-				else {
-					node->status = SearchNode::State::QT;
-					failnum++;
-					goto looptail;
-				}
-			}
-			node->status = SearchNode::State::QE;
-			Evaluator::evaluate(gennodes, player);
-			double emin = std::numeric_limits<double>::max();
-			std::vector<double> evals;
-			for (const auto& child : node->children) {
-				const double eval = child->getEvaluation();
-				evals.push_back(eval);
-				if (eval < emin) {
-					emin = eval;
-				}
-			}
-			double Z_e = 0;
-			for (const auto& eval : evals) {
-				Z_e += std::exp(-(eval - emin) / T_e);
-			}
-			double E = 0;
-			for (const auto& eval : evals) {
-				E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
-			}
-			node->setEvaluation(E);
-			node->setMass(1);
-		}
-		backup:
-		//バックアップ
-		for (int i = history.size() - 2; i >= 0; i--) {
-			node = history[i];
-			//もし途中でLEノードが詰みになってしまったら、そのノードをフル展開する
-			double emin = std::numeric_limits<double>::max();
-			std::vector<dd> emvec;
-			for (const auto child : node->children) {
-				const double eval = child->eval;
-				const double mass = child->mass;
-				emvec.push_back(std::make_pair(eval, mass));
-				if (eval < emin) {
-					emin = eval;
-				}
-			}
-			if (emin >= MateScoreBound) {
-				if (node->isExpandedAll()) {
-					node->setMateVariation(emin);
-					continue;
-				}
-				else {
-					SearchPlayer qp2(player);
-					for (size_t j = 1; j <= i; j++) {
-						qp2.proceed(history[j]->move);
-					}
-					std::vector<SearchNode*> gennodes;
-					gennodes = MoveGenerator::genNocapMove(node, qp2.kyokumen);
-					newnodecount += gennodes.size();
-					if (gennodes.empty()) {
-						node->setMateVariation(emin);
-						continue;
-					}
-					else {
-						Evaluator::evaluate(gennodes, qp2);
-						for (const auto n : gennodes) {
-							const double eval = n->eval;
-							const double mass = n->mass;
-							emvec.push_back(std::make_pair(eval, mass));
-							if (eval < emin) {
-								emin = eval;
-							}
-						}
-					}
-				}
-			}
-			else if (emin <= -MateScoreBound) {
-				node->setMateVariation(emin);
-				continue;
-			}
-			double Z_e = 0;
-			double Z_d = 0;
-			for (const auto em : emvec) {
-				Z_e += std::exp(-(em.first - emin) / T_e);
-				Z_d += std::exp(-(em.first - emin) / T_d);
-			}
-			double E = 0;
-			double M = 1;
-			for (const auto& em : emvec) {
-				E -= em.first * std::exp(-(em.first - emin) / T_e) / Z_e;
-				M += em.second * std::exp(-(em.first - emin) / T_d) / Z_d;
-			}
-			node->setEvaluation(E);
-			node->setMass(M);
-		}
-		failnum = 0u;
-	looptail:;
+double alphabeta(const Move& pmove,SearchPlayer& player, int depth, double alpha, double beta) {
+	if (depth <= 0) {
+		return Evaluator::evaluate(player);
 	}
-	if (root->children.empty()) {
-		if (!root->isExpandedAll()){
-			Evaluator::evaluate(root, p);
+	const auto moves = MoveGenerator::genCapMove(pmove, player.kyokumen);
+	if (moves.first.empty()) {
+		if (moves.second) {
+			SearchNode::getMateScore();
+		}
+		else {
+			return Evaluator::evaluate(player);
 		}
 	}
-	return newnodecount;
+	alpha = std::max(Evaluator::evaluate(player), alpha);
+	if (alpha >= beta) {
+		return alpha;
+	}
+	for (auto& m : moves.first) {
+		const FeaureCache cache = player.feature.getCache();
+		const koma::Koma captured = player.proceed(m);
+		alpha = std::max(-alphabeta(m, player, depth - 1, -beta, -alpha), alpha);
+		player.recede(m, captured, cache);
+		if (alpha >= beta) {
+			return alpha;
+		}
+	}
+	return alpha;
+}
+
+void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
+#ifdef _DEBUG
+	SearchPlayer pcopy(p);
+#endif
+	const FeaureCache cache = player.feature.getCache();
+	const koma::Koma captured = player.proceed(root->move);
+	const double eval = alphabeta(root->move, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
+	root->setEvaluation(eval);
+	if (use_original_kyokumen_eval) root->setOriginEval(Evaluator::evaluate(p));
+	else root->setOriginEval(eval);
+	player.recede(root->move, captured, cache);
+	assert(pcopy == p);
+	return;
 }
 
 bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vector<SearchNode*>& searchhis, const SearchNode* const repnode)const {
@@ -447,7 +297,6 @@ void SearchAgent::nodeCopy(const SearchNode* const origin, SearchNode* const cop
 	for (auto& child : origin->children) {
 		copy->addCopyChild(child);
 	}
-	copy->setExpandedAll();
 	copy->setMass(1);
 	copy->status = SearchNode::State::E;
 }

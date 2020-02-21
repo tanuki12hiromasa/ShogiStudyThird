@@ -7,3 +7,4 @@
 
 //apery
 using Feature = apery::apery_feat;
+using FeaureCache = apery::EvalSum;

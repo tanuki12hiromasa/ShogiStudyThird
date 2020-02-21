@@ -5,28 +5,31 @@
 
 class SearchAgent {
 public:
-	static void setFailnum(unsigned num) { maxfailnum = num; }
 	static void setLeaveQSNode(bool b) { leave_QsearchNode = b; }
+	static void setUseOriginalKyokumenEval(bool b) { use_original_kyokumen_eval = b; }
 private:
-	static unsigned maxfailnum;
 	static bool leave_QsearchNode;
+	static bool use_original_kyokumen_eval;
 public:
-	SearchAgent(SearchTree& tree, unsigned threadid, int seed);
-	SearchAgent(SearchTree& tree, unsigned threadid) :SearchAgent(tree, threadid, threadid){}
+	SearchAgent(SearchTree& tree, int seed);
 	SearchAgent(SearchAgent&&)noexcept;
 	SearchAgent() = delete;
 	SearchAgent(const SearchAgent&) = delete;
+	SearchAgent& operator=(const SearchAgent&) = delete;
 
 	void loop();
-	void terminate() { alive = false; }
+	void stop() { alive = false; }
+	void terminate() { alive = false; th.join(); }
 private:
 	size_t simulate(SearchNode* const root);
-	size_t qsimulate(SearchNode* const root, const SearchPlayer& player);
+	void qsimulate(SearchNode* const root, SearchPlayer& player);
 	bool checkRepetitiveCheck(const Kyokumen& k,const std::vector<SearchNode*>& searchhis, const SearchNode* const latestRepnode)const;
 	void nodeCopy(const SearchNode* const origin, SearchNode* const copy)const;
 	SearchTree& tree;
-	unsigned ID;
+	SearchNode* const root;
+	SearchPlayer player;
 	std::atomic_bool alive;//生きているかどうか
+	std::thread th;
 
 	//値域 [0,1.0) のランダムな値
 	std::uniform_real_distribution<double> random{ 0, 1.0 };

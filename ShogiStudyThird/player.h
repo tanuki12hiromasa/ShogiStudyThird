@@ -10,8 +10,15 @@ public:
 	SearchPlayer(const Kyokumen& _kyokumen) :kyokumen(_kyokumen) { feature.set(kyokumen); }
 	SearchPlayer(const Kyokumen& k, const Feature& f):kyokumen(k),feature(f){}
 
-	void proceed(Move m) {
+	koma::Koma proceed(Move m) {
 		feature.proceed(kyokumen,m);
-		kyokumen.proceed(m);
+		return kyokumen.proceed(m);
+	}
+	void recede(Move m, koma::Koma captured, FeaureCache cache) {
+		const auto moved = kyokumen.recede(m, captured);
+		feature.recede(kyokumen, moved, captured, m, cache);
+	}
+	bool operator==(const SearchPlayer& rhs) const {
+		return kyokumen == rhs.kyokumen && feature == rhs.feature;
 	}
 };

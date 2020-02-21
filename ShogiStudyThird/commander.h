@@ -13,16 +13,21 @@ private:
 	void paramInit();
 	void gameInit();
 
+	void startAgent();
+	void stopAgent();
 	void go(const std::vector<std::string>& tokens);
 	void info();
-	bool chakushu();
+	void chakushu();
+	void position(const std::vector<std::string>& tokens);
+	void releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes);
+	void releaseAgentAndTree(SearchNode* const root);
 
 	SearchTree tree;
-	std::vector<SearchAgent> agents;
+	std::vector<std::unique_ptr<SearchAgent>> agents;
+	std::unique_ptr<std::thread> deleteThread;
 	unsigned agentNum = 6;
 	bool permitPonder;
 
-	std::vector<std::thread> agent_threads;
 	std::thread go_thread;
 	std::thread info_thread;
 	std::atomic_bool go_alive;

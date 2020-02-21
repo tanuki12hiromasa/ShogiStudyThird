@@ -40,8 +40,16 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "position") {
 			commander.go_alive = false;
-			commander.tree.prohibitSearch();
-			commander.tree.set(tokens);
+			commander.position(tokens);
+		}
+		else if (tokens[0] == "staticevaluate") {
+			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
+		}
+		else if (tokens[0] == "getsfen") {
+			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
+		}
+		else if (tokens[0] == "getBanFigure") {
+			std::cout << commander.tree.getRootPlayer().kyokumen.toBanFigure() << std::endl;
 		}
 		else if (tokens[0] == "go") {
 			if (tokens[1] == "mate") {
@@ -52,11 +60,7 @@ void Commander::execute() {
 			commander.go(tokens);
 		}
 		else if (tokens[0] == "stop") {
-			bool saseta = false;
-			while (!saseta) {
-				saseta = commander.chakushu();
-				if (!saseta)std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			}
+			commander.chakushu();
 		}
 		else if (tokens[0] == "fouttree") {
 			commander.tree.foutTree();
@@ -68,7 +72,7 @@ void Commander::execute() {
 		else if (tokens[0] == "gameover") {
 			commander.go_alive = false;
 			commander.info_alive = false;
-			commander.tree.prohibitSearch();
+			commander.stopAgent();
 		}
 		else if (tokens[0] == "quit") {
 			return;
@@ -86,18 +90,15 @@ Commander::Commander():
 }
 
 Commander::~Commander() {
-	tree.prohibitSearch();
 	go_alive = false;
 	info_enable = false;
 	info_alive = false;
 	for (auto& ag : agents) {
-		ag.terminate();
+		ag->terminate();
 	}
+	if (deleteThread != nullptr && deleteThread->joinable())deleteThread->detach();
 	if(go_thread.joinable()) go_thread.join();
 	if(info_thread.joinable())info_thread.join();
-	for (auto& th : agent_threads) {
-		if(th.joinable())th.join();
-	}
 }
 
 void Commander::coutOption() {
@@ -105,21 +106,21 @@ void Commander::coutOption() {
 	//cout << "option name kppt_filepath type string default ./data/kppt_apery" << endl; //隠しオプション
 	cout << "option name leave_branchNode type check default false" << endl;
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
-	cout << "option name leave_qsearchNode type check default false" << endl;
 	cout << "option name Repetition_score type string default 0" << endl;
-	cout << "option name QSstopper_failnum type spin default 0 min 0 max 64" << endl;
-	cout << "option name QSstopper_mass type string default 0.0" << endl;
-	cout << "option name Tc_functionCode type spin default 0 min 0 max 6" << endl;
-	cout << "option name T_choice_const type string default 160" << endl;
+	cout << "option name leave_qsearchNode type check default false" << endl;
+	cout << "option name QSearch_depth type string default 5" << endl;
+	cout << "option name Use_Original_Kyokumen_Eval type check default true" << endl;
+	cout << "option name T_choice_const type string default 120" << endl;
+	cout << "option name Tc_functionCode type spin default 0 min 0 max 7" << endl;
 	cout << "option name T_choice_mass_parent type string default 1" << endl;
 	cout << "option name T_choice_children_masses type string default 1" << endl;
 	cout << "option name T_eval type string default 40" << endl;
-	cout << "option name T_depth type string default 200" << endl;
-	cout << "option name Ec_functionCode type spin default 0 min 0 max 19" << endl;
-	cout << "option name Ec_c type string default 10" << endl;
-	cout << "option name NodeMaxNum type spin default 100000000 min 1000 max 5000000000" << endl;
+	cout << "option name T_depth type string default 100" << endl;
+	cout << "option name Ec_functionCode type spin default 18 min 0 max 19" << endl;
+	cout << "option name Ec_c type string default 0.5" << endl;
+	cout << "option name NodeMaxNum type string default 100000000" << endl;
 	cout << "option name PV_functionCode type spin default 0 min 0 max 2" << endl;
-	cout << "option name PV_const type string default 5" << endl;
+	cout << "option name PV_const type string default 0" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -143,11 +144,11 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "Repetition_score") {
 			SearchNode::setRepScore(std::stod(token[4]));
 		}
-		else if (token[2] == "QSstopper_failnum") {
-			SearchAgent::setFailnum(std::stoi(token[4]));
-		}
-		else if (token[2] == "QSstopper_mass") {
+		else if (token[2] == "QSearch_depth") {
 			SearchNode::setMassmaxInQSearch(std::stod(token[4]));
+		}
+		else if (token[2] == "Use_Original_Kyokumen_Eval") {
+			SearchAgent::setUseOriginalKyokumenEval(token[4] == "true");
 		}
 		else if (token[2] == "T_choice_const") {
 			SearchNode::setTcConst(std::stod(token[4]));
@@ -205,24 +206,19 @@ void Commander::gameInit() {
 		Evaluator::init();
 		tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
 	}
-	else {
-		for (auto& ag : agents) {
-			ag.terminate();
-		}
-		for (auto& th : agent_threads) {
-			th.join();
-		}
-		agents.clear();
-		agent_threads.clear();
-	}
-	tree.lastRefRootByThread.assign(agentNum, 0);
-	for (unsigned i = 0; i < agentNum; i++) {
-		agents.emplace_back(SearchAgent(tree, i));
-	}
-	for (auto& ag : agents) {
-		agent_threads.emplace_back(std::thread(&SearchAgent::loop, &ag));
-	}
 	info();
+}
+
+void Commander::startAgent() {
+	assert(agents.empty());
+	for (int i = 0; i < agentNum; i++) {
+		agents.push_back(std::unique_ptr<SearchAgent>(new SearchAgent(tree, i)));
+	}
+}
+void Commander::stopAgent() {
+	for (auto& ag : agents) {
+		ag->stop();
+	}
 }
 
 void Commander::go(const std::vector<std::string>& tokens) {
@@ -232,7 +228,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove win" << std::endl;
 		return;
 	}
-	tree.permitSearch();
+	startAgent();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
 	if(go_thread.joinable()) go_thread.join();
@@ -246,11 +242,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		else {
 			std::this_thread::sleep_for(5s);
 		}
-		while (go_alive) {
-			bool saseta = chakushu();
-			if (saseta) return;
-			std::this_thread::sleep_for(100ms);
-		}
+		chakushu();
 	});
 	info_enable = true;
 }
@@ -283,32 +275,75 @@ void Commander::info() {
 	}
 }
 
-bool Commander::chakushu() {
+void Commander::chakushu() {
 	std::lock_guard<std::mutex> lock(coutmtx);
-	tree.prohibitSearch();
+	stopAgent();
 	info_enable = false;
 	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
 	if (kyokumen.isDeclarable()) {
 		std::cout << "bestmove win" << std::endl;
-		return true;
+		return;
 	}
-	const SearchNode* const root = tree.getRoot();
+	SearchNode* const root = tree.getRoot();
 	if (root->eval < -33000) {
 		std::cout << "info score cp " << root->eval << std::endl;
 		std::cout << "bestmove resign" << std::endl;
-		return true;
+		return;
 	}
 	const auto bestchild = tree.getBestMove();
 	if (bestchild == nullptr) {
-		tree.permitSearch();
-		return false;
+		std::cout << "info string error no children" << std::endl;
+		std::cout << "bestmove resign" << std::endl;
+		return;
 	}
 	std::cout << "info pv " << bestchild->move.toUSI() << " depth " << bestchild->mass.load() <<
 		" score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
+	releaseAgentAndBranch(root, {bestchild});
 	if (permitPonder) {
-		tree.permitSearch();
+		startAgent();
 	}
-	return true;
+	return;
+}
+
+void Commander::position(const std::vector<std::string>& tokens) {
+	stopAgent();
+	const auto prevRoot = tree.getRoot();
+	auto result = tree.set(tokens);
+	if (result.first) {
+		releaseAgentAndBranch(prevRoot, std::move(result.second));
+	}
+	else {
+		tree.makeNewTree(tokens);
+		releaseAgentAndTree(prevRoot);
+	}
+}
+
+void Commander::releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes) {
+	auto tmpthread = std::move(deleteThread);
+	deleteThread = std::unique_ptr<std::thread>( new std::thread(
+		[&tree=tree,prevThread = std::move(tmpthread), prevAgents = std::move(agents), prevRoot, savedNodes = std::move(newNodes)]
+		{
+			if(prevThread != nullptr && prevThread->joinable()) prevThread->join();
+			for (auto& ag : prevAgents) {
+				ag->terminate();
+			}
+			tree.deleteBranch(prevRoot, savedNodes);
+		}));
+	agents.clear();
+}
+
+void Commander::releaseAgentAndTree(SearchNode* const root) {
+	auto tmpthread = std::move(deleteThread);
+	deleteThread = std::unique_ptr<std::thread>(new std::thread(
+		[&tree = tree, prevThread = std::move(tmpthread), prevAgents = std::move(agents), root]
+		{
+			if (prevThread != nullptr && prevThread->joinable()) prevThread->join();
+			for (auto& ag : prevAgents) {
+				ag->terminate();
+			}
+			tree.deleteTree(root);
+		}));
+	agents.clear();
 }
