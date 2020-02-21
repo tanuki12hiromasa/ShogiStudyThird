@@ -577,19 +577,25 @@ std::string Kyokumen::toBanFigure()const {
 		fig += '\n';
 	}
 	fig += "SenteMochi: ";
+	std::string smochistr;
 	for (Mochigoma m = Mochigoma::Fu; m != Mochigoma::MochigomaNum; m = static_cast<Mochigoma>(static_cast<uint8_t>(m) + 1)) {
 		int mNum = getMochigomaNum(true, m);
 		if (mNum > 0) {
-			fig += usi::mochigomaToUsi(true, m) + std::to_string(mNum) + " ";
+			smochistr += usi::mochigomaToUsi(true, m) + std::to_string(mNum) + " ";
 		}
 	}
+	if (smochistr == "") smochistr = "none";
+	fig += smochistr;
 	fig += '\n';
 	fig += "GoteMochi: ";
+	std::string gmochistr;
 	for (Mochigoma m = Mochigoma::Fu; m != Mochigoma::MochigomaNum; m = static_cast<Mochigoma>(static_cast<uint8_t>(m) + 1)) {
 		int mNum = getMochigomaNum(false, m);
 		if (mNum > 0) {
-			fig += usi::mochigomaToUsi(false, m) + std::to_string(mNum) + " ";
+			gmochistr += usi::mochigomaToUsi(false, m) + std::to_string(mNum) + " ";
 		}
 	}
+	if (gmochistr == "") gmochistr = "none";
+	fig += gmochistr;
 	return fig;
 }

@@ -45,6 +45,12 @@ void Commander::execute() {
 		else if (tokens[0] == "staticevaluate") {
 			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
 		}
+		else if (tokens[0] == "getsfen") {
+			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
+		}
+		else if (tokens[0] == "getBanFigure") {
+			std::cout << commander.tree.getRootPlayer().kyokumen.toBanFigure() << std::endl;
+		}
 		else if (tokens[0] == "go") {
 			if (tokens[1] == "mate") {
 				//詰将棋は非対応
