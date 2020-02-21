@@ -97,9 +97,10 @@ void Commander::coutOption() {
 	//cout << "option name kppt_filepath type string default ./data/kppt_apery" << endl; //隠しオプション
 	cout << "option name leave_branchNode type check default false" << endl;
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
-	cout << "option name leave_qsearchNode type check default false" << endl;
 	cout << "option name Repetition_score type string default 0" << endl;
-	cout << "option name QSstopper_mass type string default 5" << endl;
+	cout << "option name leave_qsearchNode type check default false" << endl;
+	cout << "option name QSearch_depth type string default 5" << endl;
+	cout << "option name Use_Original_Kyokumen_Eval type check default true" << endl;
 	cout << "option name Tc_functionCode type spin default 0 min 0 max 6" << endl;
 	cout << "option name T_choice_const type string default 120" << endl;
 	cout << "option name T_choice_mass_parent type string default 1" << endl;
@@ -134,8 +135,11 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "Repetition_score") {
 			SearchNode::setRepScore(std::stod(token[4]));
 		}
-		else if (token[2] == "QSstopper_mass") {
+		else if (token[2] == "QSearch_depth") {
 			SearchNode::setMassmaxInQSearch(std::stod(token[4]));
+		}
+		else if (token[2] == "Use_Original_Kyokumen_Eval") {
+			SearchAgent::setUseOriginalKyokumenEval(token[4] == "true");
 		}
 		else if (token[2] == "T_choice_const") {
 			SearchNode::setTcConst(std::stod(token[4]));

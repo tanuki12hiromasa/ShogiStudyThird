@@ -4,6 +4,7 @@
 #include <algorithm>
 
 bool SearchAgent::leave_QsearchNode = false;
+bool SearchAgent::use_original_kyokumen_eval = true;
 
 SearchAgent::SearchAgent(SearchTree& tree,int seed)
 	:tree(tree),engine(seed),root(tree.getRoot())
@@ -247,8 +248,9 @@ void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
 	const FeaureCache cache = player.feature.getCache();
 	const koma::Koma captured = player.proceed(root->move);
 	const double eval = alphabeta(root->move, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
-	root->setOriginEval(eval);
 	root->setEvaluation(eval);
+	if (use_original_kyokumen_eval) root->setOriginEval(Evaluator::evaluate(p));
+	else root->setOriginEval(eval);
 	player.recede(root->move, captured, cache);
 	assert(pcopy == p);
 	return;
