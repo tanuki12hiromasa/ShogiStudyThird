@@ -42,6 +42,9 @@ void Commander::execute() {
 			commander.go_alive = false;
 			commander.position(tokens);
 		}
+		else if (tokens[0] == "staticevaluate") {
+			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
+		}
 		else if (tokens[0] == "go") {
 			if (tokens[1] == "mate") {
 				//詰将棋は非対応
