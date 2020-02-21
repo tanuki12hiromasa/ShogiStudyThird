@@ -104,15 +104,15 @@ void Commander::coutOption() {
 	cout << "option name leave_qsearchNode type check default false" << endl;
 	cout << "option name QSearch_depth type string default 5" << endl;
 	cout << "option name Use_Original_Kyokumen_Eval type check default true" << endl;
-	cout << "option name Tc_functionCode type spin default 0 min 0 max 6" << endl;
 	cout << "option name T_choice_const type string default 120" << endl;
+	cout << "option name Tc_functionCode type spin default 0 min 0 max 7" << endl;
 	cout << "option name T_choice_mass_parent type string default 1" << endl;
 	cout << "option name T_choice_children_masses type string default 1" << endl;
 	cout << "option name T_eval type string default 40" << endl;
 	cout << "option name T_depth type string default 100" << endl;
 	cout << "option name Ec_functionCode type spin default 18 min 0 max 19" << endl;
 	cout << "option name Ec_c type string default 0.5" << endl;
-	cout << "option name NodeMaxNum type spin default 100000000 min 1000 max 5000000000" << endl;
+	cout << "option name NodeMaxNum type string default 100000000" << endl;
 	cout << "option name PV_functionCode type spin default 0 min 0 max 2" << endl;
 	cout << "option name PV_const type string default 0" << endl;
 }
