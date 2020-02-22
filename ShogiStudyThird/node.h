@@ -70,14 +70,12 @@ public:
 	void setRepetition(const bool teban);
 	void setRepetitiveCheck();
 	void setOriginEval(const double evaluation) { origin_eval = evaluation; }
-	void addVisitCount() { visit_count++; }
 
 	double getEvaluation()const { return eval.load(); }
 	bool isLeaf()const { return status == State::N; }
 	bool isTerminal()const { return status == State::T; }
 	double getT_c()const;
-	size_t getVisitCount()const { return visit_count; }
-	double getE_c(const size_t& visitnum_p, const double& mass_p)const;
+	double getE_c()const;
 	SearchNode* getBestChild()const;
 private:
 	double getTcMcVariance()const;
@@ -88,7 +86,6 @@ public:
 	std::atomic<State> status;
 private:
 	std::int32_t origin_eval;
-	size_t visit_count;
 public:
 	std::atomic<double> eval;
 	std::atomic<double> mass;

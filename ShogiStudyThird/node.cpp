@@ -27,7 +27,6 @@ SearchNode::SearchNode(const Move& move)
 	status = State::N;
 	eval = 0;
 	mass = 0;
-	visit_count = 0;
 }
 
 size_t SearchNode::deleteTree() {
@@ -174,42 +173,23 @@ double SearchNode::getTcMcVarianceExpection()const {
 	return std::sqrt(variance / Z);
 }
 
-double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
+double SearchNode::getE_c()const {
 	switch (Ec_FunctionCode)
 	{
 	case 0:
 		return eval;
 	case 1:
-		return eval - Ec_c * (std::log((double)visitnum_p) / (visit_count+1));
 	case 2:
-		return eval + Ec_c * origin_eval * (double)visitnum_p / (visit_count * visit_count + 1);
 	case 3:
-		return eval - Ec_c * mass_p / std::exp(mass);
 	case 4:
-	{
-		const double m = mass.load();
-		return eval - Ec_c * mass_p / (1 + m * m * m);
-	}
 	case 5:
-	{
-		const double m = mass.load();
-		return eval + Ec_c * origin_eval * mass_p / (1 + m * m * m);
-	}
 	case 6:
-	{
-		const double m = mass.load();
-		return eval * (1 + Ec_c * mass_p / (1 + m * m * m));
-	}
 	case 7:
-		return eval + Ec_c * origin_eval * std::exp(mass_p / 2 - mass);
 	case 8:
-		return eval - Ec_c * std::exp(mass_p / 2 - mass);
 	case 9:
 		return eval + Ec_c * origin_eval;
 	case 10:
-		return eval * (1 + Ec_c * std::exp(mass_p / 2 - mass));
 	case 11:
-		return eval * (1 + Ec_c * (double)visitnum_p / (visit_count * visit_count + 1));
 	case 12:
 	{
 		const double e = eval.load();
@@ -218,10 +198,6 @@ double SearchNode::getE_c(const size_t& visitnum_p, const double& mass_p)const {
 	case 13:
 		return eval * (1 - Ec_c * mass);
 	case 14:
-	{
-		const double m = mass.load();
-		return eval - Ec_c * mass_p / (1 + m * m);
-	}
 	case 15:
 		return eval + Ec_c * mass;
 	case 16: {

@@ -4,7 +4,7 @@
 #include <algorithm>
 
 bool SearchAgent::leave_QsearchNode = false;
-bool SearchAgent::use_original_kyokumen_eval = true;
+bool SearchAgent::use_original_kyokumen_eval = false;
 
 SearchAgent::SearchAgent(SearchTree& tree,int seed)
 	:tree(tree),engine(seed),root(tree.getRoot())
@@ -45,16 +45,13 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	player = tree.getRootPlayer();
 	std::vector<SearchNode*> history = { node };
 	std::vector<std::pair<uint64_t, std::array<uint8_t, 95>>> k_history;
-	node->addVisitCount();
 	//選択
 	while (!node->isLeaf()) {
 		double CE = std::numeric_limits<double>::max();
 		std::vector<dn> evals;
-		const auto np = node->getVisitCount();
-		const double massp = node->mass;
 		for (const auto& child : node->children) {
 			if (!child->isTerminal()) {
-				double eval = child->getE_c(np, massp);
+				double eval = child->getE_c();
 				evals.push_back(std::make_pair(eval,child));
 				if (eval < CE) {
 					CE = eval;
@@ -80,7 +77,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		//局面を進める
-		node->addVisitCount();
 		k_history.push_back(std::make_pair(player.kyokumen.getHash(), player.kyokumen.getBammen()));
 		player.proceed(node->move);
 		history.push_back(node);
@@ -141,7 +137,6 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			goto backup;
 		}
 		newnodecount += node->children.size();
-		//Evaluator::evaluate(gennodes, player);下のforループ内で評価するので不要になった
 		for (auto child : node->children) {
 			qsimulate(child, player);
 		}
@@ -225,10 +220,6 @@ double alphabeta(const Move& pmove,SearchPlayer& player, int depth, double alpha
 			return Evaluator::evaluate(player);
 		}
 	}
-	alpha = std::max(Evaluator::evaluate(player), alpha);
-	if (alpha >= beta) {
-		return alpha;
-	}
 	for (auto& m : moves.first) {
 		const FeaureCache cache = player.feature.getCache();
 		const koma::Koma captured = player.proceed(m);
@@ -247,7 +238,15 @@ void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
 #endif
 	const FeaureCache cache = player.feature.getCache();
 	const koma::Koma captured = player.proceed(root->move);
-	const double eval = alphabeta(root->move, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
+	double eval = alphabeta(root->move, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
+	if (eval <= -SearchNode::getMateScore()) {
+		if (p.kyokumen.teban()) {
+			if (p.kyokumen.getSenteOuCheck(root->move).empty()) eval = Evaluator::evaluate(player);
+		}
+		else {
+			if (p.kyokumen.getGoteOuCheck(root->move).empty()) eval = Evaluator::evaluate(player);
+		}
+	}
 	root->setEvaluation(eval);
 	if (use_original_kyokumen_eval) root->setOriginEval(Evaluator::evaluate(p));
 	else root->setOriginEval(eval);
