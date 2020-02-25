@@ -97,13 +97,14 @@ bool ShogiTest::genMoveCheck(std::string parent_sfen, Move pmove, std::string ch
 
 bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 	Kyokumen k(usi::split(parent_sfen, ' '));
-	SearchNode* const root = new SearchNode(Move());
+	Move m;
+	SearchNode* const root = new SearchNode(m);
 	MoveGenerator::genMove(root, k);
 	const auto& moves = root->children;
 	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
-	const auto cmoves = MoveGenerator::genCapMove(Move(), k);
-	strv cmsv; for (const auto& m : cmoves.first)cmsv.push_back(m.toUSI());
-	const auto nmoves = MoveGenerator::genNocapMove(Move(), k);
+	const auto cmoves = MoveGenerator::genCapMove(m, k);
+	strv cmsv; for (const auto& m : cmoves)cmsv.push_back(m.toUSI());
+	const auto nmoves = MoveGenerator::genNocapMove(m, k);
 	strv nmsv; for (const auto& m : nmoves)nmsv.push_back(m.toUSI());
 
 	if (checkStringsUnion(msv, cmsv, nmsv)) { 

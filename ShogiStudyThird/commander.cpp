@@ -228,6 +228,10 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove win" << std::endl;
 		return;
 	}
+	else if (tree.getRoot()->eval < -SearchNode::getMateScoreBound()) {
+		std::cout << "bestmove resign" << std::endl;
+		return;
+	}
 	startAgent();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
@@ -235,14 +239,20 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	go_alive = true;
 	go_thread = std::thread([this,tp]() {
 		using namespace std::chrono_literals;
+		const auto starttime = std::chrono::system_clock::now();
+		const SearchNode* root = tree.getRoot();
 		if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
-			auto t = tp.added - 150ms;
-			std::this_thread::sleep_for(t);
+			do {
+				auto t = std::max((tp.added / 5), 50ms);
+				std::this_thread::sleep_for(t);
+			} while (((std::chrono::system_clock::now()-starttime) < tp.added - 110ms)
+				&& std::abs(root->eval) < SearchNode::getMateScoreBound());
+			chakushu();
 		}
 		else {
 			std::this_thread::sleep_for(5s);
+			chakushu();
 		}
-		chakushu();
 	});
 	info_enable = true;
 }

@@ -6,7 +6,6 @@
 class LeafGuard {
 private:
 	static std::mutex mutex;
-	static std::unordered_map<SearchNode*, bool> nmap;
 public:
 	LeafGuard(SearchNode* const);
 	bool Result() const { return result; }

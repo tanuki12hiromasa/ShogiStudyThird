@@ -9,10 +9,12 @@ using s_lock = std::shared_lock<std::shared_mutex>;
 using p_lock = std::lock_guard<std::shared_mutex>;
 
 class SearchNode {
+	friend class LeafGuard;
+	friend class SearchTree;
 public:
 	enum class State : std::int8_t {
-		NotExpanded, Expanded, Terminal,
-		N = NotExpanded, E = Expanded, T = Terminal
+		NotExpanded, inExpanding, Expanded, Terminal,
+		N = NotExpanded, iE=inExpanding, E = Expanded, T = Terminal
 	};
 private:
 	static double mateMass;
@@ -72,8 +74,9 @@ public:
 	void setOriginEval(const double evaluation) { origin_eval = evaluation; }
 
 	double getEvaluation()const { return eval.load(); }
-	bool isLeaf()const { return status == State::N; }
+	bool isLeaf()const { const auto s = status.load(); return s == State::N || s == State::iE; }
 	bool isTerminal()const { return status == State::T; }
+	bool isSearchable()const { const auto s = status.load(); return s == State::N || s == State::E; }
 	double getT_c()const;
 	double getE_c()const;
 	SearchNode* getBestChild()const;
@@ -83,8 +86,8 @@ private:
 public:
 	std::vector<SearchNode*> children;
 	Move move;
-	std::atomic<State> status;
 private:
+	std::atomic<State> status;
 	std::int32_t origin_eval;
 public:
 	std::atomic<double> eval;
