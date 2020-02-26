@@ -19,7 +19,7 @@ int SearchNode::QS_depth = 8;
 int SearchNode::Ec_FunctionCode = 0;
 double SearchNode::Ec_c = 1.0;
 int SearchNode::PV_FuncCode = 0;
-double SearchNode::PV_c = 5;
+double SearchNode::PV_c = 0;
 
 SearchNode::SearchNode(const Move& move)
 	:move(move)
@@ -35,7 +35,7 @@ size_t SearchNode::deleteTree() {
 	}
 	std::vector<SearchNode*> nodes = children;
 	children.clear();
-	status = State::N;
+	status = State::Terminal;
 	size_t delnum = nodes.size();
 	while (!nodes.empty()) {
 		SearchNode* node = nodes.back();
@@ -72,15 +72,18 @@ void SearchNode::setMateVariation(const double childmin) {
 		const double moves = (mateScore + childmin) / mateOneScore;
 		mass = mateMass + moves;
 	}
+	origin_eval = eval;
 }
 
 void SearchNode::setMate() {
 	auto const from = move.from();
 	if (from == koma::Position::m_sFu || from == koma::Position::m_gFu) {
 		eval = mateScore;
+		origin_eval = mateScore;
 	}
 	else {
 		eval = -mateScore;
+		origin_eval = -mateScore;
 	}
 	mass = mateMass;
 	status = State::T;
@@ -88,20 +91,23 @@ void SearchNode::setMate() {
 
 void SearchNode::setDeclare() {
 	eval = mateScore;
+	origin_eval = mateScore;
 	mass = mateMass;
 	status = State::T;
 }
 
 void SearchNode::setRepetition(const bool teban) {
-	deleteTree();
+	//deleteTree();
 	eval = teban ? repetitionScore : (-repetitionScore);
+	origin_eval = eval.load();
 	mass = mateMass;
 	status = State::T;
 }
 
 void SearchNode::setRepetitiveCheck() {
-	deleteTree();
+	//deleteTree();
 	eval = mateScore;
+	origin_eval = mateScore;
 	mass = mateMass;
 	status = State::T;
 }
