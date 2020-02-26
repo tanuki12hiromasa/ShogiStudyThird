@@ -142,7 +142,9 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}
 		newnodecount += node->children.size();
 		for (auto child : node->children) {
+			const auto cache = player.proceedC(child->move);
 			qsimulate(child, player);
+			player.recede(child->move, cache);
 		}
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
@@ -217,12 +219,7 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 	}
 	auto moves = MoveGenerator::genCapMove(pmove, player.kyokumen);
 	if (moves.empty()) {
-		if (pmove.isOute()) {
-			SearchNode::getMateScore();
-		}
-		else {
-			return Evaluator::evaluate(player);
-		}
+		return Evaluator::evaluate(player);
 	}
 	for (auto& m : moves) {
 		const FeaureCache cache = player.feature.getCache();
@@ -237,20 +234,39 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 }
 
 void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
-#ifdef _DEBUG
-	SearchPlayer pcopy(p);
-#endif
-	const FeaureCache cache = player.feature.getCache();
-	const koma::Koma captured = player.proceed(root->move);
-	double eval = alphabeta(root->move, p, SearchNode::getMQS(), std::numeric_limits<double>::lowest(), std::numeric_limits<double>::max());
-	if (eval <= -SearchNode::getMateScoreBound() && !root->move.isOute()) {
-		eval = Evaluator::evaluate(player);
+	const int depth = SearchNode::getQSdepth();
+	if (depth <= 0) {
+		const double eval = Evaluator::evaluate(p);
+		root->setEvaluation(eval);
+		root->setOriginEval(eval);
+		return;
 	}
-	root->setEvaluation(eval);
+	auto moves = MoveGenerator::genCapMove(root->move, player.kyokumen);
+	if (moves.empty()) {
+		if (root->move.isOute()) {
+			root->setMate();
+			return;
+		}
+		else {
+			const double eval = Evaluator::evaluate(p);
+			root->setEvaluation(eval);
+			root->setOriginEval(eval);
+			return;
+		}
+	}
+	double max = std::numeric_limits<double>::lowest();
+	for (auto m : moves) {
+		const FeaureCache cache = player.feature.getCache();
+		const koma::Koma captured = player.proceed(m);
+		const double eval = -alphabeta(m, p, depth - 1, std::numeric_limits<double>::lowest(), -max);
+		if (eval > max) {
+			max = eval;
+		}
+		player.recede(m, captured, cache);
+	}
+	root->setEvaluation(max);
 	if (use_original_kyokumen_eval) root->setOriginEval(Evaluator::evaluate(p));
-	else root->setOriginEval(eval);
-	player.recede(root->move, captured, cache);
-	assert(pcopy == p);
+	else root->setOriginEval(max);
 	return;
 }
 

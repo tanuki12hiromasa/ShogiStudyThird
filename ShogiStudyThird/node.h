@@ -28,7 +28,7 @@ private:
 	static int Tc_FunctionCode;//探索指標の分散を期待値で重みづけするかどうかのフラグ
 	static double T_eval;
 	static double T_depth;
-	static double MassMax_QS;
+	static int QS_depth;
 	static int Ec_FunctionCode;
 	static double Ec_c;
 	static int PV_FuncCode;
@@ -46,10 +46,10 @@ public:
 	static void setTcFuncCode(int c) { Tc_FunctionCode = c; }
 	static void setTeval(const double Te) { T_eval = Te; }
 	static void setTdepth(const double Td) { T_depth = Td; }
-	static void setMassmaxInQSearch(const double mmqs) { MassMax_QS = mmqs; }
+	static void setQSearchDepth(const double mmqs) { QS_depth = mmqs; }
 	static double getTeval() { return T_eval; }
 	static double getTdepth() { return T_depth; }
-	static double getMQS() { return MassMax_QS; }
+	static double getQSdepth() { return QS_depth; }
 	static void setEcFuncCode(const int code) { Ec_FunctionCode = code; }
 	static void setEcC(const double c) { Ec_c = c; }
 	static void setPVFuncCode(const int code) { PV_FuncCode = code; }

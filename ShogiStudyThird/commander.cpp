@@ -145,7 +145,7 @@ void Commander::setOption(const std::vector<std::string>& token) {
 			SearchNode::setRepScore(std::stod(token[4]));
 		}
 		else if (token[2] == "QSearch_depth") {
-			SearchNode::setMassmaxInQSearch(std::stod(token[4]));
+			SearchNode::setQSearchDepth(std::stod(token[4]));
 		}
 		else if (token[2] == "Use_Original_Kyokumen_Eval") {
 			SearchAgent::setUseOriginalKyokumenEval(token[4] == "true");
@@ -190,13 +190,14 @@ void Commander::paramInit() {
 	//usiによる設定前のデフォルト値
 
 	SearchNode::setTdepth(100);
-	SearchNode::setTeval(60);
-	SearchNode::setMassmaxInQSearch(5);
+	SearchNode::setTcConst(120);
+	SearchNode::setTeval(40);
+	SearchNode::setQSearchDepth(5);
 	tree.setNodeMaxsize(150000000);
 	SearchNode::setMateScore(34000);
 	SearchNode::setMateOneScore(20);
 	SearchNode::setMateScoreBound(30000);
-	SearchNode::setRepScore(-200);
+	SearchNode::setRepScore(0);
 	agentNum = 12;
 }
 
