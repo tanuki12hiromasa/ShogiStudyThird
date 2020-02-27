@@ -6,7 +6,6 @@
 #include "stest.h"
 #include <iostream>
 
-
 int main()
 {
 	Commander::execute();

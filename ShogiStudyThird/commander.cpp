@@ -108,8 +108,8 @@ void Commander::coutOption() {
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
 	cout << "option name Repetition_score type string default 0" << endl;
 	cout << "option name leave_qsearchNode type check default false" << endl;
-	cout << "option name QSearch_depth type string default 5" << endl;
-	cout << "option name Use_Original_Kyokumen_Eval type check default true" << endl;
+	cout << "option name QSearch_depth type string default 0" << endl;
+	cout << "option name Use_Original_Kyokumen_Eval type check default false" << endl;
 	cout << "option name T_choice_const type string default 120" << endl;
 	cout << "option name Tc_functionCode type spin default 0 min 0 max 7" << endl;
 	cout << "option name T_choice_mass_parent type string default 1" << endl;
@@ -145,7 +145,7 @@ void Commander::setOption(const std::vector<std::string>& token) {
 			SearchNode::setRepScore(std::stod(token[4]));
 		}
 		else if (token[2] == "QSearch_depth") {
-			SearchNode::setMassmaxInQSearch(std::stod(token[4]));
+			SearchNode::setQSearchDepth(std::stod(token[4]));
 		}
 		else if (token[2] == "Use_Original_Kyokumen_Eval") {
 			SearchAgent::setUseOriginalKyokumenEval(token[4] == "true");
@@ -190,13 +190,14 @@ void Commander::paramInit() {
 	//usiによる設定前のデフォルト値
 
 	SearchNode::setTdepth(100);
-	SearchNode::setTeval(60);
-	SearchNode::setMassmaxInQSearch(5);
+	SearchNode::setTcConst(120);
+	SearchNode::setTeval(40);
+	SearchNode::setQSearchDepth(0);
 	tree.setNodeMaxsize(150000000);
 	SearchNode::setMateScore(34000);
 	SearchNode::setMateOneScore(20);
 	SearchNode::setMateScoreBound(30000);
-	SearchNode::setRepScore(-200);
+	SearchNode::setRepScore(0);
 	agentNum = 12;
 }
 
@@ -228,6 +229,10 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove win" << std::endl;
 		return;
 	}
+	else if (tree.getRoot()->eval < -SearchNode::getMateScoreBound()) {
+		std::cout << "bestmove resign" << std::endl;
+		return;
+	}
 	startAgent();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
@@ -235,14 +240,20 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	go_alive = true;
 	go_thread = std::thread([this,tp]() {
 		using namespace std::chrono_literals;
+		const auto starttime = std::chrono::system_clock::now();
+		const SearchNode* root = tree.getRoot();
 		if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
-			auto t = tp.added - 150ms;
-			std::this_thread::sleep_for(t);
+			do {
+				auto t = std::max((tp.added / 5), 50ms);
+				std::this_thread::sleep_for(t);
+			} while (((std::chrono::system_clock::now()-starttime) < tp.added - 110ms)
+				&& std::abs(root->eval) < SearchNode::getMateScoreBound());
+			chakushu();
 		}
 		else {
 			std::this_thread::sleep_for(5s);
+			chakushu();
 		}
-		chakushu();
 	});
 	info_enable = true;
 }

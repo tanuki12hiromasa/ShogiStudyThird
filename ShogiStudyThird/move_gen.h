@@ -7,6 +7,6 @@ class MoveGenerator {
 public:
 	static void genAllMove(SearchNode* parent, const Kyokumen&);
 	static void genMove(SearchNode* parent, const Kyokumen&);
-	static const std::pair<std::vector<Move>,bool> genCapMove(const Move move, const Kyokumen&);
-	static std::vector<Move> genNocapMove(const Move move, const Kyokumen&);
+	static std::vector<Move> genCapMove(Move& move, const Kyokumen&);
+	static std::vector<Move> genNocapMove(Move& move, const Kyokumen&);
 };

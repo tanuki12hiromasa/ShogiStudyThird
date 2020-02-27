@@ -287,13 +287,12 @@ void MoveGenerator::genMove(SearchNode* parent, const Kyokumen& kyokumen) {
 	return;
 }
 
-const std::pair<std::vector<Move>, bool> MoveGenerator::genCapMove(const Move move, const Kyokumen& kyokumen) {
+std::vector<Move> MoveGenerator::genCapMove(Move& move, const Kyokumen& kyokumen) {
 	GeneratedMoves en;
-	bool isoute = false;
 	if (kyokumen.teban()) {
 		auto kusemono = kyokumen.getSenteOuCheck(move);
 		if (kusemono.size() > 0) {
-			isoute = true;
+			move.setOute(true);
 			if (kusemono.size() == 1) {
 				genSenteBanMove(en, kyokumen, kusemono[0]);
 				genSenteUchiMove(en, kyokumen, kusemono[0] & ~kyokumen.getAllBB());
@@ -308,7 +307,7 @@ const std::pair<std::vector<Move>, bool> MoveGenerator::genCapMove(const Move mo
 	else {
 		auto kusemono = kyokumen.getGoteOuCheck(move);
 		if (kusemono.size() > 0) {
-			isoute = true;
+			move.setOute(true);
 			if (kusemono.size() == 1) {
 				genGoteBanMove(en, kyokumen, kusemono[0]);
 				genGoteUchiMove(en, kyokumen, kusemono[0] & ~kyokumen.getAllBB());
@@ -320,10 +319,10 @@ const std::pair<std::vector<Move>, bool> MoveGenerator::genCapMove(const Move mo
 			genGoteOuMove(en, kyokumen, kyokumen.getSenteBB());
 		}
 	}
-	return std::make_pair(en.moves,isoute);
+	return en.moves;
 }
 
-std::vector<Move> MoveGenerator::genNocapMove(const Move move, const Kyokumen& kyokumen) {
+std::vector<Move> MoveGenerator::genNocapMove(Move& move, const Kyokumen& kyokumen) {
 	GeneratedMoves en;
 	if (kyokumen.teban()) {
 		auto kusemono = kyokumen.getSenteOuCheck(move);
@@ -332,6 +331,9 @@ std::vector<Move> MoveGenerator::genNocapMove(const Move move, const Kyokumen& k
 			genSenteUchiMove(en, kyokumen, ~kyokumen.getAllBB());
 			genSenteOuMove(en, kyokumen, ~kyokumen.getAllBB());
 		}
+		else {
+			move.setOute(true);
+		}
 	}
 	else {
 		auto kusemono = kyokumen.getGoteOuCheck(move);
@@ -339,6 +341,9 @@ std::vector<Move> MoveGenerator::genNocapMove(const Move move, const Kyokumen& k
 			genGoteBanMove(en, kyokumen, ~kyokumen.getAllBB());
 			genGoteUchiMove(en, kyokumen, ~kyokumen.getAllBB());
 			genGoteOuMove(en, kyokumen, ~kyokumen.getAllBB());
+		}
+		else {
+			move.setOute(true);
 		}
 	}
 	return en.moves;
