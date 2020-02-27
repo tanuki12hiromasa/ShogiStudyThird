@@ -217,6 +217,10 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 	if (depth <= 0) {
 		return Evaluator::evaluate(player);
 	}
+	alpha = std::max(Evaluator::evaluate(player), alpha);
+	if (alpha >= beta) {
+		return alpha;
+	}
 	auto moves = MoveGenerator::genCapMove(pmove, player.kyokumen);
 	if (moves.empty()) {
 		return Evaluator::evaluate(player);
@@ -254,7 +258,7 @@ void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
 			return;
 		}
 	}
-	double max = std::numeric_limits<double>::lowest();
+	double max = Evaluator::evaluate(p);
 	for (auto m : moves) {
 		const FeaureCache cache = player.feature.getCache();
 		const koma::Koma captured = player.proceed(m);

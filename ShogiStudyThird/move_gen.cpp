@@ -208,6 +208,69 @@ void genGoteBanMove(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard
 	genGoteBanMove_koma(en, kyokumen, Koma::g_nHi, false, toMaskBB);
 }
 
+
+template<class EvaluatedNodes>
+void genSenteBanMove_noMate(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& toMaskBB) {//不要な不成(歩,香2段目,角,飛)を生成しない
+	using namespace koma;
+	const unsigned oupos = kyokumen.gOuPos();
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Fu, false, kyokumen.getEachBB(Koma::s_Fu) & bbmask::Dan5to9, toMaskBB & ~BBkiki::getStepKiki(Koma::g_Fu, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Fu, true, kyokumen.getEachBB(Koma::s_Fu) & bbmask::Dan1to4, toMaskBB & ~BBkiki::getStepKiki(Koma::g_Kin, oupos));//4段目から出発したら確実に成れるのでtomaskはそのまま
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kei, false, toMaskBB & bbmask::Dan3to9 & ~BBkiki::getStepKiki(Koma::g_Kei, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kei, true, toMaskBB & bbmask::Dan1to3 & ~BBkiki::getStepKiki(Koma::g_Kin, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, false, toMaskBB & ~BBkiki::getStepKiki(Koma::g_Gin, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, true, toMaskBB & bbmask::Dan1to3 & ~BBkiki::getStepKiki(Koma::g_Kin, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, true, kyokumen.getEachBB(Koma::s_Gin) & bbmask::Dan3, toMaskBB & bbmask::Dan4to9 & ~BBkiki::getStepKiki(Koma::g_Kin, oupos));
+
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kin, false, toMaskBB & ~BBkiki::getStepKiki(Koma::g_Kin, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_nFu, false, toMaskBB & ~BBkiki::getStepKiki(Koma::g_Kin, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_nKyou, false, toMaskBB & ~BBkiki::getStepKiki(Koma::g_Kin, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_nKei, false, toMaskBB & ~BBkiki::getStepKiki(Koma::g_Kin, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_nGin, false, toMaskBB & ~BBkiki::getStepKiki(Koma::g_Kin, oupos));
+	const auto& allBB = kyokumen.getAllBB();
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kyou, false, toMaskBB & bbmask::Dan3to9 & ~BBkiki::getDashKiki(allBB,Koma::g_Kyou, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kyou, true, toMaskBB & bbmask::Dan1to3 & ~BBkiki::getStepKiki(Koma::g_Kin, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, false, kyokumen.getEachBB(Koma::s_Kaku) & bbmask::Dan4to9, toMaskBB & bbmask::Dan4to9 & ~BBkiki::getDashKiki(allBB, Koma::g_Kaku, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, true, kyokumen.getEachBB(Koma::s_Kaku) & bbmask::Dan4to9, toMaskBB & bbmask::Dan1to3 & ~BBkiki::getDashKiki(allBB, Koma::g_nKaku, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, true, kyokumen.getEachBB(Koma::s_Kaku) & bbmask::Dan1to3, toMaskBB & ~BBkiki::getDashKiki(allBB, Koma::g_nKaku, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Hi, false, kyokumen.getEachBB(Koma::s_Hi) & bbmask::Dan4to9, toMaskBB & bbmask::Dan4to9 & ~BBkiki::getDashKiki(allBB, Koma::g_Hi, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Hi, true, kyokumen.getEachBB(Koma::s_Hi) & bbmask::Dan4to9, toMaskBB & bbmask::Dan1to3 & ~BBkiki::getDashKiki(allBB, Koma::g_nHi, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Hi, true, kyokumen.getEachBB(Koma::s_Hi) & bbmask::Dan1to3, toMaskBB & ~BBkiki::getDashKiki(allBB, Koma::g_nHi, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_nKaku, false, toMaskBB & ~BBkiki::getDashKiki(allBB, Koma::g_nKaku, oupos));
+	genSenteBanMove_koma(en, kyokumen, Koma::s_nHi, false, toMaskBB & ~BBkiki::getDashKiki(allBB, Koma::g_nHi, oupos));
+}
+
+template<class EvaluatedNodes>
+void genGoteBanMove_noMate(EvaluatedNodes& en, const Kyokumen& kyokumen, const Bitboard& toMaskBB) {
+	using namespace koma;
+	const unsigned oupos = kyokumen.sOuPos();
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Fu, false, kyokumen.getEachBB(Koma::g_Fu) & bbmask::Dan1to5, toMaskBB & ~BBkiki::getStepKiki(Koma::s_Fu, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Fu, true, kyokumen.getEachBB(Koma::g_Fu) & bbmask::Dan6to9, toMaskBB & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Fu, true, toMaskBB & bbmask::Dan7to9 & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kei, false, toMaskBB & bbmask::Dan1to7 & ~BBkiki::getStepKiki(Koma::s_Kei, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kei, true, toMaskBB & bbmask::Dan7to9 & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Gin, false, toMaskBB & ~BBkiki::getStepKiki(Koma::s_Gin, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Gin, true, toMaskBB & bbmask::Dan7to9 & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Gin, true, kyokumen.getEachBB(Koma::g_Gin) & bbmask::Dan7, toMaskBB & bbmask::Dan1to6 & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kin, false, toMaskBB & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_nFu, false, toMaskBB & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_nKyou, false, toMaskBB & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_nKei, false, toMaskBB & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_nGin, false, toMaskBB & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+	const auto& allBB = kyokumen.getAllBB();
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kyou, false, toMaskBB & bbmask::Dan1to7 & ~BBkiki::getDashKiki(allBB, Koma::s_Kyou, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kyou, true, toMaskBB & bbmask::Dan7to9 & ~BBkiki::getStepKiki(Koma::s_Kin, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, false, kyokumen.getEachBB(Koma::g_Kaku) & bbmask::Dan1to6, toMaskBB & bbmask::Dan1to6 & ~BBkiki::getDashKiki(allBB, Koma::s_Kaku, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, true, kyokumen.getEachBB(Koma::g_Kaku) & bbmask::Dan1to6, toMaskBB & bbmask::Dan7to9 & ~BBkiki::getDashKiki(allBB, Koma::s_nKaku, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, true, kyokumen.getEachBB(Koma::g_Kaku) & bbmask::Dan7to9, toMaskBB & ~BBkiki::getDashKiki(allBB, Koma::s_nKaku, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Hi, false, kyokumen.getEachBB(Koma::g_Hi) & bbmask::Dan1to6, toMaskBB & bbmask::Dan1to6 & ~BBkiki::getDashKiki(allBB, Koma::s_Hi, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Hi, true, kyokumen.getEachBB(Koma::g_Hi) & bbmask::Dan1to6, toMaskBB & bbmask::Dan7to9 & ~BBkiki::getDashKiki(allBB, Koma::s_nHi, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Hi, true, kyokumen.getEachBB(Koma::g_Hi) & bbmask::Dan7to9, toMaskBB & ~BBkiki::getDashKiki(allBB, Koma::s_nHi, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_nKaku, false, toMaskBB & ~BBkiki::getDashKiki(allBB, Koma::s_nKaku, oupos));
+	genGoteBanMove_koma(en, kyokumen, Koma::g_nHi, false, toMaskBB & ~BBkiki::getDashKiki(allBB, Koma::s_nHi, oupos));
+}
+
+
 template<class EvaluatedNodes>
 void genSenteUchiMove(EvaluatedNodes& en, const Kyokumen& kyokumen,const Bitboard& blanks) {
 	using namespace koma;
@@ -300,7 +363,7 @@ std::vector<Move> MoveGenerator::genCapMove(Move& move, const Kyokumen& kyokumen
 			genSenteOuMove(en, kyokumen, ~kyokumen.getSenteBB());
 		}
 		else {
-			genSenteBanMove(en, kyokumen, kyokumen.getGoteBB());
+			genSenteBanMove_noMate(en, kyokumen, kyokumen.getGoteBB());
 			genSenteOuMove(en, kyokumen, kyokumen.getGoteBB());
 		}
 	}
@@ -315,7 +378,7 @@ std::vector<Move> MoveGenerator::genCapMove(Move& move, const Kyokumen& kyokumen
 			genGoteOuMove(en, kyokumen, ~kyokumen.getGoteBB());
 		}
 		else {
-			genGoteBanMove(en, kyokumen, kyokumen.getSenteBB());
+			genGoteBanMove_noMate(en, kyokumen, kyokumen.getSenteBB());
 			genGoteOuMove(en, kyokumen, kyokumen.getSenteBB());
 		}
 	}

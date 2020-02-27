@@ -108,7 +108,7 @@ void Commander::coutOption() {
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
 	cout << "option name Repetition_score type string default 0" << endl;
 	cout << "option name leave_qsearchNode type check default false" << endl;
-	cout << "option name QSearch_depth type string default 5" << endl;
+	cout << "option name QSearch_depth type string default 0" << endl;
 	cout << "option name Use_Original_Kyokumen_Eval type check default false" << endl;
 	cout << "option name T_choice_const type string default 120" << endl;
 	cout << "option name Tc_functionCode type spin default 0 min 0 max 7" << endl;
