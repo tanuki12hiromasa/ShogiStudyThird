@@ -5,13 +5,9 @@
 #include "usi.h"
 #include "stest.h"
 #include <iostream>
-#include <Windows.h>
 
 int main()
 {
-	char buf[256];
-	GetCurrentDirectoryA(256, buf);
-	std::cout << buf << std::endl;
 	Commander::execute();
 	//ShogiTest::test();
 }
