@@ -143,7 +143,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		newnodecount += node->children.size();
 		for (auto child : node->children) {
 			const auto cache = player.proceedC(child->move);
-			qsimulate(child, player);
+			qsimulate(child, player, history.size());
 			player.recede(child->move, cache);
 		}
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
@@ -222,7 +222,7 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 		return alpha;
 	}
 	auto moves = MoveGenerator::genCapMove(pmove, player.kyokumen);
-	if (moves.empty()) {
+	if (moves.empty() || pmove.isOute()) {
 		return Evaluator::evaluate(player);
 	}
 	for (auto& m : moves) {
@@ -237,8 +237,8 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 	return alpha;
 }
 
-void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
-	const int depth = SearchNode::getQSdepth();
+void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p, const int hislength) {
+	const int depth = SearchNode::getQSdepth() - hislength;
 	if (depth <= 0) {
 		const double eval = Evaluator::evaluate(p);
 		root->setEvaluation(eval);
