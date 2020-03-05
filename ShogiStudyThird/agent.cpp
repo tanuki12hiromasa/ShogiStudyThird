@@ -5,6 +5,7 @@
 
 bool SearchAgent::leave_QsearchNode = false;
 bool SearchAgent::use_original_kyokumen_eval = false;
+bool SearchAgent::QS_relativeDepth = false;
 
 SearchAgent::SearchAgent(SearchTree& tree,int seed)
 	:tree(tree),engine(seed),root(tree.getRoot())
@@ -238,7 +239,7 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 }
 
 void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p, const int hislength) {
-	const int depth = SearchNode::getQSdepth() - hislength;
+	const int depth = (QS_relativeDepth) ? (SearchNode::getQSdepth() - hislength) : SearchNode::getQSdepth();
 	if (depth <= 0) {
 		const double eval = Evaluator::evaluate(p);
 		root->setEvaluation(eval);

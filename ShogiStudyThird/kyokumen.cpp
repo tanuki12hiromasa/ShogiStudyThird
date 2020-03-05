@@ -537,6 +537,28 @@ Bitboard Kyokumen::pinMaskGote(const unsigned pos)const {
 	return bbmask::AllOne;
 }
 
+Bitboard Kyokumen::senteKiki_ingnoreKing()const {
+	Bitboard kikiBB;
+	Bitboard enBB = senteKomaBB;
+	enBB &= ~eachKomaBB[static_cast<size_t>(koma::Koma::s_Ou)];
+	for (unsigned pos = enBB.pop_first(); pos != enBB.size(); pos = enBB.pop_first()) {
+		const Koma k = getKoma(pos);
+		kikiBB |= BBkiki::getKiki(allKomaBB, k, pos);
+	}
+	return kikiBB;
+}
+
+Bitboard Kyokumen::goteKiki_ingnoreKing()const {
+	Bitboard kikiBB;
+	Bitboard enBB = goteKomaBB;
+	enBB &= ~eachKomaBB[static_cast<size_t>(koma::Koma::g_Ou)];
+	for (unsigned pos = enBB.pop_first(); pos != enBB.size(); pos = enBB.pop_first()) {
+		const Koma k = getKoma(pos);
+		kikiBB |= BBkiki::getKiki(allKomaBB, k, pos);
+	}
+	return kikiBB;
+}
+
 bool Kyokumen::operator==(const Kyokumen& rhs) const {
 	return (senteKomaBB == rhs.senteKomaBB && goteKomaBB == rhs.goteKomaBB && bammen == rhs.bammen);
 }
