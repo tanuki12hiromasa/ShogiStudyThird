@@ -42,6 +42,8 @@ public:
 
 	Bitboard pinMaskSente(const unsigned pos)const;//pos上の駒が敵駒にpinされていれば移動可能な直線範囲を返す pinされてなければAllOneが返る
 	Bitboard pinMaskGote(const unsigned pos)const;
+	Bitboard senteKiki_ingnoreKing()const;
+	Bitboard goteKiki_ingnoreKing()const;
 
 	bool operator==(const Kyokumen& rhs)const;
 	bool operator!=(const Kyokumen& rhs)const { return !operator==(rhs); }

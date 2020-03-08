@@ -2,6 +2,7 @@
 #include "commander.h"
 #include "usi.h" 
 #include <iostream>
+#include <iomanip>
 
 void Commander::execute() {
 	Commander commander;
@@ -108,6 +109,7 @@ void Commander::coutOption() {
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
 	cout << "option name Repetition_score type string default 0" << endl;
 	cout << "option name leave_qsearchNode type check default false" << endl;
+	cout << "option name QSearch_Use_RelativeDepth type check default false" << endl;
 	cout << "option name QSearch_depth type string default 0" << endl;
 	cout << "option name Use_Original_Kyokumen_Eval type check default false" << endl;
 	cout << "option name T_choice_const type string default 120" << endl;
@@ -140,6 +142,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "leave_qsearchNode") {
 			SearchAgent::setLeaveQSNode(token[4]=="true");
+		}
+		else if (token[2] == "QSearch_Use_RelativeDepth") {
+			SearchAgent::setQSrelativeDepth(token[4] == "true");
 		}
 		else if (token[2] == "Repetition_score") {
 			SearchNode::setRepScore(std::stod(token[4]));
@@ -226,10 +231,12 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	//宣言可能かどうかは先に調べる
 	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
 	if (kyokumen.isDeclarable()) {
+		std::lock_guard<std::mutex> lock(coutmtx);
 		std::cout << "bestmove win" << std::endl;
 		return;
 	}
 	else if (tree.getRoot()->eval < -SearchNode::getMateScoreBound()) {
+		std::lock_guard<std::mutex> lock(coutmtx);
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
@@ -274,7 +281,8 @@ void Commander::info() {
 					if (!PV.empty()) {
 						for (int i = 1; i < 7 && i < PV.size() && PV[i] != nullptr; i++) pvstr += PV[i]->move.toUSI()+' ';
 						const auto& root = PV[0];
-						std::cout << "info pv " << pvstr << "depth " << root->mass << " seldepth " << PV.size()
+						std::cout << std::fixed;
+						std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << (PV.size()-1)
 							<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
 					}
 					else {
@@ -287,7 +295,8 @@ void Commander::info() {
 }
 
 void Commander::chakushu() {
-	std::lock_guard<std::mutex> lock(coutmtx);
+	std::lock_guard<std::mutex> clock(coutmtx);
+	std::lock_guard<std::mutex> tlock(treemtx);
 	stopAgent();
 	info_enable = false;
 	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
@@ -297,17 +306,17 @@ void Commander::chakushu() {
 	}
 	SearchNode* const root = tree.getRoot();
 	if (root->eval < -33000) {
-		std::cout << "info score cp " << root->eval << std::endl;
+		std::cout << "info score cp " << static_cast<int>(root->eval) << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
 	const auto bestchild = tree.getBestMove();
 	if (bestchild == nullptr) {
-		std::cout << "info string error no children" << std::endl;
+		//std::cout << "info string error no children" << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
-	std::cout << "info pv " << bestchild->move.toUSI() << " depth " << bestchild->mass.load() <<
+	std::cout << "info pv " << bestchild->move.toUSI() << " depth " << std::setprecision(2) << bestchild->mass.load() <<
 		" score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
@@ -319,6 +328,7 @@ void Commander::chakushu() {
 }
 
 void Commander::position(const std::vector<std::string>& tokens) {
+	std::lock_guard<std::mutex> lock(treemtx);
 	stopAgent();
 	const auto prevRoot = tree.getRoot();
 	auto result = tree.set(tokens);

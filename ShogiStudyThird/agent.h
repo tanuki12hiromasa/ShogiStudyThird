@@ -7,9 +7,11 @@ class SearchAgent {
 public:
 	static void setLeaveQSNode(bool b) { leave_QsearchNode = b; }
 	static void setUseOriginalKyokumenEval(bool b) { use_original_kyokumen_eval = b; }
+	static void setQSrelativeDepth(bool b) { QS_relativeDepth = b; }
 private:
 	static bool leave_QsearchNode;
 	static bool use_original_kyokumen_eval;
+	static bool QS_relativeDepth;
 public:
 	SearchAgent(SearchTree& tree, int seed);
 	SearchAgent(SearchAgent&&)noexcept;
@@ -22,7 +24,7 @@ public:
 	void terminate() { alive = false; th.join(); }
 private:
 	size_t simulate(SearchNode* const root);
-	void qsimulate(SearchNode* const root, SearchPlayer& player);
+	void qsimulate(SearchNode* const root, SearchPlayer& player, const int hislength);
 	bool checkRepetitiveCheck(const Kyokumen& k,const std::vector<SearchNode*>& searchhis, const SearchNode* const latestRepnode)const;
 	void nodeCopy(const SearchNode* const origin, SearchNode* const copy)const;
 	SearchTree& tree;

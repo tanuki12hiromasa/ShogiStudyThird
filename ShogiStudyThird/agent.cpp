@@ -5,6 +5,7 @@
 
 bool SearchAgent::leave_QsearchNode = false;
 bool SearchAgent::use_original_kyokumen_eval = false;
+bool SearchAgent::QS_relativeDepth = false;
 
 SearchAgent::SearchAgent(SearchTree& tree,int seed)
 	:tree(tree),engine(seed),root(tree.getRoot())
@@ -143,7 +144,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		newnodecount += node->children.size();
 		for (auto child : node->children) {
 			const auto cache = player.proceedC(child->move);
-			qsimulate(child, player);
+			qsimulate(child, player, history.size());
 			player.recede(child->move, cache);
 		}
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
@@ -217,8 +218,12 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 	if (depth <= 0) {
 		return Evaluator::evaluate(player);
 	}
+	alpha = std::max(Evaluator::evaluate(player), alpha);
+	if (alpha >= beta) {
+		return alpha;
+	}
 	auto moves = MoveGenerator::genCapMove(pmove, player.kyokumen);
-	if (moves.empty()) {
+	if (moves.empty() || pmove.isOute()) {
 		return Evaluator::evaluate(player);
 	}
 	for (auto& m : moves) {
@@ -233,8 +238,8 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 	return alpha;
 }
 
-void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
-	const int depth = SearchNode::getQSdepth();
+void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p, const int hislength) {
+	const int depth = (QS_relativeDepth) ? (SearchNode::getQSdepth() - hislength) : SearchNode::getQSdepth();
 	if (depth <= 0) {
 		const double eval = Evaluator::evaluate(p);
 		root->setEvaluation(eval);
@@ -254,7 +259,7 @@ void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p) {
 			return;
 		}
 	}
-	double max = std::numeric_limits<double>::lowest();
+	double max = Evaluator::evaluate(p);
 	for (auto m : moves) {
 		const FeaureCache cache = player.feature.getCache();
 		const koma::Koma captured = player.proceed(m);
