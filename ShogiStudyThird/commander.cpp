@@ -231,10 +231,12 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	//宣言可能かどうかは先に調べる
 	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
 	if (kyokumen.isDeclarable()) {
+		std::lock_guard<std::mutex> lock(coutmtx);
 		std::cout << "bestmove win" << std::endl;
 		return;
 	}
 	else if (tree.getRoot()->eval < -SearchNode::getMateScoreBound()) {
+		std::lock_guard<std::mutex> lock(coutmtx);
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
@@ -280,7 +282,7 @@ void Commander::info() {
 						for (int i = 1; i < 7 && i < PV.size() && PV[i] != nullptr; i++) pvstr += PV[i]->move.toUSI()+' ';
 						const auto& root = PV[0];
 						std::cout << std::fixed;
-						std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << PV.size()
+						std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << (PV.size()-1)
 							<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
 					}
 					else {
@@ -293,7 +295,8 @@ void Commander::info() {
 }
 
 void Commander::chakushu() {
-	std::lock_guard<std::mutex> lock(coutmtx);
+	std::lock_guard<std::mutex> clock(coutmtx);
+	std::lock_guard<std::mutex> tlock(treemtx);
 	stopAgent();
 	info_enable = false;
 	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
@@ -303,13 +306,13 @@ void Commander::chakushu() {
 	}
 	SearchNode* const root = tree.getRoot();
 	if (root->eval < -33000) {
-		std::cout << "info score cp " << root->eval << std::endl;
+		std::cout << "info score cp " << static_cast<int>(root->eval) << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
 	const auto bestchild = tree.getBestMove();
 	if (bestchild == nullptr) {
-		std::cout << "info string error no children" << std::endl;
+		//std::cout << "info string error no children" << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
@@ -325,6 +328,7 @@ void Commander::chakushu() {
 }
 
 void Commander::position(const std::vector<std::string>& tokens) {
+	std::lock_guard<std::mutex> lock(treemtx);
 	stopAgent();
 	const auto prevRoot = tree.getRoot();
 	auto result = tree.set(tokens);
