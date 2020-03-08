@@ -5,7 +5,6 @@
 #include "usi.h"
 #include "stest.h"
 #include <iostream>
-#include <Windows.h>
 
 int main()
 {

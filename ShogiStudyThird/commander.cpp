@@ -197,7 +197,7 @@ void Commander::paramInit() {
 	SearchNode::setTdepth(100);
 	SearchNode::setTcConst(120);
 	SearchNode::setTeval(40);
-	SearchNode::setQSearchDepth(5);
+	SearchNode::setQSearchDepth(0);
 	tree.setNodeMaxsize(150000000);
 	SearchNode::setMateScore(34000);
 	SearchNode::setMateOneScore(20);
