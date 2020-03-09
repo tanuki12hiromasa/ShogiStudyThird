@@ -22,15 +22,13 @@ private:
 	static double mateScoreBound;
 	static double mateOneScore;
 	static double repetitionScore;
-	static double Tc_const;
-	static double Tc_mp;
-	static double Tc_mc;
-	static int Tc_FunctionCode;//探索指標の分散を期待値で重みづけするかどうかのフラグ
+	static double Ts_c;
+	static int Ts_FunctionCode;//探索指標の分散を期待値で重みづけするかどうかのフラグ
 	static double T_eval;
 	static double T_depth;
 	static int QS_depth;
-	static int Ec_FunctionCode;
-	static double Ec_c;
+	static int Es_FunctionCode;
+	static double Es_c;
 	static int PV_FuncCode;
 	static double PV_c;
 public:
@@ -40,18 +38,16 @@ public:
 	static void setRepScore(const double score) { repetitionScore = score; }
 	static double getMateScoreBound() { return mateScoreBound; }
 	static double getMateScore() { return mateScore; }
-	static void setTcConst(const double Tc) { Tc_const = Tc; }
-	static void setTcmp(const double Tc) { Tc_mp = Tc; }
-	static void setTcmc(const double Tc) { Tc_mc = Tc; }
-	static void setTcFuncCode(int c) { Tc_FunctionCode = c; }
+	static void setTsFuncParam(const double Ts) { Ts_c = Ts; }
+	static void setTsFuncCode(int c) { Ts_FunctionCode = c; }
 	static void setTeval(const double Te) { T_eval = Te; }
 	static void setTdepth(const double Td) { T_depth = Td; }
 	static void setQSearchDepth(const double mmqs) { QS_depth = mmqs; }
 	static double getTeval() { return T_eval; }
 	static double getTdepth() { return T_depth; }
 	static double getQSdepth() { return QS_depth; }
-	static void setEcFuncCode(const int code) { Ec_FunctionCode = code; }
-	static void setEcC(const double c) { Ec_c = c; }
+	static void setEsFuncCode(const int code) { Es_FunctionCode = code; }
+	static void setEsFuncParam(const double c) { Es_c = c; }
 	static void setPVFuncCode(const int code) { PV_FuncCode = code; }
 	static void setPVConst(const double b) { PV_c = b; }
 public:
@@ -77,8 +73,8 @@ public:
 	bool isLeaf()const { const auto s = status.load(); return s == State::N || s == State::iE; }
 	bool isTerminal()const { return status == State::T; }
 	bool isSearchable()const { const auto s = status.load(); return s == State::N || s == State::E; }
-	double getT_c()const;
-	double getE_c()const;
+	double getTs(const double baseT)const;
+	double getEs()const;
 	SearchNode* getBestChild()const;
 private:
 	double getTcMcVariance()const;

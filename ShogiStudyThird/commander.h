@@ -27,6 +27,8 @@ private:
 	std::unique_ptr<std::thread> deleteThread;
 	unsigned agentNum = 6;
 	bool permitPonder;
+	double Ts_min = 40;
+	double Ts_max = 200;
 
 	std::thread go_thread;
 	std::thread info_thread;

@@ -7,8 +7,8 @@ bool SearchAgent::leave_QsearchNode = false;
 bool SearchAgent::use_original_kyokumen_eval = false;
 bool SearchAgent::QS_relativeDepth = false;
 
-SearchAgent::SearchAgent(SearchTree& tree,int seed)
-	:tree(tree),engine(seed),root(tree.getRoot())
+SearchAgent::SearchAgent(SearchTree& tree, const double Ts,int seed)
+	:tree(tree),engine(seed),root(tree.getRoot()),Ts(Ts)
 {
 	
 	if (root != nullptr)
@@ -19,7 +19,7 @@ SearchAgent::SearchAgent(SearchTree& tree,int seed)
 }
 
 SearchAgent::SearchAgent(SearchAgent&& agent) noexcept
-	: tree(agent.tree), th(std::move(agent.th)),
+	: tree(agent.tree), th(std::move(agent.th)), Ts(agent.Ts),
 	root(agent.root), engine(std::move(agent.engine))
 {
 	alive = agent.alive.load();
@@ -52,7 +52,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		std::vector<dn> evals;
 		for (const auto& child : node->children) {
 			if (child->isSearchable()) {
-				double eval = child->getE_c();
+				double eval = child->getEs();
 				evals.push_back(std::make_pair(eval,child));
 				if (eval < CE) {
 					CE = eval;
@@ -67,7 +67,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}
 			return 0;
 		}
-		const double T_c = node->getT_c();
+		const double T_c = node->getTs(Ts);
 		double Z = 0;
 		for (const auto& eval : evals) {
 			Z += std::exp(-(eval.first - CE) / T_c);
