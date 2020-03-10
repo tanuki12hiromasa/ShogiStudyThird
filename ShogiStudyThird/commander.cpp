@@ -112,7 +112,7 @@ void Commander::coutOption() {
 	cout << "option name QSearch_Use_RelativeDepth type check default false" << endl;
 	cout << "option name QSearch_depth type string default 0" << endl;
 	cout << "option name Use_Original_Kyokumen_Eval type check default false" << endl;
-	cout << "option name Ts_disperseFunc type spin default 0 min 0 max 1" << endl;
+	cout << "option name Ts_disperseFunc type spin default 0 min 0 max 4" << endl;
 	cout << "option name Ts_min type string default 40" << endl;
 	cout << "option name Ts_max type string default 200" << endl;
 	cout << "option name Ts_functionCode type spin default 0 min 0 max 1" << endl;
@@ -161,6 +161,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "Ts_max") {
 			Ts_max = std::stod(token[4]);
+		}
+		else if (token[2] == "Ts_disperseFunc") {
+			TsDistFuncNum = std::stoi(token[4]);
 		}
 		else if (token[2] == "Ts_funcParam") {
 			SearchNode::setTsFuncParam(std::stod(token[4]));
@@ -212,15 +215,58 @@ void Commander::gameInit() {
 		Evaluator::init();
 		tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
 	}
+	setTsDistribution();
 	info();
+}
+
+void Commander::setTsDistribution() {
+	TsDistribution.clear();
+	switch (TsDistFuncNum) {
+		case 0:
+			for (int i = 0; i < agentNum; i++) TsDistribution.push_back((Ts_min + Ts_max) / 2);
+			break;
+		case 1:
+		{
+			const double delta = (Ts_max - Ts_min) / (agentNum - 1.0);
+			for (int i = 0; i < agentNum; i++) TsDistribution.push_back(Ts_min + delta * i);
+			break;
+		}
+		case 2:
+		{
+			const double minlog = std::log(Ts_min), maxlog = std::log(Ts_max);
+			const double delta = (maxlog - minlog) / (agentNum - 1.0);
+			for (int i = 0; i < agentNum; i++) TsDistribution.push_back(std::exp(minlog + delta * i));
+			break;
+		}
+		case 3:
+		{
+			const double c = (Ts_max + Ts_min) / 10.0;
+			const double a = 1.0 / (std::exp((Ts_max - Ts_min) / (c * 2.0)) - 1.0);
+			for (int i = 0; i < agentNum; i++) {
+				const double p = (double)i / (agentNum - 1.0);
+				TsDistribution.push_back(c * std::log((p + a) / (1 + a - p)) + (Ts_min + Ts_max) / 2.0);
+			}
+			break;
+		}
+		case 4:
+		{
+			const double minlog = std::log(Ts_min), maxlog = std::log(Ts_max);
+			const double c = (minlog + maxlog) / 80.0;
+			const double a = 1.0 / (std::exp((maxlog - minlog) / (c * 2.0)) - 1.0);
+			for (int i = 0; i < agentNum; i++) {
+				const double p = (double)i / (agentNum - 1.0);
+				TsDistribution.push_back(std::exp(c * std::log((p + a) / (1 + a - p)) + (minlog + maxlog) / 2.0));
+			}
+			break;
+		}
+	}
 }
 
 void Commander::startAgent() {
 	assert(agents.empty());
-	const double minlog = std::log(Ts_min), maxlog = std::log(Ts_max);
-	const double delta = (maxlog - minlog) / (agentNum - 1);
+	assert(TsDistribution.size() == agentNum);
 	for (int i = 0; i < agentNum; i++) {
-		const double Ts = std::exp(minlog + delta * i);
+		const double Ts = TsDistribution[i];
 		agents.push_back(std::unique_ptr<SearchAgent>(new SearchAgent(tree, Ts, i)));
 	}
 }
