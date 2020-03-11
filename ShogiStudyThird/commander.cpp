@@ -122,7 +122,7 @@ void Commander::coutOption() {
 	cout << "option name Es_functionCode type spin default 18 min 0 max 19" << endl;
 	cout << "option name Es_funcParam type string default 0.5" << endl;
 	cout << "option name NodeMaxNum type string default 100000000" << endl;
-	cout << "option name PV_functionCode type spin default 0 min 0 max 2" << endl;
+	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
 	cout << "option name PV_const type string default 0" << endl;
 }
 

@@ -249,6 +249,30 @@ SearchNode* SearchNode::getBestChild()const {
 			}
 			return best;
 		}
-
+		case 3: {
+			const double dbound = (mass - 1) * PV_c;
+			SearchNode* best = nullptr;
+			double min = std::numeric_limits<double>::max();
+			for (const auto child : children) {
+				const double ce = child->eval;
+				if (child->mass >= dbound && ce < min) {
+					min = ce;
+					best = child;
+				}
+			}
+			if (best != nullptr) {
+				return best;
+			}
+			else {
+				for (const auto child : children) {
+					const double ce = child->eval;
+					if (ce < min) {
+						min = ce;
+						best = child;
+					}
+				}
+				return best;
+			}
+		}
 	}
 }
