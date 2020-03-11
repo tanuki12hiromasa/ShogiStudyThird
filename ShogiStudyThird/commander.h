@@ -28,6 +28,7 @@ private:
 	std::unique_ptr<std::thread> deleteThread;
 	int agentNum = 6;
 	bool permitPonder;
+	bool continuousTree = true;
 	double Ts_min = 40;
 	double Ts_max = 200;
 	int TsDistFuncNum = 0;

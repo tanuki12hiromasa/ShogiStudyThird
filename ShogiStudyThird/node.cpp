@@ -195,6 +195,11 @@ double SearchNode::getEs()const {
 	}
 	case 19:
 		return eval * (1 - Es_c) + origin_eval * Es_c;
+	case 20: {
+		const double x = mass.load();
+		double p = Es_c * ((x >= 1) ? (1 / x*x) : 1);
+		return eval * (1.0 - p) + origin_eval * p;
+	}
 	}
 }
 

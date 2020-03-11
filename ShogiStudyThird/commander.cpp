@@ -106,6 +106,7 @@ void Commander::coutOption() {
 	using namespace std;
 	//cout << "option name kppt_filepath type string default ./data/kppt_apery" << endl; //隠しオプション
 	cout << "option name leave_branchNode type check default false" << endl;
+	cout << "option name continuous_tree type check default true" << endl;
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
 	cout << "option name Repetition_score type string default 0" << endl;
 	cout << "option name leave_qsearchNode type check default false" << endl;
@@ -119,7 +120,7 @@ void Commander::coutOption() {
 	cout << "option name Ts_funcParam type string default 1" << endl;
 	cout << "option name T_eval type string default 40" << endl;
 	cout << "option name T_depth type string default 100" << endl;
-	cout << "option name Es_functionCode type spin default 18 min 0 max 19" << endl;
+	cout << "option name Es_functionCode type spin default 18 min 0 max 20" << endl;
 	cout << "option name Es_funcParam type string default 0.5" << endl;
 	cout << "option name NodeMaxNum type string default 100000000" << endl;
 	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
@@ -133,6 +134,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "leave_branchNode") {
 			tree.leave_branchNode = (token[4] == "true");
+		}
+		else if (token[2] == "continuous_tree") {
+			continuousTree = (token[4] == "true");
 		}
 		else if (token[2] == "kppt_filepath") {
 			//aperyのパラメータファイルの位置を指定する 隠しオプション
@@ -380,9 +384,15 @@ void Commander::position(const std::vector<std::string>& tokens) {
 	std::lock_guard<std::mutex> lock(treemtx);
 	stopAgent();
 	const auto prevRoot = tree.getRoot();
-	auto result = tree.set(tokens);
-	if (result.first) {
-		releaseAgentAndBranch(prevRoot, std::move(result.second));
+	if (continuousTree) {
+		auto result = tree.set(tokens);
+		if (result.first) {
+			releaseAgentAndBranch(prevRoot, std::move(result.second));
+		}
+		else {
+			tree.makeNewTree(tokens);
+			releaseAgentAndTree(prevRoot);
+		}
 	}
 	else {
 		tree.makeNewTree(tokens);
