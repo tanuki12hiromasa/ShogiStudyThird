@@ -149,22 +149,15 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		}
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
-		double emin = std::numeric_limits<double>::max();
-		std::vector<double> evals;
-		for (const auto& child : node->children) {
-			const double eval = child->getEvaluation();
-			evals.push_back(eval);
-			if (eval < emin) {
-				emin = eval;
-			}
-		}
+		//sortしたのでfrontが最小値になっているはず
+		double emin = node->children.front()->eval;
 		double Z_e = 0;
-		for (const auto& eval : evals) {
-			Z_e += std::exp(-(eval - emin) / T_e);
+		for (const auto& child : node->children) {
+			Z_e += std::exp(-(child->eval - emin) / T_e);
 		}
 		double E = 0;
-		for (const auto& eval : evals) {
-			E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
+		for (const auto& child : node->children) {
+			E -= child->eval * std::exp(-(child->eval - emin) / T_e) / Z_e;
 		}
 		node->setEvaluation(E);
 		node->setMass(1);

@@ -73,7 +73,7 @@ namespace apery {
 				std::cerr << "error:file(KKP.bin) cannot open" << std::endl;
 				return;
 			}
-			auto end = (char*)KKP + sizeof(KPPEvalElementType2);
+			auto end = (char*)KKP + sizeof(KKPEvalElementType2);
 			for (auto it = (char*)KKP; it < end; it += (1 << 30)) {
 				size_t size = (it + (1 << 30) < end ? (1 << 30) : end - it);
 				fs.read(it, size);
@@ -281,6 +281,8 @@ namespace apery {
 						sum.p[0] -= cpskpp[index0];
 						sum.p[1] -= cpgkpp[index1];
 					}
+					sum.p[0] += KPP[skpos][bIndex0][bcIndex0];//二重に引き算している部分を戻す
+					sum.p[1] += KPP[inverse(gkpos)][bIndex1][bcIndex1];
 					sum.p[2] -= KKP[skpos][gkpos][bIndex0];
 					sum.p[2] -= KKP[skpos][gkpos][bcIndex0];
 				}
@@ -306,6 +308,8 @@ namespace apery {
 						sum.p[0] += cpskpp[index0];
 						sum.p[1] += cpgkpp[index1];
 					}
+					sum.p[0] -= KPP[skpos][aIndex0][acIndex0];//二重に足し算している部分を戻す
+					sum.p[1] -= KPP[inverse(gkpos)][aIndex1][acIndex1];
 					sum.p[2] += KKP[skpos][gkpos][aIndex0];
 					sum.p[2] += KKP[skpos][gkpos][acIndex0];
 				}
@@ -372,7 +376,7 @@ namespace apery {
 					const EvalIndex bIndex1 = komaToIndex(sgInv(movedDisprom)) + inverse(from);
 					Replace(bIndex0, aIndex0, idlist.list0);
 					Replace(bIndex1, aIndex1, idlist.list1);
-					idlist.material = -PieceScore(moved) + PieceScore(movedDisprom); //駒価値
+					idlist.material += -PieceScore(moved) + PieceScore(movedDisprom); //駒価値
 				}
 				else {
 					const EvalIndex bIndex0 = komaToIndex(moved) + from;
@@ -390,7 +394,7 @@ namespace apery {
 				const EvalIndex bcIndex1 = komaToIndex(sgInv(captured)) + inverse(to);
 				Replace(bcIndex0, acIndex0, idlist.list0);
 				Replace(bcIndex1, acIndex1, idlist.list1);
-				idlist.material = -PieceScore(capMochi, teban) + PieceScore(captured); //駒価値
+				idlist.material += -PieceScore(capMochi, teban) + PieceScore(captured); //駒価値
 			}
 		}
 		else {//打ち駒による手
@@ -405,5 +409,42 @@ namespace apery {
 		}
 #undef Replace
 		sum.p = cache.p;
+	}
+
+	bool apery_feat::operator==(const apery_feat& rhs)const {
+		//return idlist.list0 == rhs.idlist.list0 && idlist.list1 == rhs.idlist.list1 && idlist.material == idlist.material && sum.p == rhs.sum.p;
+		if (idlist.material != rhs.idlist.material || sum.p != rhs.sum.p) return false;
+		if (idlist.list0 == rhs.idlist.list0 && idlist.list1 == rhs.idlist.list1) return true;//idlistは順番が不定だが、一致する場合はtrueなので先に返す
+		std::vector<EvalIndex> checklist0(rhs.idlist.list0.begin(), rhs.idlist.list0.end());
+		for (const auto val : idlist.list0) {
+			auto result = std::find(checklist0.begin(), checklist0.end(), val);
+			if (result == checklist0.end())return false;
+			else checklist0.erase(result);
+		}
+		if (!checklist0.empty()) return false;
+		std::vector<EvalIndex> checklist1(rhs.idlist.list1.begin(), rhs.idlist.list1.end());
+		for (const auto val : idlist.list1) {
+			auto result = std::find(checklist1.begin(), checklist1.end(), val);
+			if (result == checklist1.end())return false;
+			else checklist1.erase(result);
+		}
+		if (!checklist1.empty()) return false;
+		return true;
+	}
+
+	std::string apery_feat::toString()const {
+		std::string str;
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 2; j++) {
+				str += "p[" + std::to_string(i) + "][" + std::to_string(j) + "] = " + std::to_string(sum.p[i][j]) + "  ";
+			}
+			str += "\n";
+		}
+		str += "list0: ";
+		for (const auto val : idlist.list0)str += std::to_string(val) + " ";
+		str += "\nlist1: ";
+		for (const auto val : idlist.list1)str += std::to_string(val) + " ";
+		str += "\n";
+		return str;
 	}
 }
