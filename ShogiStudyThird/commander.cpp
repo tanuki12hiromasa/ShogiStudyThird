@@ -106,22 +106,24 @@ void Commander::coutOption() {
 	using namespace std;
 	//cout << "option name kppt_filepath type string default ./data/kppt_apery" << endl; //隠しオプション
 	cout << "option name leave_branchNode type check default false" << endl;
+	cout << "option name continuous_tree type check default true" << endl;
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
 	cout << "option name Repetition_score type string default 0" << endl;
 	cout << "option name leave_qsearchNode type check default false" << endl;
 	cout << "option name QSearch_Use_RelativeDepth type check default false" << endl;
 	cout << "option name QSearch_depth type string default 0" << endl;
 	cout << "option name Use_Original_Kyokumen_Eval type check default false" << endl;
-	cout << "option name T_choice_const type string default 120" << endl;
-	cout << "option name Tc_functionCode type spin default 0 min 0 max 7" << endl;
-	cout << "option name T_choice_mass_parent type string default 1" << endl;
-	cout << "option name T_choice_children_masses type string default 1" << endl;
+	cout << "option name Ts_disperseFunc type spin default 0 min 0 max 4" << endl;
+	cout << "option name Ts_min type string default 40" << endl;
+	cout << "option name Ts_max type string default 200" << endl;
+	cout << "option name Ts_functionCode type spin default 0 min 0 max 1" << endl;
+	cout << "option name Ts_funcParam type string default 1" << endl;
 	cout << "option name T_eval type string default 40" << endl;
 	cout << "option name T_depth type string default 100" << endl;
-	cout << "option name Ec_functionCode type spin default 18 min 0 max 19" << endl;
-	cout << "option name Ec_c type string default 0.5" << endl;
+	cout << "option name Es_functionCode type spin default 18 min 0 max 20" << endl;
+	cout << "option name Es_funcParam type string default 0.5" << endl;
 	cout << "option name NodeMaxNum type string default 100000000" << endl;
-	cout << "option name PV_functionCode type spin default 0 min 0 max 2" << endl;
+	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
 	cout << "option name PV_const type string default 0" << endl;
 }
 
@@ -132,6 +134,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "leave_branchNode") {
 			tree.leave_branchNode = (token[4] == "true");
+		}
+		else if (token[2] == "continuous_tree") {
+			continuousTree = (token[4] == "true");
 		}
 		else if (token[2] == "kppt_filepath") {
 			//aperyのパラメータファイルの位置を指定する 隠しオプション
@@ -155,17 +160,20 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "Use_Original_Kyokumen_Eval") {
 			SearchAgent::setUseOriginalKyokumenEval(token[4] == "true");
 		}
-		else if (token[2] == "T_choice_const") {
-			SearchNode::setTcConst(std::stod(token[4]));
+		else if (token[2] == "Ts_min") {
+			Ts_min = std::stod(token[4]);
 		}
-		else if (token[2] == "T_choice_mass_parent") {
-			SearchNode::setTcmp(std::stod(token[4]));
+		else if (token[2] == "Ts_max") {
+			Ts_max = std::stod(token[4]);
 		}
-		else if (token[2] == "T_choice_children_masses") {
-			SearchNode::setTcmc(std::stod(token[4]));
+		else if (token[2] == "Ts_disperseFunc") {
+			TsDistFuncNum = std::stoi(token[4]);
 		}
-		else if (token[2] == "Tc_functionCode") {
-			SearchNode::setTcFuncCode(std::stoi(token[4]));
+		else if (token[2] == "Ts_funcParam") {
+			SearchNode::setTsFuncParam(std::stod(token[4]));
+		}
+		else if (token[2] == "Ts_functionCode") {
+			SearchNode::setTsFuncCode(std::stoi(token[4]));
 		}
 		else if (token[2] == "T_eval") {
 			SearchNode::setTeval(std::stod(token[4]));
@@ -173,11 +181,11 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "T_depth") {
 			SearchNode::setTdepth(std::stod(token[4]));
 		}
-		else if (token[2] == "Ec_functionCode") {
-			SearchNode::setEcFuncCode(std::stoi(token[4]));
+		else if (token[2] == "Es_functionCode") {
+			SearchNode::setEsFuncCode(std::stoi(token[4]));
 		}
-		else if (token[2] == "Ec_c") {
-			SearchNode::setEcC(std::stod(token[4]));
+		else if (token[2] == "Es_funcParam") {
+			SearchNode::setEsFuncParam(std::stod(token[4]));
 		}
 		else if (token[2] == "NodeMaxNum") {
 			tree.setNodeMaxsize(std::stoull(token[4]));
@@ -195,7 +203,6 @@ void Commander::paramInit() {
 	//usiによる設定前のデフォルト値
 
 	SearchNode::setTdepth(100);
-	SearchNode::setTcConst(120);
 	SearchNode::setTeval(40);
 	SearchNode::setQSearchDepth(0);
 	tree.setNodeMaxsize(150000000);
@@ -212,13 +219,59 @@ void Commander::gameInit() {
 		Evaluator::init();
 		tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
 	}
+	setTsDistribution();
 	info();
+}
+
+void Commander::setTsDistribution() {
+	TsDistribution.clear();
+	switch (TsDistFuncNum) {
+		case 0:
+			for (int i = 0; i < agentNum; i++) TsDistribution.push_back((Ts_min + Ts_max) / 2);
+			break;
+		case 1:
+		{
+			const double delta = (Ts_max - Ts_min) / (agentNum - 1.0);
+			for (int i = 0; i < agentNum; i++) TsDistribution.push_back(Ts_min + delta * i);
+			break;
+		}
+		case 2:
+		{
+			const double minlog = std::log(Ts_min), maxlog = std::log(Ts_max);
+			const double delta = (maxlog - minlog) / (agentNum - 1.0);
+			for (int i = 0; i < agentNum; i++) TsDistribution.push_back(std::exp(minlog + delta * i));
+			break;
+		}
+		case 3:
+		{
+			const double c = (Ts_max + Ts_min) / 10.0;
+			const double a = 1.0 / (std::exp((Ts_max - Ts_min) / (c * 2.0)) - 1.0);
+			for (int i = 0; i < agentNum; i++) {
+				const double p = (double)i / (agentNum - 1.0);
+				TsDistribution.push_back(c * std::log((p + a) / (1 + a - p)) + (Ts_min + Ts_max) / 2.0);
+			}
+			break;
+		}
+		case 4:
+		{
+			const double minlog = std::log(Ts_min), maxlog = std::log(Ts_max);
+			const double c = (minlog + maxlog) / 80.0;
+			const double a = 1.0 / (std::exp((maxlog - minlog) / (c * 2.0)) - 1.0);
+			for (int i = 0; i < agentNum; i++) {
+				const double p = (double)i / (agentNum - 1.0);
+				TsDistribution.push_back(std::exp(c * std::log((p + a) / (1 + a - p)) + (minlog + maxlog) / 2.0));
+			}
+			break;
+		}
+	}
 }
 
 void Commander::startAgent() {
 	assert(agents.empty());
+	assert(TsDistribution.size() == agentNum);
 	for (int i = 0; i < agentNum; i++) {
-		agents.push_back(std::unique_ptr<SearchAgent>(new SearchAgent(tree, i)));
+		const double Ts = TsDistribution[i];
+		agents.push_back(std::unique_ptr<SearchAgent>(new SearchAgent(tree, Ts, i)));
 	}
 }
 void Commander::stopAgent() {
@@ -331,9 +384,15 @@ void Commander::position(const std::vector<std::string>& tokens) {
 	std::lock_guard<std::mutex> lock(treemtx);
 	stopAgent();
 	const auto prevRoot = tree.getRoot();
-	auto result = tree.set(tokens);
-	if (result.first) {
-		releaseAgentAndBranch(prevRoot, std::move(result.second));
+	if (continuousTree) {
+		auto result = tree.set(tokens);
+		if (result.first) {
+			releaseAgentAndBranch(prevRoot, std::move(result.second));
+		}
+		else {
+			tree.makeNewTree(tokens);
+			releaseAgentAndTree(prevRoot);
+		}
 	}
 	else {
 		tree.makeNewTree(tokens);

@@ -12,6 +12,7 @@ private:
 	void setOption(const std::vector<std::string>& token);
 	void paramInit();
 	void gameInit();
+	void setTsDistribution();
 
 	void startAgent();
 	void stopAgent();
@@ -25,8 +26,13 @@ private:
 	SearchTree tree;
 	std::vector<std::unique_ptr<SearchAgent>> agents;
 	std::unique_ptr<std::thread> deleteThread;
-	unsigned agentNum = 6;
+	int agentNum = 6;
 	bool permitPonder;
+	bool continuousTree = true;
+	double Ts_min = 40;
+	double Ts_max = 200;
+	int TsDistFuncNum = 0;
+	std::vector<double> TsDistribution;
 
 	std::thread go_thread;
 	std::thread info_thread;

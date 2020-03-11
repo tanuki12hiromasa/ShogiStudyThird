@@ -170,6 +170,33 @@ bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 	}
 }
 
+bool ShogiTest::checkFeature(std::string usiposition) {
+	auto token = usi::split(usiposition, ' ');
+	const auto moves = Move::usiToMoves(token);
+	std::vector<std::string> startpos;
+	for (const auto& str : token) {
+		if (str == "moves") break;
+		startpos.push_back(str);
+	}
+	Kyokumen kyokumen(startpos);
+	Feature feat(kyokumen);
+	for (int t = 0; t < moves.size(); t++) {
+		const auto move = moves[t];
+		feat.proceed(kyokumen, move);
+		kyokumen.proceed(move);
+		Feature stfeat(kyokumen);
+		if (feat != stfeat) {
+			std::cout << "feature test ng" << std::endl;
+			std::cout << feat.toString() << std::endl;
+			std::cout << stfeat.toString() << std::endl;
+			assert(0);
+			return false;
+		}
+	}
+	std::cout << "feature test ok" << std::endl;
+	return true;
+}
+
 bool ShogiTest::checkRecede(std::string sfen,const int depth) {
 	Kyokumen k(usi::split(sfen,' '));
 	Feature f(k);
@@ -334,6 +361,14 @@ void ShogiTest::test() {
 		string moves2 = "P*5b P*5d P*5e P*5h P*8a P*8b P*8c P*8e P*8f P*8h N*1b N*1c N*1e N*1g N*2d N*2e N*2f N*2g N*3a N*3d N*3e N*3f N*4a N*4d N*4e N*4f N*5b N*5d N*5e N*6a N*6b N*6d N*6e N*6f N*7a N*7c N*7e N*7g N*8a N*8b N*8c N*8e N*8f N*9b N*9c N*9e N*9f B*1b B*1c B*1e B*1g B*1h B*2d B*2e B*2f B*2g B*2h B*3a B*3d B*3e B*3f B*3i B*4a B*4d B*4e B*4f B*4h B*5b B*5d B*5e B*5h B*6a B*6b B*6d B*6e B*6f B*6h B*6i B*7a B*7c B*7e B*7g B*8a B*8b B*8c B*8e B*8f B*8h B*8i B*9b B*9c B*9e B*9f B*9h 1d1e 2c2d 3c3d 4c4d 6c6d 7d7e 9d9e 2a1c 4b3a 4b5c 3b3a 7b6b 7b7a 7b7c 7b8b 7b8c 5a4a 5a6a 1a1b 1a1c 9a9b 9a9c 2b1c 2b3a 8d8a 8d8b 8d8c 8d8e 8d8f 8d8g 8d8g+";
 		ShogiTest::genMoveCheck(str2, moves2);
 		ShogiTest::genCapMoveCheck(str2);
+	}
+	{
+		string str3 = "position startpos moves 2g2f 3c3d 7g7f 4c4d 5i6h 3a3b 4g4f 8b4b 3i4h 5a6b 9g9f 6b7b 9f9e 7b8b 4h4g 9a9b 4g5f 8b9a 8h6f 3b4c 4i5h 6c6d 2f2e 2b3c 6h7h 4a5b 4f4e 7a8b 6i6h 6a7a 6f7g 5c5d 2h2g 5b5c 3g3f 5d5e 2e2d 2c2d 5f5e 4d4e 2i3g 4c5b P*4d P*5d 3g4e 5d5e 4e5c+ 5b5c G*4c N*6e 7g6f 5e5f 5g5f P*5g 5h5i S*3h 2g2h 3h4g 4c5c 4b4d S*6b 5g5h+ 7h8h 5h6h 5i6h 4g5f+ 6b7a+ 8b7a G*6b 7a8b P*4e 4d4e 6f3c+ 2a3c 6g6f B*3i B*6c 3i2h+ 6b7b G*7a 5c6b 7a7b 6b7b S*7g 8i7g 6e7g+ 6h7g 4e4h+ G*7h G*7a N*7e N*8e 7b7a 8e7g+ 8h9g 8b7a 7e8c 9a8b 8c7a+ G*8f 8g8f G*8g 7h8g 7g8g 9g8g R*8i S*8h 4h5g G*7g 5g7g 8g7g 8i7i+ 8h7i 5f6f 7g6f G*6e 6f6g 6e5f 6g7h";
+		ShogiTest::checkFeature(str3);
+		string str2 = "position startpos moves 7g7f 3c3d 8h2b 3a2b 7i8h 2b3c 2g2f 8b2b 5i6h 5a6b B*6e 7c7d 6e4c+ 6c6d 6h7h 4a5b 4c5b 6a5b 9g9f 9c9d 4i5h 6b7b 1g1f 5b6c 5h6h 7b8b 8h7g 8c8d 3i4h 5c5d 1f1e 7a7b 3g3f 3c4d 4g4f 3d3e 6i7i 3e3f 4h4g 4d3e 4g5f 3e4f 2h3h B*2g 3h4h P*4g 4h4g 4f4g+ 5f4g R*4h 4g5f 2g3h+ P*4g 3h2i G*5h 4h4i+ 7i6i 2i1i 1e1d 1c1d 9f9e 9d9e 7h8h 3f3g+ 8h7h L*6a";
+		ShogiTest::checkFeature(str2);
+		string str1 = "position startpos moves 7g7f 3c3d 8h2b+ 3a2b 7i8h 2b3c 2g2f 8b2b 5i6h 5a6b B*6e 7c7d 6e4c+ 6c6d 6h7h 4a5b 4c5b 6a5b 9g9f 9c9d 4i5h 6b7b 1g1f 5b6c 5h6h 7b8b 8h7g 8c8d 3i4h 5c5d 1f1e 7a7b 3g3f 3c4d 4g4f 3d3e 6i7i 3e3f 4h4g 4d3e 4g5f 3e4f 2h3h B*2g 3h4h P*4g 4h4g 4f4g+ 5f4g R*4h 4g5f 2g3h+ P*4g 3h2i G*5h 4h4i+ 7i6i 2i1i 1e1d 1c1d 9f9e 9d9e 7h8h 3f3g+ 8h7h L*6a";
+		ShogiTest::checkFeature(str1);
 	}
 	{
 		string str4 = "position sfen 1r3g3/l2gk3l/3p4p/2p1+B1p2/p4s3/2P1P1Pb1/1+p1PSP2P/L2S3GL/1NGKNsr2 b N3Pn3p 1";

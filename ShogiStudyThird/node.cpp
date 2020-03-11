@@ -9,15 +9,13 @@ double SearchNode::mateScore = 34000.0;//詰ませた側(勝った側)のscore
 double SearchNode::mateScoreBound = 30000.0;
 double SearchNode::mateOneScore = 20.0;
 double SearchNode::repetitionScore = -100;//先手側のscore（千日手のscoreは手番に依存する）
-double SearchNode::Tc_const = 60;
-double SearchNode::Tc_mp = 30;
-double SearchNode::Tc_mc = 20;
-int SearchNode::Tc_FunctionCode = 0;
+double SearchNode::Ts_c = 1.0;
+int SearchNode::Ts_FunctionCode = 0;
 double SearchNode::T_eval = 40;
 double SearchNode::T_depth = 90;
 int SearchNode::QS_depth = 0;
-int SearchNode::Ec_FunctionCode = 0;
-double SearchNode::Ec_c = 1.0;
+int SearchNode::Es_FunctionCode = 0;
+double SearchNode::Es_c = 1.0;
 int SearchNode::PV_FuncCode = 0;
 double SearchNode::PV_c = 0;
 
@@ -112,31 +110,14 @@ void SearchNode::setRepetitiveCheck() {
 	status = State::T;
 }
 
-double SearchNode::getT_c() const {
-	switch (Tc_FunctionCode)
+double SearchNode::getTs(const double baseT) const {
+	switch (Ts_FunctionCode)
 	{
 	case 0:
 	default:
-		return Tc_const;
+		return baseT;
 	case 1:
-		return Tc_const + Tc_mp * (mass - 1);
-	case 2:
-		return Tc_const + Tc_mc * getTcMcVariance();
-	case 3:
-		return Tc_const + Tc_mp * (mass - 1) * Tc_mc * getTcMcVariance();
-	case 4:
-		return std::max(Tc_const / ((mass - 1) / Tc_mc + 1), Tc_mp);
-	case 5:
-	{
-		const double x = mass;
-		if (x <= 3)return 120;
-		else if (x <= 7)return 165 - 15 * x;
-		else return 60;
-	}
-	case 6:
-		return std::max(Tc_const - Tc_mc * (mass - 1), Tc_mp);
-	case 7:
-		return Tc_const * std::pow(Tc_mp, mass.load());
+		return baseT * std::pow(Ts_c, mass.load());
 	}
 }
 
@@ -179,50 +160,46 @@ double SearchNode::getTcMcVarianceExpection()const {
 	return std::sqrt(variance / Z);
 }
 
-double SearchNode::getE_c()const {
-	switch (Ec_FunctionCode)
+double SearchNode::getEs()const {
+	switch (Es_FunctionCode)
 	{
 	case 0:
+	default:
 		return eval;
-	case 1:
-	case 2:
-	case 3:
-	case 4:
-	case 5:
-	case 6:
-	case 7:
-	case 8:
 	case 9:
-		return eval + Ec_c * origin_eval;
+		return eval + Es_c * origin_eval;
 	case 10:
 	case 11:
 	case 12:
 	{
 		const double e = eval.load();
-		return e + ((e > 0) ? -mass  * Ec_c : mass * Ec_c);
+		return e + ((e > 0) ? -mass  * Es_c : mass * Es_c);
 	}
 	case 13:
-		return eval * (1 - Ec_c * mass);
+		return eval * (1 - Es_c * mass);
 	case 14:
 	case 15:
-		return eval + Ec_c * mass;
+		return eval + Es_c * mass;
 	case 16: {
-		double p = Ec_c / (mass + 1);
+		double p = Es_c / (mass + 1);
 		return eval * (1.0 - p) + origin_eval * p;
 	}
 	case 17: {
-		double p = Ec_c / std::sqrt(mass + 1);
+		double p = Es_c / std::sqrt(mass + 1);
 		return eval * (1.0 - p) + origin_eval * p;
 	}
 	case 18: {
 		const double x = mass.load();
-		double p = Ec_c * ((x >= 1) ? (1 / x) : 1);
+		double p = Es_c * ((x >= 1) ? (1 / x) : 1);
 		return eval * (1.0 - p) + origin_eval * p;
 	}
 	case 19:
-		return eval * (1 - Ec_c) + origin_eval * Ec_c;
-	default:
-		return eval;
+		return eval * (1 - Es_c) + origin_eval * Es_c;
+	case 20: {
+		const double x = mass.load();
+		double p = Es_c * ((x >= 1) ? (1 / x*x) : 1);
+		return eval * (1.0 - p) + origin_eval * p;
+	}
 	}
 }
 
@@ -277,6 +254,30 @@ SearchNode* SearchNode::getBestChild()const {
 			}
 			return best;
 		}
-
+		case 3: {
+			const double dbound = (mass - 1) * PV_c;
+			SearchNode* best = nullptr;
+			double min = std::numeric_limits<double>::max();
+			for (const auto child : children) {
+				const double ce = child->eval;
+				if (child->mass >= dbound && ce < min) {
+					min = ce;
+					best = child;
+				}
+			}
+			if (best != nullptr) {
+				return best;
+			}
+			else {
+				for (const auto child : children) {
+					const double ce = child->eval;
+					if (ce < min) {
+						min = ce;
+						best = child;
+					}
+				}
+				return best;
+			}
+		}
 	}
 }

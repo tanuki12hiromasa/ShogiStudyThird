@@ -75,11 +75,10 @@ namespace apery {
 		void proceed(const Kyokumen& before, const Move& move);
 		void recede(const Kyokumen& before,const koma::Koma moved,const koma::Koma captured, const Move move, const EvalSum& cache);
 		EvalSum getCache() { return sum; }
-		bool operator==(const apery_feat& rhs)const {
-			return idlist.list0 == rhs.idlist.list0 && idlist.list1 == rhs.idlist.list1 && idlist.material == idlist.material && sum.p == rhs.sum.p;
-		}
+		bool operator==(const apery_feat& rhs)const;
 		bool operator!=(const apery_feat& rhs)const {
 			return !operator==(rhs);
 		}
+		std::string toString()const;
 	};
 }

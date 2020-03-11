@@ -13,7 +13,7 @@ private:
 	static bool use_original_kyokumen_eval;
 	static bool QS_relativeDepth;
 public:
-	SearchAgent(SearchTree& tree, int seed);
+	SearchAgent(SearchTree& tree, const double Ts, int seed);
 	SearchAgent(SearchAgent&&)noexcept;
 	SearchAgent() = delete;
 	SearchAgent(const SearchAgent&) = delete;
@@ -32,6 +32,7 @@ private:
 	SearchPlayer player;
 	std::atomic_bool alive;//生きているかどうか
 	std::thread th;
+	const double Ts;
 
 	//値域 [0,1.0) のランダムな値
 	std::uniform_real_distribution<double> random{ 0, 1.0 };
