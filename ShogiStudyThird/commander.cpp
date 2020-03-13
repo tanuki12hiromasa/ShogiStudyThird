@@ -331,8 +331,8 @@ void Commander::info() {
 					//std::cout << "info string info" << std::endl;
 					const auto PV = tree.getPV();
 					std::string pvstr;
-					if (!PV.empty()) {
-						for (int i = 1; i < 7 && i < PV.size() && PV[i] != nullptr; i++) pvstr += PV[i]->move.toUSI()+' ';
+					if (PV.size() >= 2) {
+						for (int i = 1; i < 15 && i < PV.size() && PV[i] != nullptr; i++) pvstr += PV[i]->move.toUSI()+' ';
 						const auto& root = PV[0];
 						std::cout << std::fixed;
 						std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << (PV.size()-1)
@@ -363,14 +363,21 @@ void Commander::chakushu() {
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
+	const auto PV = tree.getPV();
+	std::string pvstr;
+	if (PV.size() >= 2) {
+		for (int i = 1; i < 15 && i < PV.size() && PV[i] != nullptr; i++) pvstr += PV[i]->move.toUSI() + ' ';
+		const auto& root = PV[0];
+		std::cout << std::fixed;
+		std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << (PV.size() - 1)
+			<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
+	}
 	const auto bestchild = tree.getBestMove();
 	if (bestchild == nullptr) {
 		//std::cout << "info string error no children" << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
-	std::cout << "info pv " << bestchild->move.toUSI() << " depth " << std::setprecision(2) << bestchild->mass.load() <<
-		" score cp " << static_cast<int>(-bestchild->eval) << " nodes " << tree.getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
 	releaseAgentAndBranch(root, {bestchild});

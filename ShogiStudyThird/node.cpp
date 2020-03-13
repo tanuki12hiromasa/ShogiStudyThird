@@ -197,7 +197,7 @@ double SearchNode::getEs()const {
 		return eval * (1 - Es_c) + origin_eval * Es_c;
 	case 20: {
 		const double x = mass.load();
-		double p = Es_c * ((x >= 1) ? (1 / x*x) : 1);
+		double p = Es_c * ((x >= 1) ? (1 / (x*x)) : 1);
 		return eval * (1.0 - p) + origin_eval * p;
 	}
 	}
@@ -212,7 +212,7 @@ SearchNode* SearchNode::getBestChild()const {
 			double min = std::numeric_limits<double>::max();
 			for (const auto child : children) {
 				const double e = child->eval - child->mass * PV_c;
-				if (e <= min) {
+				if (e < min) {
 					best = child;
 					min = e;
 				}
@@ -247,7 +247,7 @@ SearchNode* SearchNode::getBestChild()const {
 				const double x = child->mass.load();
 				double p = PV_c * ((x >= 1) ? (1 / x) : 1);
 				const double e = child->eval * (1.0 - p) + origin_eval * p;
-				if (e <= min) {
+				if (e < min) {
 					best = child;
 					min = e;
 				}
