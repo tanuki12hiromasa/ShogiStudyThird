@@ -255,7 +255,7 @@ void Commander::setTsDistribution() {
 		case 4:
 		{
 			const double minlog = std::log(Ts_min), maxlog = std::log(Ts_max);
-			const double c = (minlog + maxlog) / 80.0;
+			const double c = (minlog + maxlog) / 40.0;
 			const double a = 1.0 / (std::exp((maxlog - minlog) / (c * 2.0)) - 1.0);
 			for (int i = 0; i < agentNum; i++) {
 				const double p = (double)i / (agentNum - 1.0);
