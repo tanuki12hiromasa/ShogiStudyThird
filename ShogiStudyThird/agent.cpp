@@ -136,12 +136,18 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				goto backup;
 			}*/
 		}
-		MoveGenerator::genMove(node, player.kyokumen);
-		if (node->children.empty()) {
-			node->setMate();
-			goto backup;
+		{//子ノード生成
+			const auto moves = MoveGenerator::genMove(node, player.kyokumen);
+			if (moves.empty()) {
+				node->setMate();
+				goto backup;
+			}
+			node->children.reserve(moves.size());//合法手の数だけchildrenの領域を確保しておく(メモリの再確保と過剰確保を抑制する)
+			newnodecount += moves.size();
+			for (const auto move : moves) {
+				node->addChild(move);
+			}
 		}
-		newnodecount += node->children.size();
 		for (auto child : node->children) {
 			const auto cache = player.proceedC(child->move);
 			qsimulate(child, player, history.size());

@@ -339,8 +339,9 @@ void genGoteUchiMove(EvaluatedNodes& en, const Kyokumen& kyokumen,const Bitboard
 	}
 }
 
-void MoveGenerator::genMove(SearchNode* parent, const Kyokumen& kyokumen) {
-	EvaluatedParent en(parent);
+std::vector<Move> MoveGenerator::genMove(SearchNode* parent, const Kyokumen& kyokumen) {
+	GeneratedMoves en;
+	en.moves.reserve(512);
 	if (kyokumen.teban()) {
 		auto kusemono = kyokumen.getSenteOuCheck(parent->move);
 		if (kusemono.size() > 0) {
@@ -373,7 +374,7 @@ void MoveGenerator::genMove(SearchNode* parent, const Kyokumen& kyokumen) {
 			genGoteOuMove(en, kyokumen, ~kyokumen.getGoteBB());
 		}
 	}
-	return;
+	return en.moves;
 }
 
 std::vector<Move> MoveGenerator::genCapMove(Move& move, const Kyokumen& kyokumen) {
