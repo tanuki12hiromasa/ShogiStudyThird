@@ -141,9 +141,8 @@ bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 	Kyokumen k(usi::split(parent_sfen, ' '));
 	Move m;
 	SearchNode* const root = new SearchNode(m);
-	MoveGenerator::genMove(root, k);
-	const auto& moves = root->children;
-	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
+	const auto& moves = MoveGenerator::genMove(root, k);
+	strv msv; for (const auto& m : moves)msv.push_back(m.toUSI());
 	const auto cmoves = MoveGenerator::genCapMove(m, k);
 	strv cmsv; for (const auto& m : cmoves)cmsv.push_back(m.toUSI());
 
@@ -219,7 +218,11 @@ bool ShogiTest::checkRecede(std::string sfen,const int depth) {
 }
 
 bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int depth) {
-	MoveGenerator::genMove(p, k);
+	const auto moves = MoveGenerator::genMove(p, k);
+	p->children.reserve(moves.size());
+	for (const auto move : moves) {
+		p->addChild(move);
+	}
 	const Kyokumen ck = k;
 	const Feature cf = f;
 	for (const auto& c : p->children) {
