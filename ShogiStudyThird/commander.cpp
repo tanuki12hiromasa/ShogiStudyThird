@@ -3,6 +3,7 @@
 #include "usi.h" 
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 
 void Commander::execute() {
 	Commander commander;
@@ -35,6 +36,7 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "position") {
 			commander.go_alive = false;
+			commander.info_enable = false;
 			commander.position(tokens);
 		}
 		else if (tokens[0] == "go") {
@@ -67,7 +69,7 @@ void Commander::execute() {
 			std::cout << "readyok" << std::endl;
 		}
 		else if (tokens[0] == "searchstatistics") {
-
+			commander.searchStatistics(tokens);
 		}
 		else if (tokens[0] == "staticevaluate") {
 			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
@@ -296,6 +298,9 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
+	tree.evaluationcount = 0ull;
+	info_prev_evcount = 0ull;
+	info_prevtime = std::chrono::system_clock::now();
 	startAgent();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
@@ -330,7 +335,11 @@ void Commander::info() {
 				using namespace std::chrono_literals;
 				std::this_thread::sleep_for(950ms);
 				std::lock_guard<std::mutex> lock(coutmtx);
+				const uint64_t evcount = tree.getEvaluationCount();
+				const auto now = std::chrono::system_clock::now();
 				if (info_enable) {
+					const int nps = (evcount - info_prev_evcount) / ((double)std::chrono::duration_cast<std::chrono::milliseconds>(now - info_prevtime).count() / 1000);
+					info_prevtime = now;
 					//std::cout << "info string info" << std::endl;
 					const auto PV = tree.getPV();
 					std::string pvstr;
@@ -339,12 +348,13 @@ void Commander::info() {
 						const auto& root = PV[0];
 						std::cout << std::fixed;
 						std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << (PV.size()-1)
-							<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
+							<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << " nps " << nps << std::endl;
 					}
 					else {
 						std::cout << "info string failed to get pv" << std::endl;
 					}
 				}
+				info_prev_evcount = evcount;
 			}
 		});
 	}
@@ -436,4 +446,70 @@ void Commander::releaseAgentAndTree(SearchNode* const root) {
 			tree.deleteTree(root);
 		}));
 	agents.clear();
+}
+
+void Commander::searchStatistics(const std::vector<std::string>& token) {
+	if (token.size() > 4) {
+		if (token[1] == "evalranking") {
+			//searchstatistics evalranking <探索時間(s)> <出力ファイル名(拡張子は不要)> <出力先ディレクトリ>
+			//という形式になっている　その時のノード数と評価値上位30位までの手の指し手,評価値,探索深さ期待値をファイルに出力する
+			evalranking(std::stoi(token[2]), token[3], token[4]);
+		}
+	}
+}
+
+void Commander::evalranking(const int searchtime,const std::string& filename,const std::string& filepos) {
+	using namespace std::chrono_literals;
+	std::cout << "start make evalrank statistics" << std::endl;
+	std::cout << std::fixed << std::setprecision(2);
+	using med = std::tuple<Move, double, double>;
+	std::ofstream fs(filepos + "/" + filename + ".evalranking");
+	if (!fs) {
+		std::cerr << "file access error" << std::endl;
+		return;
+	}
+	fs << std::fixed << std::setprecision(2);
+	tree.evaluationcount = 0ull;
+	info_alive = false;
+	startAgent();
+	const auto starttime = std::chrono::system_clock::now();
+	const auto spantime = 200ms;
+	int t = 1;
+	do {
+		std::this_thread::sleep_until(starttime + spantime * t);
+		std::vector<med> meds;
+		const auto evalcount = tree.getEvaluationCount();
+		const auto& root = tree.getRoot();
+		for (const auto child : root->children) {
+			meds.push_back(std::make_tuple(child->move, child->eval.load(), child->mass.load()));
+		}
+		std::list<med> ranking;
+		for (const auto& child : meds) {
+			const double eval = std::get<1>(child);
+			auto it = ranking.begin();
+			for (int i = 0; i < 30; i++) {
+				if (it == ranking.end()) {
+					ranking.push_back(child);
+					break;
+				}
+				if (eval < std::get<1>(*it)) {
+					ranking.insert(it, child);
+					break;
+				}
+				it++;
+			}
+		}
+		//std::cout << evalcount << " besstmove:" << std::get<0>(ranking.front()).toUSI() << "(" << std::get<1>(ranking.front()) << "," << std::get<2>(ranking.front()) << ")\n";
+		fs << evalcount << ":";
+		int n = 0;
+		for (const auto child : ranking) {
+			fs << " [" << std::get<0>(child).toUSI() << "," << std::get<1>(child) << "," << std::get<2>(child) << "]";
+			if (++n >= 30) break;
+		}
+		fs << "\n";
+		t++;
+	} while (std::chrono::system_clock::now() <= (starttime + std::chrono::seconds(searchtime)));
+	stopAgent();
+	std::cout << "finished." << std::endl;
+	info();
 }
