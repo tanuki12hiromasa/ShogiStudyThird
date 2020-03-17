@@ -33,24 +33,9 @@ void Commander::execute() {
 		else if (tokens[0] == "usinewgame") {
 			commander.go_alive = false;
 		}
-		else if (tokens[0] == "debugsetup") {
-			auto setLeaveNodeCommand = usi::split("setoption name leave_branchNode value true", ' ');
-			commander.setOption(setLeaveNodeCommand);
-			commander.gameInit();
-			std::cout << "readyok" << std::endl;
-		}
 		else if (tokens[0] == "position") {
 			commander.go_alive = false;
 			commander.position(tokens);
-		}
-		else if (tokens[0] == "staticevaluate") {
-			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
-		}
-		else if (tokens[0] == "getsfen") {
-			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
-		}
-		else if (tokens[0] == "getBanFigure") {
-			std::cout << commander.tree.getRootPlayer().kyokumen.toBanFigure() << std::endl;
 		}
 		else if (tokens[0] == "go") {
 			if (tokens[1] == "mate") {
@@ -74,6 +59,24 @@ void Commander::execute() {
 			commander.go_alive = false;
 			commander.info_alive = false;
 			commander.stopAgent();
+		}
+		else if (tokens[0] == "debugsetup") {
+			auto setLeaveNodeCommand = usi::split("setoption name leave_branchNode value true", ' ');
+			commander.setOption(setLeaveNodeCommand);
+			commander.gameInit();
+			std::cout << "readyok" << std::endl;
+		}
+		else if (tokens[0] == "searchstatistics") {
+
+		}
+		else if (tokens[0] == "staticevaluate") {
+			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
+		}
+		else if (tokens[0] == "getsfen") {
+			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
+		}
+		else if (tokens[0] == "getBanFigure") {
+			std::cout << commander.tree.getRootPlayer().kyokumen.toBanFigure() << std::endl;
 		}
 		else if (tokens[0] == "quit") {
 			return;

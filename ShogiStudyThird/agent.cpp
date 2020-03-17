@@ -142,11 +142,8 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				node->setMate();
 				goto backup;
 			}
-			node->children.reserve(moves.size());//合法手の数だけchildrenの領域を確保しておく(メモリの再確保と過剰確保を抑制する)
+			node->addChildren(moves);
 			newnodecount += moves.size();
-			for (const auto move : moves) {
-				node->addChild(move);
-			}
 		}
 		for (auto child : node->children) {
 			const auto cache = player.proceedC(child->move);
