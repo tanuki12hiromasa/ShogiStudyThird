@@ -310,6 +310,44 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
+
+	//定跡の中から一番良い手を指す
+	static bool josekiF = true;
+	if (josekiF) {
+		//定跡を利用しない
+		if (yomikomi_on == false) {
+			josekiF = false;
+		}
+		else {
+			//定跡を使用する
+			auto children = tree.getRoot()->children;
+			if (children.size() == 0) {
+				//子供がいなければ定跡終了
+				josekiF = false;
+			}
+			else {
+				//一番いい子供を選び、その子供を出力する
+				SearchNode* bestChild = children.front();
+
+				for (auto child : children) {
+					if (bestChild->eval < child->eval) {
+						bestChild = child;
+					}
+				}
+
+				std::cout << "info pv " << bestChild->move.toUSI() << " depth " << std::setprecision(2) << bestChild->mass.load() <<
+					" score cp " << static_cast<int>(-bestChild->eval) << " nodes " << tree.getNodeCount() << std::endl;
+				std::cout << "bestmove " << bestChild->move.toUSI() << std::endl;
+
+				auto root = tree.getRoot();
+				tree.proceed(bestChild);
+				releaseAgentAndBranch(root, { bestChild });
+
+				return;
+			}
+		}
+	}
+
 	startAgent();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
@@ -410,7 +448,7 @@ void Commander::position(const std::vector<std::string>& tokens) {
 	const auto prevRoot = tree.getRoot();
 	if (continuousTree) {
 		auto result = tree.set(tokens);
-		if (result.first || yomikomi) {
+		if (result.first || yomikomi_on) {
 			releaseAgentAndBranch(prevRoot, std::move(result.second));
 		}
 		else {
