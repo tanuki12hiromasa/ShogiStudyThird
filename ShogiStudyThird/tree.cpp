@@ -160,3 +160,14 @@ void SearchTree::foutTree()const {
 	}
 	fs.close();
 }
+
+void SearchTree::setRoot(SearchNode* const root, const Kyokumen& kyokumen, size_t nodes) {
+	SearchNode* motoroot = history.front();
+	motoroot->deleteTree();
+	delete motoroot;
+	history.clear();
+	history.push_back(root);				//std::cout << root->eval << std::endl;
+	startKyokumen = kyokumen;				//std::cout << "sfen " << kyokumen.toSfen() << std::endl;
+	rootPlayer = SearchPlayer(kyokumen);    //ここ 解決したはず
+	nodecount = nodes;						//std::cout << "nodes "<< nodes << std::endl;
+}
