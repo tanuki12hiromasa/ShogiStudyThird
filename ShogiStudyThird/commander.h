@@ -23,6 +23,8 @@ private:
 	void releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes);
 	void releaseAgentAndTree(SearchNode* const root);
 
+	void yomikomi();
+
 	SearchTree tree;
 	std::vector<std::unique_ptr<SearchAgent>> agents;
 	std::unique_ptr<std::thread> deleteThread;
@@ -44,6 +46,7 @@ private:
 	std::mutex treemtx;
 
 	bool yomikomi_on;
+	std::string yomikomi_file_name;
 
 	friend class ShogiTest;
 };

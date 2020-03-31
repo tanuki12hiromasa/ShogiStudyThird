@@ -2,6 +2,7 @@
 #include "commander.h"
 #include "usi.h" 
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 
 void Commander::execute() {
@@ -437,4 +438,72 @@ void Commander::releaseAgentAndTree(SearchNode* const root) {
 			tree.deleteTree(root);
 		}));
 	agents.clear();
+}
+
+void Commander::yomikomi()
+{
+	std::string ss;
+	int i = 0, j = 0;
+	std::ifstream ifs;
+	size_t i_max = 0;
+	std::vector<SearchNode*> test;
+
+	SearchNode* node = NULL;
+	std::vector<int> parents = {};
+	parents.push_back(-1);
+	bool oute;
+	int index = 0;
+	int	st = 0;
+	double eval = 0.0;
+	double mass = 0.0;
+	Move move;
+	std::cout << "1 " << std::endl;
+	static int num = 0;
+	//ifs.open("treeLogs/treelog" + std::to_string(num++) + ".txt");
+	ifs.open(yomikomi_file_name + ".txt");
+	if (ifs.fail()) {
+		std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+	}
+	std::getline(ifs, ss); //sfen
+	std::cout << "2 " << std::endl;
+	while (1) {
+		std::getline(ifs, ss);
+		if (ifs.eof()) {
+			std::cout << "5 " << std::endl;
+			break;//ファイルの終わりならブレイク
+		}
+		auto gyou = usi::split(ss, ',');
+		index = std::stoi(gyou[0]);		//std::cout << "0 " << gyou[i][0] << std::endl;
+		st = std::stoi(gyou[1]);			//std::cout << "1 " << gyou[i][1] << std::endl;
+		//oute = std::stoi(gyou[2]);		//std::cout << "2 " << gyou[i][2] << std::endl;
+		//move = Move(gyou[3], 0, oute);	//std::cout << "3 " << gyou[i][3] << std::endl;
+		move = Move(gyou[2], false);	//std::cout << "3 " << gyou[i][3] << std::endl;
+		eval = std::stod(gyou[3]);		//std::cout << "4 " << gyou[i][4] << std::endl;
+		mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
+		j = 6;
+		while (1) {		//子ノードのインデックスが読み終わるまでループ
+			if (gyou[j] == "]") break;//1列の終わりならブレイク 
+			parents.push_back(index);	 //親のインデックスを要素として持つ
+			j++;	//]のチェック用
+		}
+
+		if (index == 0) {//1つ目は親なし
+			test.push_back(node->restoreNode(move, st, eval, mass));
+		}
+		else {
+			test.push_back(node->restoreNode(move, st, eval, mass));
+			test[parents[index]]->children.push_back(test[index]);
+		}
+		i++;
+	}
+	std::cout << "3 " << std::endl;
+	i_max = i;
+	std::vector<std::string> startpos;
+	startpos.push_back(" ");
+	startpos.push_back("startpos");
+	Kyokumen kyo = Kyokumen(startpos);
+
+	node = test[0];
+	tree.setRoot(node, kyo, i_max + 1);
+	i_max = 0;
 }
