@@ -29,6 +29,10 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "isready") {
 			commander.gameInit();
+			//定跡を利用する場合のみ読みこみ
+			if (commander.yomikomi_on) {
+				commander.yomikomi();
+			}
 			std::cout << "readyok" << std::endl;
 		}
 		else if (tokens[0] == "usinewgame") {
@@ -79,6 +83,10 @@ void Commander::execute() {
 		else if (tokens[0] == "quit") {
 			return;
 		}
+		else if (tokens[0] == "yomikomi") {
+			//読み込みを実行
+			commander.yomikomi();
+		}
 	}
 }
 
@@ -126,7 +134,7 @@ void Commander::coutOption() {
 	cout << "option name NodeMaxNum type string default 100000000" << endl;
 	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
 	cout << "option name PV_const type string default 0" << endl;
-	cout << "option name Yomikomi_on type check default false" << endl;
+	cout << "option name yomikomi_on type check default false" << endl;
 	cout << "option name yomikomi_file_name type check string treemake" << endl;
 }
 
@@ -199,7 +207,7 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "PV_const") {
 			SearchNode::setPVConst(std::stod(token[4]));
 		}
-		else if (token[2] == "Yomikomi_on") {
+		else if (token[2] == "yomikomi_on") {
 			yomikomi_on = (token[4] == "true");
 		}
 		else if (token[2] == "yomikomi_file_name") {
@@ -455,7 +463,7 @@ void Commander::yomikomi()
 	SearchNode* node = NULL;
 	std::vector<int> parents = {};
 	parents.push_back(-1);
-	bool oute;
+	//bool oute;
 	int index = 0;
 	int	st = 0;
 	double eval = 0.0;
