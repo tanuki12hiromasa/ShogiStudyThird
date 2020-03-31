@@ -127,6 +127,7 @@ void Commander::coutOption() {
 	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
 	cout << "option name PV_const type string default 0" << endl;
 	cout << "option name Yomikomi_on type check default false" << endl;
+	cout << "option name yomikomi_file_name type check string treemake" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -198,8 +199,11 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "PV_const") {
 			SearchNode::setPVConst(std::stod(token[4]));
 		}
-		else if (token[2] == "Yomikomi on") {
+		else if (token[2] == "Yomikomi_on") {
 			yomikomi_on = (token[4] == "true");
+		}
+		else if (token[2] == "yomikomi_file_name") {
+			yomikomi_file_name = token[4];
 		}
 	}
 }
