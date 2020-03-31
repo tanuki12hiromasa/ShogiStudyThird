@@ -76,6 +76,9 @@ public:
 	double getTs(const double baseT)const;
 	double getEs()const;
 	SearchNode* getBestChild()const;
+
+	SearchNode* restoreNode(const Move& move, int st, double eval, double mass);
+
 private:
 	double getTcMcVariance()const;
 	double getTcMcVarianceExpection()const;
@@ -89,4 +92,5 @@ public:
 	std::atomic<double> eval;
 	std::atomic<double> mass;
 
+	
 };

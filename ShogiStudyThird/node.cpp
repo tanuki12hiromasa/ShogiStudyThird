@@ -121,6 +121,16 @@ double SearchNode::getTs(const double baseT) const {
 	}
 }
 
+SearchNode* SearchNode::restoreNode(const Move& move, int st, double eval, double mass)
+{
+	SearchNode* child = new SearchNode(move);
+	child->eval = eval;
+	child->mass = mass;
+	child->status = (SearchNode::State)st;
+
+	return child;
+}
+
 double SearchNode::getTcMcVariance()const {
 	std::vector<double> cmasses;
 	double mean = 0;
@@ -159,6 +169,7 @@ double SearchNode::getTcMcVarianceExpection()const {
 	}
 	return std::sqrt(variance / Z);
 }
+
 
 double SearchNode::getEs()const {
 	switch (Es_FunctionCode)

@@ -270,3 +270,4 @@ ShogiStudySecond/depthlog/
 *.bin
 
 ShogiStudyThird/treelog.txt
+/ShogiStudyThird/treemake.txt

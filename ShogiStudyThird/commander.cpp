@@ -461,19 +461,17 @@ void Commander::yomikomi()
 	double eval = 0.0;
 	double mass = 0.0;
 	Move move;
-	std::cout << "1 " << std::endl;
+	std::cout << "start \"Yomikomi!\" " << std::endl;
 	static int num = 0;
-	//ifs.open("treeLogs/treelog" + std::to_string(num++) + ".txt");
 	ifs.open(yomikomi_file_name + ".txt");
 	if (ifs.fail()) {
 		std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
 	}
 	std::getline(ifs, ss); //sfen
-	std::cout << "2 " << std::endl;
+
 	while (1) {
 		std::getline(ifs, ss);
 		if (ifs.eof()) {
-			std::cout << "5 " << std::endl;
 			break;//ファイルの終わりならブレイク
 		}
 		auto gyou = usi::split(ss, ',');
@@ -500,7 +498,7 @@ void Commander::yomikomi()
 		}
 		i++;
 	}
-	std::cout << "3 " << std::endl;
+	std::cout << "end \"Yomikomi!\" " << std::endl;
 	i_max = i;
 	std::vector<std::string> startpos;
 	startpos.push_back(" ");
