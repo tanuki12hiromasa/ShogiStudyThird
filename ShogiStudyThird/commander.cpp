@@ -330,7 +330,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 				SearchNode* bestChild = children.front();
 
 				for (auto child : children) {
-					if (bestChild->eval < child->eval) {
+					if (-bestChild->eval < -child->eval) {
 						bestChild = child;
 					}
 				}
