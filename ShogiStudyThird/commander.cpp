@@ -410,7 +410,7 @@ void Commander::position(const std::vector<std::string>& tokens) {
 	const auto prevRoot = tree.getRoot();
 	if (continuousTree) {
 		auto result = tree.set(tokens);
-		if (result.first) {
+		if (result.first || yomikomi) {
 			releaseAgentAndBranch(prevRoot, std::move(result.second));
 		}
 		else {
