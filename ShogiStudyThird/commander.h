@@ -43,5 +43,7 @@ private:
 	std::mutex coutmtx;
 	std::mutex treemtx;
 
+	bool yomikomi_on;
+
 	friend class ShogiTest;
 };
