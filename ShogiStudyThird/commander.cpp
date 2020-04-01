@@ -87,6 +87,9 @@ void Commander::execute() {
 			//読み込みを実行
 			commander.yomikomi();
 		}
+		else if (tokens[0] == "makejoseki") {
+			commander.makeJoseki();
+		}
 	}
 }
 
@@ -554,4 +557,12 @@ void Commander::yomikomi()
 	node = test[0];
 	tree.setRoot(node, kyo, i_max + 1);
 	i_max = 0;
+}
+
+/*
+  定跡を作るための関数
+  ひとまず高丘さんの提案手法を実装
+*/
+void Commander::makeJoseki() {
+
 }
