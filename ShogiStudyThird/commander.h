@@ -24,7 +24,7 @@ private:
 	void releaseAgentAndTree(SearchNode* const root);
 
 	void yomikomi();
-	void makeJoseki();
+	void makeJoseki(const std::vector<std::string>& tokens);
 
 	SearchTree tree;
 	std::vector<std::unique_ptr<SearchAgent>> agents;

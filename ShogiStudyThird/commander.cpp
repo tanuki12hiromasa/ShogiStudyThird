@@ -88,7 +88,7 @@ void Commander::execute() {
 			commander.yomikomi();
 		}
 		else if (tokens[0] == "makejoseki") {
-			commander.makeJoseki();
+			commander.makeJoseki(tokens);
 		}
 	}
 }
@@ -563,6 +563,53 @@ void Commander::yomikomi()
   定跡を作るための関数
   ひとまず高丘さんの提案手法を実装
 */
-void Commander::makeJoseki() {
+void Commander::makeJoseki(const std::vector<std::string>& tokens) {
+	/*
+		1.パソコンのメモリの限界までMCSoftmax探索を行い木を成長させる
+		2.その中から局面の評価値が低いノードを探し消去する
+		3.空いたメモリを使いさらに木を成長させる
+	*/
 
+	//1.commander::goの中身を利用
+	//宣言可能かどうかは先に調べる
+	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
+	if (kyokumen.isDeclarable()) {
+		std::lock_guard<std::mutex> lock(coutmtx);
+		std::cout << "bestmove win" << std::endl;
+		return;
+	}
+	else if (tree.getRoot()->eval < -SearchNode::getMateScoreBound()) {
+		std::lock_guard<std::mutex> lock(coutmtx);
+		std::cout << "bestmove resign" << std::endl;
+		return;
+	}
+	startAgent();
+	TimeProperty tp(kyokumen.teban(), tokens);
+	go_alive = false;
+	if (go_thread.joinable()) go_thread.join();
+	go_alive = true;
+	go_thread = std::thread([this, tp]() {
+		using namespace std::chrono_literals;
+		const auto starttime = std::chrono::system_clock::now();
+		const SearchNode* root = tree.getRoot();
+		if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
+			do {
+				auto t = std::max((tp.added / 5), 50ms);
+				std::this_thread::sleep_for(t);
+			} while (((std::chrono::system_clock::now() - starttime) < tp.added - 110ms)
+				&& std::abs(root->eval) < SearchNode::getMateScoreBound());
+			//chakushu();
+		}
+		else {
+			std::this_thread::sleep_for(5s);
+			//chakushu();
+		}
+		std::lock_guard<std::mutex> clock(coutmtx);
+		std::lock_guard<std::mutex> tlock(treemtx);
+		stopAgent();
+		});
+	info_enable = true;
+
+	tree.foutTree();
+	std::cout << "fouttree: done" << std::endl;
 }
