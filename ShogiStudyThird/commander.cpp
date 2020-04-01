@@ -453,7 +453,11 @@ void Commander::searchStatistics(const std::vector<std::string>& token) {
 		if (token[1] == "evalranking") {
 			//searchstatistics evalranking <探索時間(s)> <出力ファイル名(拡張子は不要)> <出力先ディレクトリ>
 			//という形式になっている　その時のノード数と評価値上位30位までの手の指し手,評価値,探索深さ期待値をファイルに出力する
-			evalranking(std::stoi(token[2]), token[3], token[4]);
+			std::string filepos = token[4];
+			for (int i = 5; i < token.size(); i++) {
+				filepos += " " + token[i];
+			}
+			evalranking(std::stoi(token[2]), token[3], filepos);
 		}
 	}
 }
