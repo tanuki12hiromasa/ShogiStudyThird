@@ -525,10 +525,11 @@ void Commander::yomikomi()
 		st = std::stoi(gyou[1]);			//std::cout << "1 " << gyou[i][1] << std::endl;
 		//oute = std::stoi(gyou[2]);		//std::cout << "2 " << gyou[i][2] << std::endl;
 		//move = Move(gyou[3], 0, oute);	//std::cout << "3 " << gyou[i][3] << std::endl;
-		move = Move(gyou[2], false);	//std::cout << "3 " << gyou[i][3] << std::endl;
+		move = Move(gyou[2].erase(0,1), false);	//std::cout << "3 " << gyou[i][3] << std::endl;
 		eval = std::stod(gyou[3]);		//std::cout << "4 " << gyou[i][4] << std::endl;
 		mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
 		j = 6;
+		parents.push_back(index);
 		while (1) {		//子ノードのインデックスが読み終わるまでループ
 			if (gyou[j] == "]") break;//1列の終わりならブレイク 
 			parents.push_back(index);	 //親のインデックスを要素として持つ
@@ -553,5 +554,4 @@ void Commander::yomikomi()
 
 	node = test[0];
 	tree.setRoot(node, kyo, i_max + 1);
-	i_max = 0;
 }
