@@ -135,7 +135,7 @@ void Commander::coutOption() {
 	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
 	cout << "option name PV_const type string default 0" << endl;
 	cout << "option name yomikomi_on type check default false" << endl;
-	cout << "option name yomikomi_file_name type check string treemake" << endl;
+	cout << "option name yomikomi_file_name type string default treemake" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
