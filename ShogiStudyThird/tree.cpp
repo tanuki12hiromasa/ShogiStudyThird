@@ -35,7 +35,8 @@ std::pair<bool, std::vector<SearchNode*>> SearchTree::set(const Kyokumen& startp
 			const Move nextmove = usihis[i];
 			SearchNode* nextNode = nullptr;
 			if (root->isLeaf()) {
-				MoveGenerator::genAllMove(root, rootPlayer.kyokumen);
+				const auto moves = MoveGenerator::genAllMove(root->move, rootPlayer.kyokumen);
+				root->addChildren(moves);
 			}
 			for (SearchNode* child : root->children) {
 				if (child->move == nextmove) {
@@ -61,7 +62,8 @@ void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& 
 	rootPlayer = SearchPlayer(startKyokumen);
 	for (auto& usimove : usihis) {
 		SearchNode* rootNode = getRoot();
-		MoveGenerator::genAllMove(rootNode, rootPlayer.kyokumen);
+		const auto moves = MoveGenerator::genAllMove(rootNode->move, rootPlayer.kyokumen);
+		rootNode->addChildren(moves);
 		SearchNode* next = nullptr;
 		for (const auto& child : rootNode->children) {
 			assert(child != nullptr);

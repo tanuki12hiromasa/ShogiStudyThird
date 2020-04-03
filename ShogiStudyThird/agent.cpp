@@ -137,7 +137,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}*/
 		}
 		{//子ノード生成
-			const auto moves = MoveGenerator::genMove(node, player.kyokumen);
+			const auto moves = MoveGenerator::genMove(node->move, player.kyokumen);
 			if (moves.empty()) {
 				node->setMate();
 				goto backup;
@@ -172,7 +172,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	//バックアップ
 	backup:
 	{
-	for (int i = history.size() - 2; i >= 0; i--) {
+		for (int i = history.size() - 2; i >= 0; i--) {
 			node = history[i];
 			double emin = std::numeric_limits<double>::max();
 			std::vector<dd> emvec;

@@ -75,10 +75,9 @@ void ShogiTest::coutStringsDiff(const strv& cor,const strv& s) {
 bool ShogiTest::genMoveCheck(std::string parent_sfen, std::string child_moves) {
 	strv ans = usi::split(child_moves, ' ');
 	Kyokumen k(usi::split(parent_sfen, ' '));
-	SearchNode* const root = new SearchNode(Move());
-	MoveGenerator::genAllMove(root, k);
-	const auto& moves = root->children;
-	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
+	Move nmove;
+	const auto moves = MoveGenerator::genAllMove(nmove, k);
+	strv msv; for (const auto& m : moves)msv.push_back(m.toUSI());
 	if (checkStrings(ans, msv)) return true;
 	else {
 		std::cout << k.toBanFigure() << std::endl;
@@ -91,10 +90,9 @@ bool ShogiTest::genMoveCheck(std::string parent_sfen, std::string child_moves) {
 bool ShogiTest::genMoveCheck(std::string parent_sfen, Move pmove, std::string child_moves) {
 	strv ans = usi::split(child_moves, ' ');
 	Kyokumen k(usi::split(parent_sfen, ' '));
-	SearchNode* const root = new SearchNode(pmove);
-	MoveGenerator::genAllMove(root, k);
-	const auto& moves = root->children;
-	strv msv; for (const auto& m : moves)msv.push_back(m->move.toUSI());
+	Move nmove;
+	const auto moves = MoveGenerator::genAllMove(nmove, k);
+	strv msv; for (const auto& m : moves)msv.push_back(m.toUSI());
 	if (checkStrings(ans, msv)) return true;
 	else {
 		std::cout << k.toBanFigure() << std::endl;
@@ -140,8 +138,7 @@ bool ShogiTest::genCapMoveCheck(std::string parent_sfen) {
 	//合法手⊃capmoveを確かめる
 	Kyokumen k(usi::split(parent_sfen, ' '));
 	Move m;
-	SearchNode* const root = new SearchNode(m);
-	const auto& moves = MoveGenerator::genMove(root, k);
+	const auto moves = MoveGenerator::genMove(m, k);
 	strv msv; for (const auto& m : moves)msv.push_back(m.toUSI());
 	const auto cmoves = MoveGenerator::genCapMove(m, k);
 	strv cmsv; for (const auto& m : cmoves)cmsv.push_back(m.toUSI());
@@ -218,7 +215,7 @@ bool ShogiTest::checkRecede(std::string sfen,const int depth) {
 }
 
 bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int depth) {
-	const auto moves = MoveGenerator::genMove(p, k);
+	const auto moves = MoveGenerator::genMove(p->move, k);
 	p->children.reserve(moves.size());
 	for (const auto move : moves) {
 		p->addChild(move);
@@ -366,6 +363,8 @@ void ShogiTest::test() {
 		ShogiTest::genCapMoveCheck(str2);
 	}
 	{
+		string str4 = "position startpos moves 2g2f 8c8d 7g7f 8d8e 8h7g 3c3d 7i8h 2b7g+ 8h7g 3a2b 2f2e 2b3c 3i3h 5a4b 5i6h 7a7b 4g4f 7b8c 3g3f 8c8d 2i3g 4a3b 3f3e 3d3e 3g4e 3c2b 2e2d 6a5b B*6f B*4d 6i7h 3e3f 9g9f 4d6f 7g6f 4c4d";
+		ShogiTest::checkFeature(str4);
 		string str3 = "position startpos moves 2g2f 3c3d 7g7f 4c4d 5i6h 3a3b 4g4f 8b4b 3i4h 5a6b 9g9f 6b7b 9f9e 7b8b 4h4g 9a9b 4g5f 8b9a 8h6f 3b4c 4i5h 6c6d 2f2e 2b3c 6h7h 4a5b 4f4e 7a8b 6i6h 6a7a 6f7g 5c5d 2h2g 5b5c 3g3f 5d5e 2e2d 2c2d 5f5e 4d4e 2i3g 4c5b P*4d P*5d 3g4e 5d5e 4e5c+ 5b5c G*4c N*6e 7g6f 5e5f 5g5f P*5g 5h5i S*3h 2g2h 3h4g 4c5c 4b4d S*6b 5g5h+ 7h8h 5h6h 5i6h 4g5f+ 6b7a+ 8b7a G*6b 7a8b P*4e 4d4e 6f3c+ 2a3c 6g6f B*3i B*6c 3i2h+ 6b7b G*7a 5c6b 7a7b 6b7b S*7g 8i7g 6e7g+ 6h7g 4e4h+ G*7h G*7a N*7e N*8e 7b7a 8e7g+ 8h9g 8b7a 7e8c 9a8b 8c7a+ G*8f 8g8f G*8g 7h8g 7g8g 9g8g R*8i S*8h 4h5g G*7g 5g7g 8g7g 8i7i+ 8h7i 5f6f 7g6f G*6e 6f6g 6e5f 6g7h";
 		ShogiTest::checkFeature(str3);
 		string str2 = "position startpos moves 7g7f 3c3d 8h2b 3a2b 7i8h 2b3c 2g2f 8b2b 5i6h 5a6b B*6e 7c7d 6e4c+ 6c6d 6h7h 4a5b 4c5b 6a5b 9g9f 9c9d 4i5h 6b7b 1g1f 5b6c 5h6h 7b8b 8h7g 8c8d 3i4h 5c5d 1f1e 7a7b 3g3f 3c4d 4g4f 3d3e 6i7i 3e3f 4h4g 4d3e 4g5f 3e4f 2h3h B*2g 3h4h P*4g 4h4g 4f4g+ 5f4g R*4h 4g5f 2g3h+ P*4g 3h2i G*5h 4h4i+ 7i6i 2i1i 1e1d 1c1d 9f9e 9d9e 7h8h 3f3g+ 8h7h L*6a";
@@ -374,6 +373,8 @@ void ShogiTest::test() {
 		ShogiTest::checkFeature(str1);
 	}
 	{
+		string str5 = "position sfen ln5nl/1r2gkgs1/p1ppp2pp/1s3p1P1/1p3N3/P1PS1Pp2/1P1PP3P/2GK2SR1/LN3G2L b Bbp 1";
+		checkRecede(str5, 1);
 		string str4 = "position sfen 1r3g3/l2gk3l/3p4p/2p1+B1p2/p4s3/2P1P1Pb1/1+p1PSP2P/L2S3GL/1NGKNsr2 b N3Pn3p 1";
 		checkRecede(str4, 1);
 		string str3 = "position sfen ln1gk1gnl/2s6/p1p1ppppp/3p3R1/4B4/2P5P/P2PPPP2/L3K4/1+rSG1GSNL w BSPn2p 1";
