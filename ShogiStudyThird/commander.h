@@ -45,8 +45,9 @@ private:
 	std::mutex coutmtx;
 	std::mutex treemtx;
 
-	bool yomikomi_on;
-	std::string yomikomi_file_name;
+	bool yomikomi_on;	//定跡を有効化
+	std::string yomikomi_file_name;	//定跡木の名前(.txtは不要)
+	bool yomikomi_sokuuchi;	//定跡利用時に、評価値が高い手をすぐに打つかどうか
 
 	friend class ShogiTest;
 };

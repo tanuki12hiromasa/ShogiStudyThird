@@ -136,6 +136,7 @@ void Commander::coutOption() {
 	cout << "option name PV_const type string default 0" << endl;
 	cout << "option name yomikomi_on type check default false" << endl;
 	cout << "option name yomikomi_file_name type string default treemake" << endl;
+	cout << "option name yomikomi_sokuuchi type check default false" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -212,6 +213,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "yomikomi_file_name") {
 			yomikomi_file_name = token[4];
+		}
+		else if (token[2] == "yomikomi_sokuuchi") {
+			yomikomi_sokuuchi = (token[4] == "true");
 		}
 	}
 }
@@ -312,18 +316,17 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	}
 
 	//定跡の中から一番良い手を指す
-	static bool josekiF = true;
-	if (josekiF) {
-		//定跡を利用しない
-		if (yomikomi_on == false) {
-			josekiF = false;
+	//static bool josekiF = true;
+	if (yomikomi_on) {
+		if (yomikomi_sokuuchi == false) {
+			yomikomi_on = false;
 		}
 		else {
 			//定跡を使用する
 			auto children = tree.getRoot()->children;
 			if (children.size() == 0) {
 				//子供がいなければ定跡終了
-				josekiF = false;
+				yomikomi_on = false;
 			}
 			else {
 				//一番いい子供を選び、その子供を出力する
@@ -448,11 +451,12 @@ void Commander::position(const std::vector<std::string>& tokens) {
 	const auto prevRoot = tree.getRoot();
 	if (continuousTree) {
 		auto result = tree.set(tokens);
-		if (result.first || yomikomi_on) {
+		if (result.first) {
 			releaseAgentAndBranch(prevRoot, std::move(result.second));
 		}
 		else {
-			tree.makeNewTree(tokens);
+			if(!yomikomi_on)
+				tree.makeNewTree(tokens);
 			releaseAgentAndTree(prevRoot);
 		}
 	}
@@ -514,7 +518,9 @@ void Commander::yomikomi()
 		std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
 	}
 	std::getline(ifs, ss); //sfen
-
+	//std::vector<std::string> sfen = usi::split("position " + ss,' ');
+	//position(sfen);
+		
 	while (1) {
 		std::getline(ifs, ss);
 		if (ifs.eof()) {
@@ -525,7 +531,8 @@ void Commander::yomikomi()
 		st = std::stoi(gyou[1]);			//std::cout << "1 " << gyou[i][1] << std::endl;
 		//oute = std::stoi(gyou[2]);		//std::cout << "2 " << gyou[i][2] << std::endl;
 		//move = Move(gyou[3], 0, oute);	//std::cout << "3 " << gyou[i][3] << std::endl;
-		move = Move(gyou[2].erase(0,1), false);	//std::cout << "3 " << gyou[i][3] << std::endl;
+		std::string sss = gyou[2].erase(0, 1);
+		move = Move(sss, false);	//std::cout << "3 " << gyou[i][3] << std::endl;
 		eval = std::stod(gyou[3]);		//std::cout << "4 " << gyou[i][4] << std::endl;
 		mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
 		j = 6;
@@ -553,5 +560,12 @@ void Commander::yomikomi()
 	Kyokumen kyo = Kyokumen(startpos);
 
 	node = test[0];
+	//node->move = Move("2g2f",false);
 	tree.setRoot(node, kyo, i_max + 1);
+	//tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
+	//auto prev = tree.getRoot();
+	//tree.startKyokumen = Kyokumen(sfen);
+	//tree.proceed(node);
+	//tree.proceed(sfen);
+	//releaseAgentAndTree(prev);
 }
