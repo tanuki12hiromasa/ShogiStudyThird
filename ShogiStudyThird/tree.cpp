@@ -149,11 +149,22 @@ void SearchTree::foutTree()const {
 		const SearchNode* const node = nq.front();
 		nq.pop();
 		int st = static_cast<int>(node->status.load());
+
+		//深さ探索指標が2未満のnodeを削除
+		bool erase = false;
+		if (node->mass < 2) {
+			if (st == static_cast<int>(SearchNode::State::Expanded)) {
+				st = static_cast<int>(SearchNode::State::NotExpanded);
+			}
+			erase = true;
+		}
 		fs << index << ", " << st << ", " << node->move.toUSI() << ", " << node->eval << ", " << node->mass << ", [,";
 		for (const auto c : node->children) {
-			nq.push(c);
-			fs << c_index << ",";
-			c_index++;
+			if (erase == false) {
+				nq.push(c);
+				fs << c_index << ",";
+				c_index++;
+			}
 		}
 		fs << "]\n";
 		index++;
