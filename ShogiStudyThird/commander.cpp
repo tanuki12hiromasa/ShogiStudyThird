@@ -517,8 +517,8 @@ void Commander::yomikomi()
 		std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
 	}
 	std::getline(ifs, ss); //sfen
-	std::string sfen = "position " + ss;
-	tree.makeNewTree(usi::split(sfen, ' '));
+	//std::string sfen = "position " + ss;
+	//tree.makeNewTree(usi::split(sfen, ' '));
 
 	while (1) {
 		std::getline(ifs, ss);
