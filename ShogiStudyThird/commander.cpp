@@ -316,17 +316,17 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	}
 
 	//定跡の中から一番良い手を指す
-	//static bool josekiF = true;
-	if (yomikomi_on) {
+	static bool josekiF = true;
+	if (josekiF) {
 		if (yomikomi_sokuuchi == false) {
-			yomikomi_on = false;
+			josekiF = false;
 		}
 		else {
 			//定跡を使用する
 			auto children = tree.getRoot()->children;
 			if (children.size() == 0) {
 				//子供がいなければ定跡終了
-				yomikomi_on = false;
+				josekiF = false;
 			}
 			else {
 				//一番いい子供を選び、その子供を出力する
@@ -451,12 +451,11 @@ void Commander::position(const std::vector<std::string>& tokens) {
 	const auto prevRoot = tree.getRoot();
 	if (continuousTree) {
 		auto result = tree.set(tokens);
-		if (result.first) {
+		if (result.first || yomikomi_on) {
 			releaseAgentAndBranch(prevRoot, std::move(result.second));
 		}
 		else {
-			if(!yomikomi_on)
-				tree.makeNewTree(tokens);
+			tree.makeNewTree(tokens);
 			releaseAgentAndTree(prevRoot);
 		}
 	}
@@ -518,9 +517,9 @@ void Commander::yomikomi()
 		std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
 	}
 	std::getline(ifs, ss); //sfen
-	//std::vector<std::string> sfen = usi::split("position " + ss,' ');
-	//position(sfen);
-		
+	std::string sfen = "position " + ss;
+	tree.makeNewTree(usi::split(sfen, ' '));
+
 	while (1) {
 		std::getline(ifs, ss);
 		if (ifs.eof()) {
@@ -536,7 +535,6 @@ void Commander::yomikomi()
 		eval = std::stod(gyou[3]);		//std::cout << "4 " << gyou[i][4] << std::endl;
 		mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
 		j = 6;
-		parents.push_back(index);
 		while (1) {		//子ノードのインデックスが読み終わるまでループ
 			if (gyou[j] == "]") break;//1列の終わりならブレイク 
 			parents.push_back(index);	 //親のインデックスを要素として持つ
@@ -560,12 +558,5 @@ void Commander::yomikomi()
 	Kyokumen kyo = Kyokumen(startpos);
 
 	node = test[0];
-	//node->move = Move("2g2f",false);
 	tree.setRoot(node, kyo, i_max + 1);
-	//tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
-	//auto prev = tree.getRoot();
-	//tree.startKyokumen = Kyokumen(sfen);
-	//tree.proceed(node);
-	//tree.proceed(sfen);
-	//releaseAgentAndTree(prev);
 }
