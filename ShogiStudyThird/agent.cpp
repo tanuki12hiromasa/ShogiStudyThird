@@ -137,22 +137,21 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 			}*/
 		}
 		{//子ノード生成
-			const auto moves = MoveGenerator::genMove(node, player.kyokumen);
+			const auto moves = MoveGenerator::genMove(node->move, player.kyokumen);
 			if (moves.empty()) {
 				node->setMate();
 				goto backup;
 			}
-			node->children.reserve(moves.size());//合法手の数だけchildrenの領域を確保しておく(メモリの再確保と過剰確保を抑制する)
+			node->addChildren(moves);
 			newnodecount += moves.size();
-			for (const auto move : moves) {
-				node->addChild(move);
-			}
 		}
+		uint64_t evalcount = 0ull;
 		for (auto child : node->children) {
 			const auto cache = player.proceedC(child->move);
-			qsimulate(child, player, history.size());
+			evalcount += qsimulate(child, player, history.size());
 			player.recede(child->move, cache);
 		}
+		tree.addEvaluationCount(evalcount);
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
 		//sortしたのでfrontが最小値になっているはず
@@ -173,7 +172,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	//バックアップ
 	backup:
 	{
-	for (int i = history.size() - 2; i >= 0; i--) {
+		for (int i = history.size() - 2; i >= 0; i--) {
 			node = history[i];
 			double emin = std::numeric_limits<double>::max();
 			std::vector<dd> emvec;
@@ -213,22 +212,24 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	return newnodecount;
 }
 
-double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, double beta) {
+double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, double beta, uint64_t& evalcount) {
+	evalcount++;
+	const auto eval = Evaluator::evaluate(player);
 	if (depth <= 0) {
-		return Evaluator::evaluate(player);
+		return eval;
 	}
-	alpha = std::max(Evaluator::evaluate(player), alpha);
+	alpha = std::max(eval, alpha);
 	if (alpha >= beta) {
 		return alpha;
 	}
 	auto moves = MoveGenerator::genCapMove(pmove, player.kyokumen);
 	if (moves.empty() || pmove.isOute()) {
-		return Evaluator::evaluate(player);
+		return eval;
 	}
 	for (auto& m : moves) {
 		const FeaureCache cache = player.feature.getCache();
 		const koma::Koma captured = player.proceed(m);
-		alpha = std::max(-alphabeta(m, player, depth - 1, -beta, -alpha), alpha);
+		alpha = std::max(-alphabeta(m, player, depth - 1, -beta, -alpha, evalcount), alpha);
 		player.recede(m, captured, cache);
 		if (alpha >= beta) {
 			return alpha;
@@ -237,32 +238,33 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 	return alpha;
 }
 
-void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p, const int hislength) {
+uint64_t SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p, const int hislength) {
 	const int depth = (QS_relativeDepth) ? (SearchNode::getQSdepth() - hislength) : SearchNode::getQSdepth();
 	if (depth <= 0) {
 		const double eval = Evaluator::evaluate(p);
 		root->setEvaluation(eval);
 		root->setOriginEval(eval);
-		return;
+		return 1ull;
 	}
 	auto moves = MoveGenerator::genCapMove(root->move, player.kyokumen);
 	if (moves.empty()) {
 		if (root->move.isOute()) {
 			root->setMate();
-			return;
+			return 1ull;
 		}
 		else {
 			const double eval = Evaluator::evaluate(p);
 			root->setEvaluation(eval);
 			root->setOriginEval(eval);
-			return;
+			return 1ull;
 		}
 	}
 	double max = Evaluator::evaluate(p);
+	uint64_t evaluationcount = 1ull;
 	for (auto m : moves) {
 		const FeaureCache cache = player.feature.getCache();
 		const koma::Koma captured = player.proceed(m);
-		const double eval = -alphabeta(m, p, depth - 1, std::numeric_limits<double>::lowest(), -max);
+		const double eval = -alphabeta(m, p, depth - 1, std::numeric_limits<double>::lowest(), -max, evaluationcount);
 		if (eval > max) {
 			max = eval;
 		}
@@ -271,7 +273,7 @@ void SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p, const int h
 	root->setEvaluation(max);
 	if (use_original_kyokumen_eval) root->setOriginEval(Evaluator::evaluate(p));
 	else root->setOriginEval(max);
-	return;
+	return evaluationcount;
 }
 
 bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vector<SearchNode*>& searchhis, const SearchNode* const repnode)const {

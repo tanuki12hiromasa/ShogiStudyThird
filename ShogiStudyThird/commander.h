@@ -23,6 +23,9 @@ private:
 	void releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes);
 	void releaseAgentAndTree(SearchNode* const root);
 
+	void searchStatistics(const std::vector<std::string>& token);
+	void evalranking(const int searchtime, const std::string& filename, const std::string& filepos);
+
 	SearchTree tree;
 	std::vector<std::unique_ptr<SearchAgent>> agents;
 	std::unique_ptr<std::thread> deleteThread;
@@ -39,6 +42,8 @@ private:
 	std::atomic_bool go_alive;
 	std::atomic_bool info_enable;
 	std::atomic_bool info_alive;
+	uint64_t info_prev_evcount;
+	std::chrono::time_point<std::chrono::system_clock> info_prevtime;
 
 	std::mutex coutmtx;
 	std::mutex treemtx;

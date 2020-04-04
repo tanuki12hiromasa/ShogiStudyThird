@@ -45,6 +45,14 @@ size_t SearchNode::deleteTree() {
 	return delnum;
 }
 
+void SearchNode::addChildren(const std::vector<Move>& moves) {
+	const auto childrennum = moves.size();
+	children.reserve(childrennum);//合法手の数だけchildrenの領域を確保しておく(メモリの再確保と過剰確保を抑制する)
+	for (size_t i = 0; i < childrennum; i++) {
+		children.push_back(new SearchNode(moves[i]));
+	}
+}
+
 SearchNode* SearchNode::addChild(const Move& move) {
 	SearchNode* child = new SearchNode(move);
 	children.push_back(child);

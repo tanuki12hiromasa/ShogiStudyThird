@@ -15,6 +15,7 @@ public:
 
 	void setNodeMaxsize(const size_t s) { nodesMaxCount = s; }
 	void addNodeCount(const size_t n) { nodecount += n; }
+	void addEvaluationCount(const uint64_t n) { evaluationcount += n; }
 
 	SearchNode* getBestMove()const;//最もevalの高いrootのchildを返す
 	std::vector<SearchNode*> getPV()const;//rootからのpvの連なりを返す
@@ -23,6 +24,7 @@ public:
 	void deleteTree(SearchNode* const root);//rootを含め子孫を全消去する
 
 	const uint64_t getNodeCount() const { return nodecount; }
+	const uint64_t getEvaluationCount()const { return evaluationcount; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
 	const SearchPlayer& getRootPlayer()const { return rootPlayer; }
 	std::pair<unsigned,SearchNode*> findRepetition(const Kyokumen& kyokumen)const;//過去に同一局面が無かったか検索する なければ-1を返す
@@ -36,6 +38,7 @@ private:
 	Kyokumen startKyokumen;
 	SearchPlayer rootPlayer;
 	std::atomic_uint64_t nodecount;
+	std::atomic_uint64_t evaluationcount;
 	std::uint64_t nodesMaxCount;
 
 	bool leave_branchNode;

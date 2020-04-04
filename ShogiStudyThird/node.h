@@ -56,6 +56,7 @@ public:
 	SearchNode(SearchNode&&) = delete;
 
 	size_t deleteTree();//子孫ノードをすべて消す 自身は消さない
+	void addChildren(const std::vector<Move>& moves);
 	SearchNode* addChild(const Move& move);
 	SearchNode* addCopyChild(const SearchNode* const origin);
 
