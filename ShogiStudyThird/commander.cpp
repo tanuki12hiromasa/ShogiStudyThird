@@ -140,7 +140,6 @@ void Commander::coutOption() {
 	cout << "option name PV_const type string default 0" << endl;
 	cout << "option name yomikomi_on type check default false" << endl;
 	cout << "option name yomikomi_file_name type string default treemake" << endl;
-	cout << "option name yomikomi_sokuuchi type check default false" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -217,9 +216,6 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "yomikomi_file_name") {
 			yomikomi_file_name = token[4];
-		}
-		else if (token[2] == "yomikomi_sokuuchi") {
-			yomikomi_sokuuchi = (token[4] == "true");
 		}
 	}
 }
@@ -317,42 +313,6 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::lock_guard<std::mutex> lock(coutmtx);
 		std::cout << "bestmove resign" << std::endl;
 		return;
-	}
-
-	//定跡の中から一番良い手を指す
-	static bool josekiF = true;
-	if (josekiF) {
-		if (yomikomi_sokuuchi == false) {
-			josekiF = false;
-		}
-		else {
-			//定跡を使用する
-			auto children = tree.getRoot()->children;
-			if (children.size() == 0) {
-				//子供がいなければ定跡終了
-				josekiF = false;
-			}
-			else {
-				//一番いい子供を選び、その子供を出力する
-				SearchNode* bestChild = children.front();
-
-				for (auto child : children) {
-					if (-bestChild->eval < -child->eval) {
-						bestChild = child;
-					}
-				}
-
-				std::cout << "info pv " << bestChild->move.toUSI() << " depth " << std::setprecision(2) << bestChild->mass.load() <<
-					" score cp " << static_cast<int>(-bestChild->eval) << " nodes " << tree.getNodeCount() << std::endl;
-				std::cout << "bestmove " << bestChild->move.toUSI() << std::endl;
-
-				auto root = tree.getRoot();
-				tree.proceed(bestChild);
-				releaseAgentAndBranch(root, { bestChild });
-
-				return;
-			}
-		}
 	}
 
 	startAgent();
@@ -521,8 +481,8 @@ void Commander::yomikomi()
 		std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
 	}
 	std::getline(ifs, ss); //sfen
-	std::string sfen = "position " + ss;
-	tree.makeNewTree(usi::split(sfen, ' '));
+	//std::string sfen = "position " + ss;
+	//tree.makeNewTree(usi::split(sfen, ' '));
 
 	while (1) {
 		std::getline(ifs, ss);
