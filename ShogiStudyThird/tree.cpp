@@ -147,21 +147,74 @@ void SearchTree::foutTree()const {
 	size_t c_index = 1;
 	while (!nq.empty()) {
 		const SearchNode* const node = nq.front();
+		nq.pop(); 
+		int st = static_cast<int>(node->status.load());
+		fs << index << ", " << st << ", " << node->move.toUSI() << ", " << node->eval << ", " << node->mass << ", [,";
+		for (const auto c : node->children) {
+			nq.push(c);
+			fs << c_index << ",";
+			c_index++;
+		}
+		fs << "]\n";
+		index++;
+	}
+	fs.close();
+}
+
+void SearchTree::foutJoseki()const {
+	std::ofstream fs("treelog.txt");
+	//nodeの選択確率をfirstに格納
+	using ds = std::pair<double, SearchNode*>;
+	std::queue<ds> nq;
+	fs << rootPlayer.kyokumen.toSfen() << "\n";
+	nq.push(ds(1,history.front()));
+	size_t index = 0;
+	size_t c_index = 1;
+	while (!nq.empty()) {
+		const ds dnode = nq.front();
+		SearchNode* const node = dnode.second;
 		nq.pop();
 		int st = static_cast<int>(node->status.load());
 
-		//深さ探索指標が2未満のnodeを削除
+		std::vector<double>childSelect;	//childそれぞれの選択確率
+		static double T_r = 100;	//温度を仮置き
+
 		bool erase = false;
-		if (node->mass < 2) {
+		//選択確率が一定以下のnodeを削除
+		if (dnode.first < 0.0001) {
 			if (st == static_cast<int>(SearchNode::State::Expanded)) {
 				st = static_cast<int>(SearchNode::State::NotExpanded);
 			}
 			erase = true;
 		}
+		else {
+			//選択確率の計算
+
+			//ノード評価値と、その最小値を求める
+			double emin = std::numeric_limits<double>::max();
+			std::vector<double> evec;
+			for (const auto& child : node->children) {
+				const double eval = child->getEvaluation();
+				evec.push_back(eval);
+				if (eval < emin) {
+					emin = eval;
+				}
+			}
+			//ボルツマン分布の分母Z_rを求める
+			double Z_r = 0;
+			for (const auto& eval : evec) {
+				Z_r += std::exp(-(eval - emin) / T_r);
+			}
+			//ボルツマン分布による選択確率を、childSelectに収める
+			for (const auto& eval : evec) {
+				childSelect.push_back(std::exp(-(eval - emin) / T_r) / Z_r);
+			}
+		}
 		fs << index << ", " << st << ", " << node->move.toUSI() << ", " << node->eval << ", " << node->mass << ", [,";
-		for (const auto c : node->children) {
+		for (int i = 0; i < node->children.size();++i) {
 			if (erase == false) {
-				nq.push(c);
+				double s = childSelect[i] * dnode.first;
+				nq.push(ds(s, node->children[i]));
 				fs << c_index << ",";
 				c_index++;
 			}
