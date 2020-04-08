@@ -162,7 +162,8 @@ void SearchTree::foutTree()const {
 }
 
 void SearchTree::foutJoseki()const {
-	std::ofstream fs("treelog.txt");
+	std::ofstream fs("treejoseki.txt");
+	//std::ofstream fse("treejoseki_kakuritu.txt");
 	//nodeの選択確率をfirstに格納
 	using ds = std::pair<double, SearchNode*>;
 	std::queue<ds> nq;
@@ -181,7 +182,7 @@ void SearchTree::foutJoseki()const {
 
 		bool erase = false;
 		//選択確率が一定以下のnodeを削除
-		if (dnode.first < 0.0001) {
+		if (dnode.first < 0.00001) {
 			if (st == static_cast<int>(SearchNode::State::Expanded)) {
 				st = static_cast<int>(SearchNode::State::NotExpanded);
 			}
@@ -220,6 +221,7 @@ void SearchTree::foutJoseki()const {
 			}
 		}
 		fs << "]\n";
+		//fse << index << "," << dnode.first << std::endl;
 		index++;
 	}
 	fs.close();
