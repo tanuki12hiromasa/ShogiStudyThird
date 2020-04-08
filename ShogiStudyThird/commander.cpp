@@ -87,6 +87,10 @@ void Commander::execute() {
 			//読み込みを実行
 			commander.yomikomi();
 		}
+		else if (tokens[0] == "foutjoseki") {
+			commander.tree.foutJoseki();
+			std::cout << "foutjoseki: done" << std::endl;
+		}
 	}
 }
 
