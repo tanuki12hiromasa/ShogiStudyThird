@@ -412,17 +412,14 @@ void Commander::position(const std::vector<std::string>& tokens) {
 	if (continuousTree) {
 		auto result = tree.set(tokens);
 		if (result.first) {
-			std::cout << "A" << std::endl;
 			releaseAgentAndBranch(prevRoot, std::move(result.second));
 		}
 		else {
 			if (!yomikomi_on) {
-				std::cout << "B" << std::endl;
 				tree.makeNewTree(tokens);
 				releaseAgentAndTree(prevRoot);
 			}
 			else {
-				std::cout << "C" << std::endl;
 				yomikomi_on = false;
 			}
 		}
@@ -521,7 +518,7 @@ void Commander::yomikomi()
 	std::cout << "end \"Yomikomi!\" " << std::endl;
 	i_max = i;
 	std::vector<std::string> startpos;
-	startpos.push_back("position");
+	startpos.push_back(" ");
 	startpos.push_back("startpos");
 	Kyokumen kyo = Kyokumen(startpos);
 
