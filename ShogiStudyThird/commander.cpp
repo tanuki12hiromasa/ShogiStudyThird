@@ -527,5 +527,5 @@ void Commander::yomikomi()
 	Kyokumen kyo = Kyokumen(startpos);
 
 	node = test[0];
-	tree.setRoot(node, kyo, i_max + 1);
+	tree.setRoot(node, kyo, i_max);
 }
