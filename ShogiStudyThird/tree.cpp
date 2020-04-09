@@ -162,12 +162,12 @@ void SearchTree::foutTree()const {
 }
 
 void SearchTree::foutJoseki()const {
-	std::ofstream fs("treejoseki.txt");
-	//std::ofstream fse("treejoseki_kakuritu.txt");
+	std::ofstream fs("treelog.txt");
 	//nodeの選択確率をfirstに格納
 	using ds = std::pair<double, SearchNode*>;
 	std::queue<ds> nq;
-	fs << rootPlayer.kyokumen.toSfen() << "\n";
+	//fs << rootPlayer.kyokumen.toSfen() << "\n";
+	fs << startKyokumen.toSfen() << "\n";
 	nq.push(ds(1,history.front()));
 	size_t index = 0;
 	size_t c_index = 1;
@@ -182,7 +182,7 @@ void SearchTree::foutJoseki()const {
 
 		bool erase = false;
 		//選択確率が一定以下のnodeを削除
-		if (dnode.first < 0.00001) {
+		if (dnode.first < 0.05) {
 			if (st == static_cast<int>(SearchNode::State::Expanded)) {
 				st = static_cast<int>(SearchNode::State::NotExpanded);
 			}
@@ -214,14 +214,13 @@ void SearchTree::foutJoseki()const {
 		fs << index << ", " << st << ", " << node->move.toUSI() << ", " << node->eval << ", " << node->mass << ", [,";
 		for (int i = 0; i < node->children.size();++i) {
 			if (erase == false) {
-				double s = childSelect[i] * dnode.first;
+				double s = childSelect[i]/* * dnode.first*/;
 				nq.push(ds(s, node->children[i]));
 				fs << c_index << ",";
 				c_index++;
 			}
 		}
 		fs << "]\n";
-		//fse << index << "," << dnode.first << std::endl;
 		index++;
 	}
 	fs.close();
