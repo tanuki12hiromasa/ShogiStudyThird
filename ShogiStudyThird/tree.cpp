@@ -162,8 +162,8 @@ void SearchTree::foutTree()const {
 }
 
 void SearchTree::foutJoseki()const {
-	std::ofstream fs("treelog.txt");
-	std::ofstream fsk("treelog_kakuritu.txt");
+	std::ofstream fs("treejoseki.txt");
+	std::ofstream fsk("treejoseki_kakuritu.txt");
 	//nodeの選択確率をfirstに格納
 	using ds = std::pair<double, SearchNode*>;
 	std::queue<ds> nq;
