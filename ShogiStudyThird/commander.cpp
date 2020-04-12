@@ -473,6 +473,7 @@ void Commander::evalranking(const int searchtime,const std::string& filename,con
 		return;
 	}
 	fs << std::fixed << std::setprecision(2);
+	fs << tree.getRootPlayer().kyokumen.toSfen() << "\n";
 	tree.evaluationcount = 0ull;
 	info_alive = false;
 	startAgent();
