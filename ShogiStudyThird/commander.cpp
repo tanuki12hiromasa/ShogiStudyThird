@@ -469,7 +469,7 @@ void Commander::yomikomi()
 	SearchNode* node = NULL;
 	std::vector<int> parents = {};
 	parents.push_back(-1);
-	//bool oute;
+	bool oute;
 	int index = 0;
 	int	st = 0;
 	double eval = 0.0;
@@ -493,15 +493,15 @@ void Commander::yomikomi()
 		auto gyou = usi::split(ss, ',');
 		index = std::stoi(gyou[0]);		//std::cout << "0 " << gyou[i][0] << std::endl;
 		st = std::stoi(gyou[1]);			//std::cout << "1 " << gyou[i][1] << std::endl;
-		//oute = std::stoi(gyou[2]);		//std::cout << "2 " << gyou[i][2] << std::endl;
+		oute = std::stoi(gyou[2]);		//std::cout << "2 " << gyou[i][2] << std::endl;
 		//move = Move(gyou[3], 0, oute);	//std::cout << "3 " << gyou[i][3] << std::endl;
-		std::string sss = gyou[2].erase(0, 1);
+		std::string sss = gyou[2];
 		move = Move(sss, false);	//std::cout << "3 " << gyou[i][3] << std::endl;
 		eval = std::stod(gyou[3]);		//std::cout << "4 " << gyou[i][4] << std::endl;
 		mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
 		j = 6;
 		while (1) {		//子ノードのインデックスが読み終わるまでループ
-			if (gyou[j] == "]") break;//1列の終わりならブレイク 
+			if (gyou[j] == "]") break;//1列の終わりならブレイク
 			parents.push_back(index);	 //親のインデックスを要素として持つ
 			j++;	//]のチェック用
 		}
@@ -510,6 +510,7 @@ void Commander::yomikomi()
 			test.push_back(node->restoreNode(Move(), st, eval, mass));
 		}
 		else {
+			move.setOute(oute);
 			test.push_back(node->restoreNode(move, st, eval, mass));
 			test[parents[index]]->children.push_back(test[index]);
 		}
