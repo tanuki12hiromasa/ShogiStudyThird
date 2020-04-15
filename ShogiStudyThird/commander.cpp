@@ -511,7 +511,7 @@ void Commander::yomikomi()
 		}
 
 		if (index == 0) {//1つ目は親なし
-			test.push_back(node->restoreNode(move, st, eval, mass));
+			test.push_back(node->restoreNode(Move(), st, eval, mass));
 		}
 		else {
 			test.push_back(node->restoreNode(move, st, eval, mass));
