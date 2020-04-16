@@ -49,7 +49,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 	//選択
 	while (!node->isLeaf()) {
 		double CE = std::numeric_limits<double>::max();
-		std::vector<dn> evals;
+		std::vector<dn> evals; evals.reserve(node->children.size());
 		for (const auto& child : node->children) {
 			if (child->isSearchable()) {
 				double eval = child->getEs();
@@ -175,7 +175,7 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 		for (int i = history.size() - 2; i >= 0; i--) {
 			node = history[i];
 			double emin = std::numeric_limits<double>::max();
-			std::vector<dd> emvec;
+			std::vector<dd> emvec; emvec.reserve(node->children.size());
 			for (const auto& child : node->children) {
 				const double eval = child->getEvaluation();
 				const double mass = child->mass;

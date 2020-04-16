@@ -268,7 +268,7 @@ SearchNode* SearchNode::getBestChild()const {
 			double min = std::numeric_limits<double>::max();
 			for (const auto child : children) {
 				const double ce = child->eval;
-				if (child->mass >= dbound && ce < min) {
+				if ((ce <= -mateScoreBound || min >= mateScoreBound || child->mass >= dbound) && ce < min) {
 					min = ce;
 					best = child;
 				}
@@ -288,4 +288,27 @@ SearchNode* SearchNode::getBestChild()const {
 			}
 		}
 	}
+}
+
+double SearchNode::getChildRate(SearchNode* const child, const double T)const {
+	using dn = std::pair<double, SearchNode*>;
+	double emin = std::numeric_limits<double>::max();
+	std::vector<dn> nodes; nodes.reserve(children.size());
+	for (const auto c : children) {
+		const double e = c->eval;
+		nodes.push_back(std::make_pair(e, c));
+		if (e < emin) {
+			emin = e;
+		}
+	}
+	double Z = 0;
+	double childexp = 0;
+	for (const auto node : nodes) {
+		const double exp = std::exp(-(node.first - emin) / T);
+		Z += exp;
+		if (node.second == child) {
+			childexp = exp;
+		}
+	}
+	return childexp / Z;
 }

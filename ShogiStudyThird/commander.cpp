@@ -48,7 +48,7 @@ void Commander::execute() {
 			commander.go(tokens);
 		}
 		else if (tokens[0] == "stop") {
-			commander.chakushu();
+			commander.chakushu(commander.tree.getBestMove());
 		}
 		else if (tokens[0] == "fouttree") {
 			commander.tree.foutTree();
@@ -130,6 +130,7 @@ void Commander::coutOption() {
 	cout << "option name NodeMaxNum type string default 100000000" << endl;
 	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
 	cout << "option name PV_const type string default 0" << endl;
+	cout << "option name overhead_time type spin default 200 min 0 max 10000" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -200,6 +201,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "PV_const") {
 			SearchNode::setPVConst(std::stod(token[4]));
+		}
+		else if (token[2] == "overhead_time") {
+			time_overhead = std::chrono::milliseconds(std::stoi(token[4]));
 		}
 	}
 }
@@ -306,24 +310,79 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	go_alive = false;
 	if(go_thread.joinable()) go_thread.join();
 	go_alive = true;
+	if (tp.rule == TimeProperty::TimeRule::infinite) return;
 	go_thread = std::thread([this,tp]() {
 		using namespace std::chrono_literals;
 		const auto starttime = std::chrono::system_clock::now();
 		const SearchNode* root = tree.getRoot();
-		if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
-			do {
-				auto t = std::max((tp.added / 5), 50ms);
-				std::this_thread::sleep_for(t);
-			} while (((std::chrono::system_clock::now()-starttime) < tp.added - 110ms)
-				&& std::abs(root->eval) < SearchNode::getMateScoreBound());
-			chakushu();
+		const auto timelimit = decide_timelimit(tp);
+		auto searchtime = timelimit.first;//探索時間
+		SearchNode* provisonalBestMove = nullptr;//暫定着手
+		double provisonal_pi = 0;//暫定着手の方策
+		SearchNode* recentBestNode = nullptr;//直前の最善ノード
+		double pi_average = 0;//最善手の方策の時間平均
+		int continuous_counter = 0;//最善手が同じまま連続している回数
+		int extend_times = 0;//延長した回数
+		constexpr int extend_times_limit = 2;
+		std::cout << "info string time:" << timelimit.first.count() << ", " << timelimit.second.count() << std::endl;
+		while (std::abs(root->eval) < SearchNode::getMateScoreBound()) {
+			constexpr auto sleeptime = 50ms;
+			std::this_thread::sleep_for(sleeptime);
+			const auto bestnode = root->getBestChild();
+			const double pi = root->getChildRate(bestnode, 40);
+			if (bestnode == recentBestNode) { //最善ノードが変わっていない
+				pi_average = (pi_average * continuous_counter + pi) / ((double)continuous_counter + 1);
+				continuous_counter++;
+				if (continuous_counter > 4) { //一定回数以上最善が不変であれば信頼できるとして暫定着手とする
+					provisonalBestMove = recentBestNode;
+					provisonal_pi = pi_average;
+				}
+			}
+			else {
+				pi_average = pi;
+				continuous_counter = 1;
+			}
+			//即指しの条件を満たしたら指す
+			if (continuous_counter * sleeptime > searchtime / 2) {
+				break;
+			}
+			//標準時間になったら指すか決める もし拮抗している局面なら時間を延長する
+			if (std::chrono::system_clock::now() - starttime >= searchtime) {
+				if (provisonal_pi < 0.4 && ++extend_times <= extend_times_limit) {
+					searchtime += timelimit.first;
+				}
+				else {
+					break;
+				}
+			}
+			//時間上限になったら指す
+			if (std::chrono::system_clock::now() - starttime >= timelimit.second) {
+				break;
+			}
+			recentBestNode = bestnode;
 		}
-		else {
-			std::this_thread::sleep_for(5s);
-			chakushu();
-		}
+		if (provisonalBestMove == nullptr) recentBestNode;
+		chakushu(provisonalBestMove);
 	});
 	info_enable = true;
+}
+
+//first:標準的な思考時間 second:思考時間の上限
+std::pair<std::chrono::milliseconds, std::chrono::milliseconds> Commander::decide_timelimit(const TimeProperty time)const {
+	constexpr int estimate_movesnum = 120;
+	switch (time.rule) {
+		case TimeProperty::TimeRule::byoyomi: {
+			const auto standerd_time = std::max(time.left / std::max(estimate_movesnum - tree.getMoveNum(), 5), time.added) - time_overhead;
+			const auto limit_time = time.left + time.added - time_overhead;
+			return std::make_pair(standerd_time, limit_time);
+		}
+		case TimeProperty::TimeRule::fischer: {
+			const int expected_movesleft = std::max(estimate_movesnum - tree.getMoveNum(), 2);
+			const auto standerd_time = time.left / expected_movesleft + time.added - time_overhead;
+			const auto limit_time = time.left + time.added - time_overhead;
+			return std::make_pair(standerd_time, limit_time);
+		}
+	}
 }
 
 void Commander::info() {
@@ -360,7 +419,7 @@ void Commander::info() {
 	}
 }
 
-void Commander::chakushu() {
+void Commander::chakushu(SearchNode* const bestchild) {
 	std::lock_guard<std::mutex> clock(coutmtx);
 	std::lock_guard<std::mutex> tlock(treemtx);
 	stopAgent();
@@ -376,21 +435,17 @@ void Commander::chakushu() {
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
-	const auto PV = tree.getPV();
-	std::string pvstr;
-	if (PV.size() >= 2) {
-		for (int i = 1; i < 15 && i < PV.size() && PV[i] != nullptr; i++) pvstr += PV[i]->move.toUSI() + ' ';
-		const auto& root = PV[0];
-		std::cout << std::fixed;
-		std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << (PV.size() - 1)
-			<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
-	}
-	const auto bestchild = tree.getBestMove();
 	if (bestchild == nullptr) {
 		//std::cout << "info string error no children" << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
+	std::string pvstr;
+	int depth = 1;
+	for (SearchNode* node = bestchild; depth < 15 && node != nullptr; depth++,node = node->getBestChild()) pvstr += node->move.toUSI() + ' ';
+	std::cout << std::fixed;
+	std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << depth
+		<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
 	releaseAgentAndBranch(root, {bestchild});

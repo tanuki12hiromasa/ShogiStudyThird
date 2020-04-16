@@ -17,8 +17,9 @@ private:
 	void startAgent();
 	void stopAgent();
 	void go(const std::vector<std::string>& tokens);
+	std::pair<std::chrono::milliseconds, std::chrono::milliseconds> decide_timelimit(const TimeProperty time)const;
 	void info();
-	void chakushu();
+	void chakushu(SearchNode* const bestmove);
 	void position(const std::vector<std::string>& tokens);
 	void releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes);
 	void releaseAgentAndTree(SearchNode* const root);
@@ -36,6 +37,7 @@ private:
 	double Ts_max = 200;
 	int TsDistFuncNum = 0;
 	std::vector<double> TsDistribution;
+	std::chrono::milliseconds time_overhead {150};
 
 	std::thread go_thread;
 	std::thread info_thread;
