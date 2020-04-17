@@ -493,10 +493,9 @@ void Commander::yomikomi()
 		auto gyou = usi::split(ss, ',');
 		index = std::stoi(gyou[0]);		//std::cout << "0 " << gyou[i][0] << std::endl;
 		st = std::stoi(gyou[1]);			//std::cout << "1 " << gyou[i][1] << std::endl;
-		oute = std::stoi(gyou[2]);		//std::cout << "2 " << gyou[i][2] << std::endl;
+		//oute = std::stoi(gyou[2]);		//std::cout << "2 " << gyou[i][2] << std::endl;
 		//move = Move(gyou[3], 0, oute);	//std::cout << "3 " << gyou[i][3] << std::endl;
-		std::string sss = gyou[2];
-		move = Move(sss, false);	//std::cout << "3 " << gyou[i][3] << std::endl;
+		move = Move(std::stoi(gyou[2]));	//std::cout << "3 " << gyou[i][3] << std::endl;
 		eval = std::stod(gyou[3]);		//std::cout << "4 " << gyou[i][4] << std::endl;
 		mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
 		j = 6;
@@ -507,10 +506,9 @@ void Commander::yomikomi()
 		}
 
 		if (index == 0) {//1つ目は親なし
-			test.push_back(node->restoreNode(Move(), st, eval, mass));
+			test.push_back(node->restoreNode(move, st, eval, mass));
 		}
 		else {
-			move.setOute(oute);
 			test.push_back(node->restoreNode(move, st, eval, mass));
 			test[parents[index]]->children.push_back(test[index]);
 		}
