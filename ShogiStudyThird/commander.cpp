@@ -460,6 +460,8 @@ void Commander::releaseAgentAndTree(SearchNode* const root) {
 
 void Commander::yomikomi()
 {
+	time_t startTime = clock();
+
 	std::string ss;
 	int i = 0, j = 0;
 	std::ifstream ifs;
@@ -523,4 +525,7 @@ void Commander::yomikomi()
 
 	node = test[0];
 	tree.setRoot(node, kyo, i_max);
+
+	time_t endTime = clock();
+	std::cout << "計測時間：" << endTime - startTime << std::endl;
 }
