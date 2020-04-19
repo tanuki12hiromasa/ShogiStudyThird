@@ -17,6 +17,7 @@ public:
 	Move(const std::string& usi, bool teban)
 		:Move(usiToFrom(usi,teban),usiToTo(usi),usiToPromote(usi))
 	{}
+	Move(std::uint16_t _u) :u(_u) {}
 
 	void setOute(bool isOute) { u = (u & 0x7FFFu) | (isOute << 15); }
 

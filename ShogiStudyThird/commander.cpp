@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <sstream>
 
 void Commander::execute() {
 	Commander commander;
@@ -462,71 +463,129 @@ void Commander::releaseAgentAndTree(SearchNode* const root) {
 	agents.clear();
 }
 
+//1行読みこむ。返り値は子供のindex
+static std::vector<int> yomikomiLine(const std::vector<std::string> &lines, SearchNode**& sn, int*& parents, const int index) {
+	std::vector<int> childIndexes;
+	std::string ss = lines[index + 1];
+	auto gyou = usi::split(ss, ',');
+	int st = std::stoi(gyou[1]);			//std::cout << "1 " << gyou[i][1] << std::endl;
+	Move move = Move(std::stoi(gyou[2]));	//std::cout << "3 " << gyou[i][3] << std::endl;
+	double eval = std::stod(gyou[3]);		//std::cout << "4 " << gyou[i][4] << std::endl;
+	double mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
+	for(int i = 5;i < gyou.size();++i) {		//子ノードのインデックスが読み終わるまでループ
+		std::string childIndex = gyou[i];
+		childIndexes.push_back(std::stoi(childIndex));
+		parents[childIndexes.back()] = index;	 //親のインデックスを要素として持つ
+	}
+
+	if (index == 0) {//1つ目は親なし
+		sn[index] = (SearchNode::restoreNode(move, st, eval, mass));
+	}
+	else {
+		sn[index] = (SearchNode::restoreNode(move, st, eval, mass));
+		sn[parents[index]]->children.push_back(sn[index]);
+	}
+
+	return childIndexes;
+}
+
+//indexとその子供を再帰的に読みこむ
+static void yomikomiRecursive(const std::vector<std::string>& lines, SearchNode**& sn, int*& parents, const int index) {
+	auto children = yomikomiLine(lines, sn, parents, index);
+	for (auto c : children) {
+		yomikomiRecursive(lines, sn, parents, c);
+	}
+}
+
+//指定された深さまで読みこみ、子供たちを返す。0で指定されたindexのみ。並列処理はしない
+static std::vector<int> yomikomiDepth(const std::vector<std::string>& lines, SearchNode**& sn, int*& parents, const int index,const int depth) {
+	auto c = yomikomiLine(lines, sn, parents, index);
+	if (depth == 0) {
+		return c;
+	}
+	else {
+		std::vector<int>children;
+		for (auto ch : c) {
+			auto v = yomikomiDepth(lines, sn, parents, ch, depth - 1);
+			children.insert(children.end(),v.begin(),v.end());
+		}
+		return children;
+	}
+}
+
+//子供を評価値順に並べ替えていく。読み込み前後で木が同一であることを確認するために使用
+void Commander::sortChildren(SearchNode* node) {
+	//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
+	std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
+	for (auto c : node->children) {
+		sortChildren(c);
+	}
+}
+
 void Commander::yomikomi()
 {
-	std::string ss;
-	int i = 0, j = 0;
-	std::ifstream ifs;
-	size_t i_max = 0;
-	std::vector<SearchNode*> test;
+	//実行時間計測用
+	time_t startTime = clock();
 
-	SearchNode* node = NULL;
-	std::vector<int> parents = {};
-	parents.push_back(-1);
-	bool oute;
-	int index = 0;
-	int	st = 0;
-	double eval = 0.0;
-	double mass = 0.0;
-	Move move;
-	std::cout << "start \"Yomikomi!\" " << std::endl;
-	static int num = 0;
-	ifs.open(yomikomi_file_name + ".txt");
+	int i = 0, j = 0;
+	//読みこむ木の入ったファイルを開く
+	std::ifstream ifs(yomikomi_file_name + ".txt");
 	if (ifs.fail()) {
 		std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+		assert(ifs.fail());
 	}
-	std::getline(ifs, ss); //sfen
-	//std::string sfen = "position " + ss;
-	//tree.makeNewTree(usi::split(sfen, ' '));
 
-	while (1) {
-		std::getline(ifs, ss);
-		if (ifs.eof()) {
-			break;//ファイルの終わりならブレイク
-		}
-		auto gyou = usi::split(ss, ',');
-		index = std::stoi(gyou[0]);		//std::cout << "0 " << gyou[i][0] << std::endl;
-		st = std::stoi(gyou[1]);			//std::cout << "1 " << gyou[i][1] << std::endl;
-		oute = std::stoi(gyou[2]);		//std::cout << "2 " << gyou[i][2] << std::endl;
-		//move = Move(gyou[3], 0, oute);	//std::cout << "3 " << gyou[i][3] << std::endl;
-		std::string sss = gyou[2];
-		move = Move(sss, false);	//std::cout << "3 " << gyou[i][3] << std::endl;
-		eval = std::stod(gyou[3]);		//std::cout << "4 " << gyou[i][4] << std::endl;
-		mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
-		j = 6;
-		while (1) {		//子ノードのインデックスが読み終わるまでループ
-			if (gyou[j] == "]") break;//1列の終わりならブレイク
-			parents.push_back(index);	 //親のインデックスを要素として持つ
-			j++;	//]のチェック用
-		}
+	//ファイルの中身を全てコピーする
+	std::stringstream buf;
+	buf << ifs.rdbuf();
+	ifs.close();
 
-		if (index == 0) {//1つ目は親なし
-			test.push_back(node->restoreNode(Move(), st, eval, mass));
-		}
-		else {
-			move.setOute(oute);
-			test.push_back(node->restoreNode(move, st, eval, mass));
-			test[parents[index]]->children.push_back(test[index]);
-		}
-		i++;
+	std::cout << "ファイル読みこみ終了時間：" << clock() - startTime << std::endl;
+
+	//読みこんだものを行に分けて保存する
+	std::vector<std::string> lines = usi::split(buf.str(), '\n');
+	//行の数。1行目はsfenなため1引いてある
+	int lineCount = lines.size() - 1;
+	//ノードと親の領域を必要な数だけ確保
+	SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * lineCount);
+	int* parents = (int*)malloc(sizeof(int) * lineCount);
+
+	int index = 0;
+	//std::vector<int>childIndexes(lineCount);
+
+
+	std::cout << "分割終了時間：" << clock() - startTime << std::endl;
+
+	std::cout << "start \"Yomikomi!\" " << std::endl;
+
+	int depth = 1;
+	std::vector<int>childrenToThread = yomikomiDepth(lines, nodes, parents, index, depth);
+
+	std::cout << "スレッド化前準備完了：" << clock() - startTime << std::endl;
+
+	//再帰的に読みこむ
+	std::vector<std::thread> thr;
+	for (auto c : childrenToThread) {
+		thr.push_back(std::thread(yomikomiRecursive, std::ref(lines), std::ref(nodes), std::ref(parents), c));
 	}
+	for (int i = 0; i < thr.size();++i) {
+		thr[i].join();
+	}
+	std::cout << "読みこみ完了：" << clock() - startTime << std::endl;
+
+	//depth直後が評価値順ではないので修正する
+	sortChildren(nodes[0]);
+	std::cout << "並べ替え完了：" << clock() - startTime << std::endl;
+
 	std::cout << "end \"Yomikomi!\" " << std::endl;
-	i_max = i;
+	
+	//初期局面の作成(まだ初期状態から弄ってない)
 	std::vector<std::string> startpos;
 	startpos.push_back(" ");
 	startpos.push_back("startpos");
 	Kyokumen kyo = Kyokumen(startpos);
 
-	node = test[0];
-	tree.setRoot(node, kyo, i_max);
+	tree.setRoot(nodes[0], kyo, lines.size() - 1);
+
+	std::cout << "総時間：" << clock() - startTime << std::endl;
 }
