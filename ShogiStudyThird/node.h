@@ -77,7 +77,7 @@ public:
 	double getEs()const;
 	SearchNode* getBestChild()const;
 
-	SearchNode* restoreNode(const Move& move, int st, double eval, double mass);
+	static SearchNode* restoreNode(const Move& move, int st, double eval, double mass);
 
 private:
 	double getTcMcVariance()const;
