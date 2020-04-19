@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#include <sstream>
+
 
 void Commander::execute() {
 	Commander commander;
@@ -460,17 +462,17 @@ void Commander::releaseAgentAndTree(SearchNode* const root) {
 
 void Commander::yomikomi()
 {
+	//実行時間計測用
 	time_t startTime = clock();
 
 	std::string ss;
 	int i = 0, j = 0;
 	std::ifstream ifs;
 	size_t i_max = 0;
-	std::vector<SearchNode*> test;
+	SearchNode* *nodes;
 
 	SearchNode* node = NULL;
-	std::vector<int> parents = {};
-	parents.push_back(-1);
+	int* parents;
 	bool oute;
 	int index = 0;
 	int	st = 0;
@@ -483,13 +485,22 @@ void Commander::yomikomi()
 	if (ifs.fail()) {
 		std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
 	}
-	std::getline(ifs, ss); //sfen
+
+	std::stringstream buf;
+	buf << ifs.rdbuf();
+	ifs.close();
+
+	auto gyougoto = usi::split(buf.str(), '\n');
+	nodes = (SearchNode**)malloc(sizeof(SearchNode*) * gyougoto.size());
+	parents = (int*)malloc(sizeof(int) * gyougoto.size());
+
+	std::getline(buf, ss); //sfen
 	//std::string sfen = "position " + ss;
 	//tree.makeNewTree(usi::split(sfen, ' '));
 
 	while (1) {
-		std::getline(ifs, ss);
-		if (ifs.eof()) {
+		std::getline(buf, ss);
+		if (buf.eof()) {
 			break;//ファイルの終わりならブレイク
 		}
 		auto gyou = usi::split(ss, ',');
@@ -502,17 +513,18 @@ void Commander::yomikomi()
 		mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
 		j = 6;
 		while (1) {		//子ノードのインデックスが読み終わるまでループ
-			if (gyou[j] == "]") break;//1列の終わりならブレイク
-			parents.push_back(index);	 //親のインデックスを要素として持つ
+			auto childIndex = gyou[j];
+			if (childIndex == "]") break;//1列の終わりならブレイク
+			parents[std::stoi(childIndex)] = index;	 //親のインデックスを要素として持つ
 			j++;	//]のチェック用
 		}
 
 		if (index == 0) {//1つ目は親なし
-			test.push_back(node->restoreNode(move, st, eval, mass));
+			nodes[index] = (node->restoreNode(move, st, eval, mass));
 		}
 		else {
-			test.push_back(node->restoreNode(move, st, eval, mass));
-			test[parents[index]]->children.push_back(test[index]);
+			nodes[index] = (node->restoreNode(move, st, eval, mass));
+			nodes[parents[index]]->children.push_back(nodes[index]);
 		}
 		i++;
 	}
@@ -523,7 +535,7 @@ void Commander::yomikomi()
 	startpos.push_back("startpos");
 	Kyokumen kyo = Kyokumen(startpos);
 
-	node = test[0];
+	node = nodes[0];
 	tree.setRoot(node, kyo, i_max);
 
 	time_t endTime = clock();
