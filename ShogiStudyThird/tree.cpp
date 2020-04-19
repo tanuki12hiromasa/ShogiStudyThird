@@ -161,6 +161,13 @@ void SearchTree::foutTree()const {
 	fs.close();
 }
 
+static void sortDepth(SearchNode* node) {
+	std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
+	for (auto c : node->children) {
+		sortDepth(c);
+	}
+}
+
 void SearchTree::foutJoseki()const {
 	std::ofstream fs("treejoseki.txt");
 	std::queue<SearchNode*> nq;
@@ -168,17 +175,20 @@ void SearchTree::foutJoseki()const {
 	nq.push(history.front());
 	size_t index = 0;
 	size_t c_index = 1;
+
+	sortDepth(nq.front());
+
 	while (!nq.empty()) {
 		const SearchNode* const node = nq.front();
 		nq.pop();
 		int st = static_cast<int>(node->status.load());
-		fs << index << "," << st << "," << node->move.isOute() << "," << node->move.toUSI() << "," << node->eval << "," << node->mass << ",[,";
+		fs << index << "," << st << "," << node->move.getU() << "," << node->eval << "," << node->mass;
 		for (const auto c : node->children) {
 			nq.push(c);
-			fs << c_index << ",";
+			fs << "," << c_index;
 			c_index++;
 		}
-		fs << "]\n";
+		fs << "\n";
 		index++;
 	}
 	fs.close();
