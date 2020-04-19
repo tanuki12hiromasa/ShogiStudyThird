@@ -50,6 +50,8 @@ public:
 	static void setEsFuncParam(const double c) { Es_c = c; }
 	static void setPVFuncCode(const int code) { PV_FuncCode = code; }
 	static void setPVConst(const double b) { PV_c = b; }
+
+	static void sortChildren(SearchNode* node);
 public:
 	SearchNode(const Move& move);
 	SearchNode(const SearchNode&) = delete;

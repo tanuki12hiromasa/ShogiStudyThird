@@ -131,6 +131,15 @@ SearchNode* SearchNode::restoreNode(const Move& move, int st, double eval, doubl
 	return child;
 }
 
+//子供を評価値順に並べ替えていく。読み込み前後で木が同一であることを確認するために使用
+void SearchNode::sortChildren(SearchNode* node) {
+	//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
+	std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
+	for (auto c : node->children) {
+		sortChildren(c);
+	}
+}
+
 double SearchNode::getTcMcVariance()const {
 	std::vector<double> cmasses;
 	double mean = 0;

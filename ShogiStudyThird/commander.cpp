@@ -88,6 +88,10 @@ void Commander::execute() {
 			//読み込みを実行
 			commander.yomikomi();
 		}
+		else if (tokens[0] == "yomikomikizon") {
+			//読み込みを実行
+			commander.yomikomiKizon();
+		}
 		else if (tokens[0] == "foutjoseki") {
 			commander.tree.foutJoseki();
 			std::cout << "foutjoseki: done" << std::endl;
@@ -513,15 +517,6 @@ static std::vector<int> yomikomiDepth(const std::vector<std::string>& lines, Sea
 	}
 }
 
-//子供を評価値順に並べ替えていく。読み込み前後で木が同一であることを確認するために使用
-void Commander::sortChildren(SearchNode* node) {
-	//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
-	std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
-	for (auto c : node->children) {
-		sortChildren(c);
-	}
-}
-
 void Commander::yomikomi()
 {
 	//実行時間計測用
@@ -574,7 +569,7 @@ void Commander::yomikomi()
 	std::cout << "読みこみ完了：" << clock() - startTime << std::endl;
 
 	//depth直後が評価値順ではないので修正する
-	sortChildren(nodes[0]);
+	SearchNode::sortChildren(nodes[0]);
 	std::cout << "並べ替え完了：" << clock() - startTime << std::endl;
 
 	std::cout << "end \"Yomikomi!\" " << std::endl;
@@ -586,6 +581,75 @@ void Commander::yomikomi()
 	Kyokumen kyo = Kyokumen(startpos);
 
 	tree.setRoot(nodes[0], kyo, lines.size() - 1);
+
+	std::cout << "総時間：" << clock() - startTime << std::endl;
+}
+
+void Commander::yomikomiKizon()
+{
+	//実行時間計測用
+	time_t startTime = clock();
+
+	std::string ss;
+	int i = 0, j = 0;
+	std::ifstream ifs;
+	size_t i_max = 0;
+	std::vector<SearchNode*> test;
+
+	SearchNode* node = NULL;
+	std::vector<int> parents = {};
+	parents.push_back(-1);
+	int index = 0;
+	int	st = 0;
+	double eval = 0.0;
+	double mass = 0.0;
+	Move move;
+	std::cout << "start \"Yomikomi!\" " << std::endl;
+	static int num = 0;
+	ifs.open(yomikomi_file_name + ".txt");
+	if (ifs.fail()) {
+		std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+	}
+	std::getline(ifs, ss); //sfen
+	//std::string sfen = "position " + ss;
+	//tree.makeNewTree(usi::split(sfen, ' '));
+
+	while (1) {
+		std::getline(ifs, ss);
+		if (ifs.eof()) {
+			break;//ファイルの終わりならブレイク
+		}
+		auto gyou = usi::split(ss, ',');
+		index = std::stoi(gyou[0]);		//std::cout << "0 " << gyou[i][0] << std::endl;
+		st = std::stoi(gyou[1]);			//std::cout << "1 " << gyou[i][1] << std::endl;
+		//move = Move(gyou[3], 0, oute);	//std::cout << "3 " << gyou[i][3] << std::endl;
+		uint16_t sss = std::stoi(gyou[2]);
+		move = Move(sss);	//std::cout << "3 " << gyou[i][3] << std::endl;
+		eval = std::stod(gyou[3]);		//std::cout << "4 " << gyou[i][4] << std::endl;
+		mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
+		j = 5;
+		for(int j = 5;j < gyou.size();++j){		//子ノードのインデックスが読み終わるまでループ
+			parents.push_back(index);	 //親のインデックスを要素として持つ
+		}
+
+		if (index == 0) {//1つ目は親なし
+			test.push_back(node->restoreNode(move, st, eval, mass));
+		}
+		else {
+			test.push_back(node->restoreNode(move, st, eval, mass));
+			test[parents[index]]->children.push_back(test[index]);
+		}
+		i++;
+	}
+	std::cout << "end \"Yomikomi!\" " << std::endl;
+	i_max = i;
+	std::vector<std::string> startpos;
+	startpos.push_back(" ");
+	startpos.push_back("startpos");
+	Kyokumen kyo = Kyokumen(startpos);
+
+	node = test[0];
+	tree.setRoot(node, kyo, i_max);
 
 	std::cout << "総時間：" << clock() - startTime << std::endl;
 }

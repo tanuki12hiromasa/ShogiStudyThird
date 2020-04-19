@@ -24,6 +24,7 @@ private:
 	void releaseAgentAndTree(SearchNode* const root);
 
 	void yomikomi();
+	void yomikomiKizon();
 
 	SearchTree tree;
 	std::vector<std::unique_ptr<SearchAgent>> agents;
@@ -47,7 +48,6 @@ private:
 
 	bool yomikomi_on = false;	//定跡を有効化
 	std::string yomikomi_file_name = "treejoseki";	//定跡木の名前(.txtは不要)
-	static void sortChildren(SearchNode* node);
 	
 	friend class ShogiTest;
 };
