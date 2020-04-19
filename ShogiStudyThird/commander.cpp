@@ -468,7 +468,7 @@ static std::vector<int> yomikomiLine(const std::vector<std::string> &lines, Sear
 	Move move = Move(std::stoi(gyou[2]));	//std::cout << "3 " << gyou[i][3] << std::endl;
 	double eval = std::stod(gyou[3]);		//std::cout << "4 " << gyou[i][4] << std::endl;
 	double mass = std::stod(gyou[4]);		//std::cout << "5 " << gyou[i][5] << std::endl;
-	for(int i = 5;i < ss.size();++i) {		//子ノードのインデックスが読み終わるまでループ
+	for(int i = 5;i < gyou.size();++i) {		//子ノードのインデックスが読み終わるまでループ
 		std::string childIndex = gyou[i];
 		childIndexes.push_back(std::stoi(childIndex));
 		parents[childIndexes.back()] = index;	 //親のインデックスを要素として持つ
@@ -509,21 +509,14 @@ static std::vector<int> yomikomiDepth(const std::vector<std::string>& lines, Sea
 	}
 }
 
-//指定された深さまで読みこみ、子供を評価値順に並べなおす。不要かもしれないけど一応
-void sortDepth(SearchNode* sn, const int depth) {
-	if (depth == 110) {
-		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
-		std::sort(sn->children.begin(), sn->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
-	}
-	else {
-		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
-		std::sort(sn->children.begin(), sn->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
-		for (auto c:sn->children) {
-			sortDepth(c, depth - 1);
-		}
+//子供を評価値順に並べ替えていく。読み込み前後で木が同一であることを確認するために使用
+void Commander::sortChildren(SearchNode* node) {
+	//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
+	std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
+	for (auto c : node->children) {
+		sortChildren(c);
 	}
 }
-
 
 void Commander::yomikomi()
 {
@@ -577,7 +570,7 @@ void Commander::yomikomi()
 	std::cout << "読みこみ完了：" << clock() - startTime << std::endl;
 
 	//depth直後が評価値順ではないので修正する
-	sortDepth(nodes[0], depth);
+	sortChildren(nodes[0]);
 	std::cout << "並べ替え完了：" << clock() - startTime << std::endl;
 
 	std::cout << "end \"Yomikomi!\" " << std::endl;
