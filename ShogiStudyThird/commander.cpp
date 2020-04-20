@@ -467,6 +467,7 @@ void Commander::releaseAgentAndTree(SearchNode* const root) {
 	agents.clear();
 }
 
+
 //1行読みこむ。返り値は子供のindex
 static std::vector<int> yomikomiLine(const std::vector<std::string> &lines, SearchNode**& sn, int*& parents, const int index) {
 	std::vector<int> childIndexes;
@@ -517,6 +518,9 @@ static std::vector<int> yomikomiDepth(const std::vector<std::string>& lines, Sea
 	}
 }
 
+#include <Windows.h>
+#include <tchar.h>
+#include <locale.h>
 void Commander::yomikomi()
 {
 	//実行時間計測用
@@ -524,29 +528,76 @@ void Commander::yomikomi()
 
 	int i = 0, j = 0;
 	//読みこむ木の入ったファイルを開く
-	std::ifstream ifs(yomikomi_file_name + ".txt");
+	std::string fileName = (yomikomi_file_name + ".txt");
+	std::ifstream ifs(fileName);
 	if (ifs.fail()) {
 		std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
 		assert(ifs.fail());
 	}
-
-	//ファイルの中身を全てコピーする
-	std::stringstream buf;
-	buf << ifs.rdbuf();
 	ifs.close();
+	//メモリマップドファイルで開いてみる
+	//ファイルオープン
+	WCHAR *wStrW;
+	wStrW = (WCHAR*)malloc((std::strlen(fileName.c_str()) + 1) * sizeof(WCHAR));
+	size_t wLen = 0;
+	errno_t err = 0;
+
+	//ロケール指定
+	//setlocale(LC_ALL, "japanese");
+	//変換
+	err = mbstowcs_s(&wLen, wStrW, 20, fileName.c_str(), _TRUNCATE);
+	std::cout << wStrW << std::endl;
+	HANDLE hFile;
+	hFile = CreateFile(wStrW, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
+	if (hFile == INVALID_HANDLE_VALUE) {
+		std::cout << GetLastError() << std::endl;
+	}
+	
+	//ファイルマッピングオブジェクトを作成
+	HANDLE hMap;
+	auto mapname = _T("TestFile");
+	hMap = CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, mapname);
+	if (hMap <= 0) {
+		std::cout << "get pointa error" << std::endl;
+	}
+
+	//ファイルポインタを取得
+	char* pPointer;
+	pPointer = (char*)MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
+	std::cout << pPointer[100000000] << std::endl;
+
+	std::cout << "ファイル読みこみ開始時間：" << clock() - startTime << std::endl;
+	//ファイルの中身を全てコピーする
+	//std::stringstream buf;
+	//buf << ifs.rdbuf();
+	//std::string stringbuf((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+	std::vector<std::string> lines;
+	lines.reserve(200000000);
+	std::string sss;
+	while (getline(ifs,sss)){
+		lines.push_back(sss);
+	}
+	//ifs.close();
 
 	std::cout << "ファイル読みこみ終了時間：" << clock() - startTime << std::endl;
 
 	//読みこんだものを行に分けて保存する
-	std::vector<std::string> lines = usi::split(buf.str(), '\n');
+	//std::vector<std::string> lines = usi::split(buf.str(), '\n');
+	/*std::vector<std::string>lines;
+		std::vector<std::string> tokens;
+		std::stringstream ss(str);
+		std::string token;
+		while (std::getline(ss, token, splitter)) {
+			tokens.push_back(token);
+		}
+		return tokens;*/
 	//行の数。1行目はsfenなため1引いてある
 	int lineCount = lines.size() - 1;
+	std::cout << "ファイルの行数：" << lineCount << std::endl;
 	//ノードと親の領域を必要な数だけ確保
 	SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * lineCount);
 	int* parents = (int*)malloc(sizeof(int) * lineCount);
 
-	int index = 0;
-	//std::vector<int>childIndexes(lineCount);
 
 
 	std::cout << "分割終了時間：" << clock() - startTime << std::endl;
@@ -554,7 +605,7 @@ void Commander::yomikomi()
 	std::cout << "start \"Yomikomi!\" " << std::endl;
 
 	int depth = 1;
-	std::vector<int>childrenToThread = yomikomiDepth(lines, nodes, parents, index, depth);
+	std::vector<int>childrenToThread = yomikomiDepth(lines, nodes, parents, 0, depth);
 
 	std::cout << "スレッド化前準備完了：" << clock() - startTime << std::endl;
 

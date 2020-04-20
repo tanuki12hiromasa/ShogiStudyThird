@@ -3,6 +3,8 @@
 #include "move_gen.h"
 #include <queue>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
 
 SearchTree::SearchTree()
 	:rootPlayer(),startKyokumen()
@@ -164,24 +166,53 @@ void SearchTree::foutTree()const {
 void SearchTree::foutJoseki()const {
 	std::ofstream fs("treejoseki.txt");
 	std::queue<SearchNode*> nq;
-	fs << startKyokumen.toSfen() << "\n";
 	nq.push(history.front());
 	size_t index = 0;
 	size_t c_index = 1;
+	int childCount;
+	std::stringstream ss;
+	int keta = log10(nodecount.load()) + 1;
 
 	SearchNode::sortChildren(nq.front());
+	
+	fs << "lineLen," << keta + 1 + 5 + 10 + 10 + 2 + keta + 6 << 
+		"," << "nodeCount," << nodecount.load() <<
+		"\n";
 
+	fs << startKyokumen.toSfen() << "\n";
 	while (!nq.empty()) {
 		const SearchNode* const node = nq.front();
 		nq.pop();
 		int st = static_cast<int>(node->status.load());
-		fs << index << "," << st << "," << node->move.getU() << "," << node->eval << "," << node->mass;
+		ss << std::setw(keta) << index  << 
+			"," << st << 
+			"," << std::setw(5) << node->move.getU()  << 
+			"," << std::setw(10) << node->eval  << 
+			"," <<  std::setw(10) << node->mass;
+
+		childCount = 0;
+
 		for (const auto c : node->children) {
 			nq.push(c);
-			fs << "," << c_index;
-			c_index++;
+			childCount++;
 		}
-		fs << "\n";
+		ss << ","  << std::setw(2) << childCount;
+		ss << "," << std::setw(keta) << c_index ;
+		c_index += childCount;
+
+
+		//for (; ss.str().length() < 100;) {
+		//	ss << " ";
+		//}
+
+		ss << "\n";
+
+
+		fs << ss.str();
+
+		ss.str("");
+		ss.clear(std::stringstream::goodbit);
+
 		index++;
 	}
 	fs.close();
