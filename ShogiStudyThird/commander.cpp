@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <fstream>
 
-void Commander::execute() {
+void Commander::execute(const std::string& enginename) {
 	Commander commander;
 	while (true) {
 		std::string usiin;
@@ -15,12 +15,8 @@ void Commander::execute() {
 			std::cout << "command ready" << std::endl;
 		}
 		else if (tokens[0] == "usi") {
-#ifdef _DEBUG
-			std::cout << "id name ShibauraSoftmaxThird_debug" << std::endl;
-#else
-			std::cout << "id name ShibauraSoftmaxThird" << std::endl;
-#endif
-			std::cout << "id author Iwamoto" << std::endl;
+			std::cout << "id name " << enginename << std::endl;
+			std::cout << "id author Hiromasa_Iwamoto" << std::endl;
 			coutOption();
 			std::cout << "usiok" << std::endl;
 		}
@@ -325,7 +321,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		int extend_times = 0;//延長した回数
 		constexpr int extend_times_limit = 2;
 		std::cout << "info string time:" << timelimit.first.count() << ", " << timelimit.second.count() << std::endl;
-		while (std::abs(root->eval) < SearchNode::getMateScoreBound()) {
+		do {
 			constexpr auto sleeptime = 50ms;
 			std::this_thread::sleep_for(sleeptime);
 			const auto bestnode = root->getBestChild();
@@ -360,8 +356,8 @@ void Commander::go(const std::vector<std::string>& tokens) {
 				break;
 			}
 			recentBestNode = bestnode;
-		}
-		if (provisonalBestMove == nullptr) recentBestNode;
+		} while (std::abs(root->eval) < SearchNode::getMateScoreBound());
+		if (provisonalBestMove == nullptr) provisonalBestMove = recentBestNode;
 		chakushu(provisonalBestMove);
 	});
 	info_enable = true;
@@ -370,6 +366,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 //first:標準的な思考時間 second:思考時間の上限
 std::pair<std::chrono::milliseconds, std::chrono::milliseconds> Commander::decide_timelimit(const TimeProperty time)const {
 	constexpr int estimate_movesnum = 120;
+	using namespace std::chrono_literals;
 	switch (time.rule) {
 		case TimeProperty::TimeRule::byoyomi: {
 			const auto standerd_time = std::max(time.left / std::max(estimate_movesnum - tree.getMoveNum(), 5), time.added) - time_overhead;
@@ -382,6 +379,9 @@ std::pair<std::chrono::milliseconds, std::chrono::milliseconds> Commander::decid
 			const auto limit_time = time.left + time.added - time_overhead;
 			return std::make_pair(standerd_time, limit_time);
 		}
+		default:
+			assert(0);
+			return std::make_pair(5s, 5s);
 	}
 }
 

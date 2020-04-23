@@ -4,7 +4,7 @@
 
 class Commander {
 public:
-	static void execute();
+	static void execute(const std::string& enginename);
 private:
 	Commander();
 	~Commander();
