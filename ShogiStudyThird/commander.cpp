@@ -319,7 +319,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		double pi_average = 0;//最善手の方策の時間平均
 		int continuous_counter = 0;//最善手が同じまま連続している回数
 		int extend_times = 0;//延長した回数
-		constexpr int extend_times_limit = 2;
+		constexpr int extend_times_limit = 1;
 		std::cout << "info string time:" << timelimit.first.count() << ", " << timelimit.second.count() << std::endl;
 		do {
 			constexpr auto sleeptime = 50ms;
@@ -339,13 +339,13 @@ void Commander::go(const std::vector<std::string>& tokens) {
 				continuous_counter = 1;
 			}
 			//即指しの条件を満たしたら指す
-			if (continuous_counter * sleeptime > searchtime / 2) {
+			if (continuous_counter * sleeptime > searchtime / 5) {
 				break;
 			}
 			//標準時間になったら指すか決める もし拮抗している局面なら時間を延長する
 			if (std::chrono::system_clock::now() - starttime >= searchtime) {
 				if (provisonal_pi < 0.4 && ++extend_times <= extend_times_limit) {
-					searchtime += timelimit.first;
+					searchtime += timelimit.first / 2;
 				}
 				else {
 					break;
