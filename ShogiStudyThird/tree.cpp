@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 SearchTree::SearchTree()
 	:rootPlayer(),startKyokumen()
@@ -164,58 +165,247 @@ void SearchTree::foutTree()const {
 }
 
 void SearchTree::foutJoseki()const {
-	std::ofstream fs("treejoseki.txt");
-	std::queue<SearchNode*> nq;
-	nq.push(history.front());
-	size_t index = 0;
-	size_t c_index = 1;
-	int childCount;
-	std::stringstream ss;
-	int keta = log10(nodecount.load()) + 1;
+	int select = 1;
+	int maxLength = -1;	
+	int maxLengthFILE = -1;
+	if(select == 0){
+		time_t startTime = clock();
+		std::ofstream fs("treejoseki.txt");
+		std::queue<SearchNode*> nq;
+		nq.push(history.front());
+		size_t index = 0;
+		size_t c_index = 1;
+		int childCount;
+		std::stringstream ss;
+		int keta = log10(nodecount.load()) + 1;
+		int ketad = 20;
+		int lineLen = keta + 1 + 5 + ketad + ketad + 2 + keta + 6;
 
-	SearchNode::sortChildren(nq.front());
-	
-	fs << "lineLen," << keta + 1 + 5 + 10 + 10 + 2 + keta + 6 << 
-		"," << "nodeCount," << nodecount.load() <<
-		"\n";
+		SearchNode::sortChildren(nq.front());
 
-	fs << startKyokumen.toSfen() << "\n";
-	while (!nq.empty()) {
-		const SearchNode* const node = nq.front();
-		nq.pop();
-		int st = static_cast<int>(node->status.load());
-		ss << std::setw(keta) << index  << 
-			"," << st << 
-			"," << std::setw(5) << node->move.getU()  << 
-			"," << std::setw(10) << node->eval  << 
-			"," <<  std::setw(10) << node->mass;
+		fs << "lineLen," << lineLen <<
+			"," << "nodeCount," << nodecount.load() <<
+			"\n";
 
-		childCount = 0;
+		fs << startKyokumen.toSfen() << "\n";
+		while (!nq.empty()) {
+			const SearchNode* const node = nq.front();
+			nq.pop();
+			int st = static_cast<int>(node->status.load());
+			ss << index <<
+				"," << st <<
+				"," << node->move.getU() <<
+				"," << node->eval <<
+				"," << node->mass;
 
-		for (const auto c : node->children) {
-			nq.push(c);
-			childCount++;
+			childCount = 0;
+
+			for (const auto c : node->children) {
+				nq.push(c);
+				childCount++;
+			}
+			ss << "," << childCount;
+			int tsize = (ss.str() + "," + std::to_string(c_index)).length();
+			if (tsize > maxLength) {
+				maxLength = (ss.str() + "," + std::to_string(c_index)).length();
+			}
+			ss << "," << std::setw(lineLen - ss.str().length() - 1) << std::left << c_index;
+			c_index += childCount;
+
+
+			ss << "\n";
+
+
+
+			fs << ss.str();
+
+			ss.str("");
+			ss.clear(std::stringstream::goodbit);
+
+			index++;
+			if (index % (nodecount / 10) == 0) {
+				std::cout << (index / (nodecount / 10) * 10) << "%,Time:" << clock() - startTime << std::endl;
+			}
 		}
-		ss << ","  << std::setw(2) << childCount;
-		ss << "," << std::setw(keta) << c_index ;
-		c_index += childCount;
 
-
-		//for (; ss.str().length() < 100;) {
-		//	ss << " ";
-		//}
-
-		ss << "\n";
-
-
-		fs << ss.str();
-
-		ss.str("");
-		ss.clear(std::stringstream::goodbit);
-
-		index++;
+		fs.close();
 	}
-	fs.close();
+	else if (select == 1){
+		time_t now = time(NULL);
+		struct tm pnow;
+		localtime_s(&pnow,&now);
+		std::cout << "開始時刻　" << pnow.tm_hour << "時" << pnow.tm_min << "分" << pnow.tm_sec << "秒" << std::endl;
+
+		time_t startTime = clock();
+		const unsigned int maxLength = 70;
+		unsigned int maxLengthTemp = maxLength;
+		bool loop = true;
+
+		while(loop) {
+			loop = false;
+			FILE* fp;
+			fopen_s(&fp, "treejoseki_FILE.txt", "w");
+			std::queue<SearchNode*> nq;
+			nq.push(history.front());
+			size_t index = 0;
+			size_t c_index = 1;
+			int childCount;
+			int lineLen = maxLengthTemp;
+
+			SearchNode::sortChildren(nq.front());
+
+
+			//1加算は改行の分
+			fprintf_s(fp, "lineLen,%lu,nodeCount,%lu\n", lineLen + 1, nodecount.load());
+
+			fprintf_s(fp, "%s\n", startKyokumen.toSfen().c_str());
+
+
+			char sp[1024];
+			while (!nq.empty()) {
+				const SearchNode* const node = nq.front();
+				nq.pop();
+				const int st = static_cast<int>(node->status.load());
+
+				childCount = 0;
+
+				for (const auto c : node->children) {
+					nq.push(c);
+					childCount++;
+				}
+				unsigned int stringLength = sprintf_s(sp, "%lu,%d,%d,%lf,%lf,%d,%lu\n", index, st, node->move.getU(), node->eval.load(), node->mass.load(), childCount, c_index);
+				fprintf_s(fp, "%*s", lineLen, sp);
+
+				if (maxLengthTemp < stringLength) {
+					maxLengthTemp = stringLength;
+					loop = true;
+				}
+
+				c_index += childCount;
+
+				index++;
+				if (index % (nodecount / 10) == 0) {
+					std::cout << (index / (nodecount / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+				}
+			}
+			if (loop) {
+				std::cout << "想定よりも長い行があったため再度出力します。" << std::endl;
+			}
+			fclose(fp);
+		}
+	}
+	else if (select == 2){
+		time_t startTime = clock();
+		std::ofstream fs("treejoseki_maxlength.txt");
+		std::queue<SearchNode*> nq;
+		nq.push(history.front());
+		size_t index = 0;
+		size_t c_index = 1;
+		int childCount;
+		std::stringstream ss;
+		int keta = log10(nodecount.load()) + 1;
+		int ketad = 20;
+		//int lineLen = keta + 1 + 5 + ketad + ketad + 2 + keta + 6;
+		int lineLen = maxLength;
+
+		SearchNode::sortChildren(nq.front());
+
+		fs << "lineLen," << lineLen <<
+			"," << "nodeCount," << nodecount.load() <<
+			"\n";
+
+		fs << startKyokumen.toSfen() << "\n";
+		while (!nq.empty()) {
+			const SearchNode* const node = nq.front();
+			nq.pop();
+			int st = static_cast<int>(node->status.load());
+			ss << index <<
+				"," << st <<
+				"," << node->move.getU() <<
+				"," << node->eval <<
+				"," << node->mass;
+
+			childCount = 0;
+
+			for (const auto c : node->children) {
+				nq.push(c);
+				childCount++;
+			}
+			ss << "," << childCount;
+			ss << "," << std::setw(lineLen - ss.str().length() - 1) << std::left << c_index;
+			c_index += childCount;
+
+
+			ss << "\n";
+
+			fs << ss.str();
+
+			ss.str("");
+			ss.clear(std::stringstream::goodbit);
+
+			index++;
+			if (index % (nodecount / 10) == 0) {
+				std::cout << (index / (nodecount / 10) * 10) << "%,Time:" << clock() - startTime << std::endl;
+			}
+		}
+		fs.close();
+	}
+	else if(select == 4)	{
+		time_t startTime = clock();
+		std::ofstream fs("treejoseki_nospace.txt");
+		std::queue<SearchNode*> nq;
+		nq.push(history.front());
+		size_t index = 0;
+		size_t c_index = 1;
+		int childCount;
+		std::stringstream ss;
+		int keta = log10(nodecount.load()) + 1;
+		int ketad = 20;
+		int lineLen = keta + 1 + 5 + ketad + ketad + 2 + keta + 6;
+
+		SearchNode::sortChildren(nq.front());
+
+		fs << "lineLen," << lineLen <<
+			"," << "nodeCount," << nodecount.load() <<
+			"\n";
+
+		fs << startKyokumen.toSfen() << "\n";
+		while (!nq.empty()) {
+			const SearchNode* const node = nq.front();
+			nq.pop();
+			int st = static_cast<int>(node->status.load());
+			ss << index <<
+				"," << st <<
+				"," << node->move.getU() <<
+				"," << node->eval <<
+				"," << node->mass;
+
+			childCount = 0;
+
+			for (const auto c : node->children) {
+				nq.push(c);
+				childCount++;
+			}
+			ss << "," << childCount;
+			ss << "," << c_index;
+			c_index += childCount;
+
+
+			ss << "\n";
+
+
+			fs << ss.str();
+
+			ss.str("");
+			ss.clear(std::stringstream::goodbit);
+
+			index++;
+			if (index % (nodecount / 10) == 0) {
+				std::cout << (index / (nodecount / 10) * 10) << "%,Time:" << clock() - startTime << std::endl;
+			}
+		}
+		fs.close();
+	}
 }
 
 void SearchTree::setRoot(SearchNode* const root, const Kyokumen& kyokumen, size_t nodes) {
