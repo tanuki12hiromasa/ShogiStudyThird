@@ -318,10 +318,12 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		SearchNode* recentBestNode = nullptr;//直前の最善ノード
 		double pi_average = 0;//最善手の方策の時間平均
 		int continuous_counter = 0;//最善手が同じまま連続している回数
-		int extend_times = 0;//延長した回数
-		constexpr int extend_times_limit = 1;
+		int changecounter = 0;
+		int loopcounter = 0;
 		std::cout << "info string time:" << timelimit.first.count() << ", " << timelimit.second.count() << std::endl;
+		std::this_thread::sleep_for(searchtime / 8);
 		do {
+			loopcounter++;
 			constexpr auto sleeptime = 50ms;
 			std::this_thread::sleep_for(sleeptime);
 			const auto bestnode = root->getBestChild();
@@ -335,21 +337,21 @@ void Commander::go(const std::vector<std::string>& tokens) {
 				}
 			}
 			else {
+				changecounter++;
 				pi_average = pi;
 				continuous_counter = 1;
 			}
 			//即指しの条件を満たしたら指す
-			if (continuous_counter * sleeptime > searchtime / 5) {
+			if (continuous_counter * sleeptime > std::min(timelimit.first / 2, 4000ms)) {
 				break;
 			}
+			if ((loopcounter & 0xF) == 0) {
+				double changerate = (double)changecounter / loopcounter;
+				searchtime = (changerate > 0.05) ? std::chrono::duration_cast<std::chrono::milliseconds>(timelimit.first * changerate / 0.05) : timelimit.first;
+			}
 			//標準時間になったら指すか決める もし拮抗している局面なら時間を延長する
-			if (std::chrono::system_clock::now() - starttime >= searchtime) {
-				if (provisonal_pi < 0.4 && ++extend_times <= extend_times_limit) {
-					searchtime += timelimit.first / 2;
-				}
-				else {
-					break;
-				}
+			if (std::chrono::system_clock::now() - starttime >= searchtime && provisonalBestMove != nullptr) {
+				break;
 			}
 			//時間上限になったら指す
 			if (std::chrono::system_clock::now() - starttime >= timelimit.second) {
