@@ -49,7 +49,8 @@ private:
 	bool yomikomi_on = false;	//定跡を有効化
 	std::string yomikomi_file_name = "treejoseki";	//定跡木の名前(.txtは不要)
 	int yomikomi_type = 0;
-	int joseki_make_type = 1;
+	int joseki_make_type = 0;
+	int joseki_file_count;
 	
 	friend class ShogiTest;
 };

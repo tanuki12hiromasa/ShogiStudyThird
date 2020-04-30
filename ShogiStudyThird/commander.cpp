@@ -80,6 +80,10 @@ void Commander::execute() {
 			commander.go_alive = false;
 			commander.info_alive = false;
 			commander.stopAgent();
+			if (commander.joseki_make_type == 1) {
+				commander.tree.foutJoseki(commander.joseki_make_type, commander.joseki_file_count);
+			}
+			std::cout << "gameoverok" << std::endl;
 		}
 		else if (tokens[0] == "quit") {
 			return;
@@ -94,7 +98,12 @@ void Commander::execute() {
 			}
 		}
 		else if (tokens[0] == "foutjoseki") {
-			commander.tree.foutJoseki();
+			if (commander.joseki_make_type == 1) {
+				commander.tree.foutJoseki(commander.joseki_make_type, commander.joseki_file_count);
+			}
+			else {
+				commander.tree.foutJoseki();
+			}
 			std::cout << "foutjoseki: done" << std::endl;
 		}
 	}
@@ -147,6 +156,8 @@ void Commander::coutOption() {
 	cout << "option name yomikomi_on type check default false" << endl;
 	cout << "option name yomikomi_file_name type string default treemake" << endl;
 	cout << "option name yomikomi_type type string default 0" << endl;
+	cout << "option name joseki_make_type type string default 0" << endl;
+
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -226,6 +237,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "yomikomi_type") {
 			yomikomi_type = std::stoi(token[4]);
+		}
+		else if (token[2] == "joseki_make_type") {
+			joseki_make_type = std::stoi(token[4]);
 		}
 	}
 }
@@ -699,8 +713,21 @@ void Commander::yomikomi()
 	int i = 0, j = 0;
 	//読みこむ木の入ったファイルを開く
 	std::string fileName = (yomikomi_file_name + ".txt");
-	if(yomikomi_type == 1){
-		
+	if(joseki_make_type == 1){
+		WIN32_FIND_DATA findFileData;
+		HANDLE hFind;
+		auto target = L"josekiFolder/*.txt";
+		int fileCount = -1;
+		hFind = FindFirstFile(target, &findFileData);
+		if (hFind != INVALID_HANDLE_VALUE) {
+			do {
+				++fileCount;
+				//_tprintf(TEXT("%d: %s\n"), ++fileCount, findFileData.cFileName);
+			} while (FindNextFile(hFind, &findFileData));
+			FindClose(hFind);
+		}
+		fileName = "josekiFolder/treejoseki" + std::to_string(fileCount) + ".txt";
+		joseki_file_count = fileCount;
 	}
 
 	//メモリマップドファイルで開いてみる
@@ -713,7 +740,7 @@ void Commander::yomikomi()
 	//ロケール指定
 	//setlocale(LC_ALL, "japanese");
 	//変換
-	err = mbstowcs_s(&wLen, wStrW, fileName.length()+1, fileName.c_str(), _TRUNCATE);
+	err = mbstowcs_s(&wLen, wStrW, fileName.length() + 1, fileName.c_str(), _TRUNCATE);
 	HANDLE hFile;
 	hFile = CreateFile(wStrW, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
 	if (hFile == INVALID_HANDLE_VALUE) {

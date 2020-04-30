@@ -29,6 +29,7 @@ public:
 	SearchNode* getRoot() const { return history.back(); }
 
 	void foutTree()const;
+	void foutJoseki(int joseki_make_type,int fileCount)const;
 	void foutJoseki()const;
 
 	void setRoot(SearchNode* const root, const Kyokumen& kyokumen, size_t nodes);

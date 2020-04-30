@@ -51,7 +51,7 @@ public:
 	static void setPVFuncCode(const int code) { PV_FuncCode = code; }
 	static void setPVConst(const double b) { PV_c = b; }
 
-	static void sortChildren(SearchNode* node);
+	static size_t sortChildren(SearchNode* node);	//返り値はノードの数
 public:
 	SearchNode(const Move& move);
 	SearchNode(const SearchNode&) = delete;
