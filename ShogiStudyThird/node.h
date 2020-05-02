@@ -77,6 +77,8 @@ public:
 	double getTs(const double baseT)const;
 	double getEs()const;
 	SearchNode* getBestChild()const;
+	double getChildRate(SearchNode* const child,const double T)const;
+	int getMateNum()const;
 private:
 	double getTcMcVariance()const;
 	double getTcMcVarianceExpection()const;

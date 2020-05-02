@@ -8,10 +8,12 @@ public:
 	static void setLeaveQSNode(bool b) { leave_QsearchNode = b; }
 	static void setUseOriginalKyokumenEval(bool b) { use_original_kyokumen_eval = b; }
 	static void setQSrelativeDepth(bool b) { QS_relativeDepth = b; }
+	static void setDrawMoveNum(int n) { drawmovenum = n; }
 private:
 	static bool leave_QsearchNode;
 	static bool use_original_kyokumen_eval;
 	static bool QS_relativeDepth;
+	static int drawmovenum;
 public:
 	SearchAgent(SearchTree& tree, const double Ts, int seed);
 	SearchAgent(SearchAgent&&)noexcept;
