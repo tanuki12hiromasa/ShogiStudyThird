@@ -6,6 +6,7 @@
 bool SearchAgent::leave_QsearchNode = false;
 bool SearchAgent::use_original_kyokumen_eval = false;
 bool SearchAgent::QS_relativeDepth = false;
+int SearchAgent::drawmovenum = 320;
 
 SearchAgent::SearchAgent(SearchTree& tree, const double Ts,int seed)
 	:tree(tree),engine(seed),root(tree.getRoot()),Ts(Ts)
@@ -142,6 +143,10 @@ size_t SearchAgent::simulate(SearchNode* const root) {
 				node->setMate();
 				goto backup;
 			}
+			else if (history.size() - 1 + tree.getMoveNum() >= drawmovenum) {
+				node->setRepetition(player.kyokumen.teban());
+				goto backup;
+			}
 			node->addChildren(moves);
 			newnodecount += moves.size();
 		}
@@ -238,10 +243,10 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 	return alpha;
 }
 
-uint64_t SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p, const int hislength) {
+uint64_t SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& player, const int hislength) {
 	const int depth = (QS_relativeDepth) ? (SearchNode::getQSdepth() - hislength) : SearchNode::getQSdepth();
 	if (depth <= 0) {
-		const double eval = Evaluator::evaluate(p);
+		const double eval = Evaluator::evaluate(player);
 		root->setEvaluation(eval);
 		root->setOriginEval(eval);
 		return 1ull;
@@ -253,25 +258,29 @@ uint64_t SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& p, const i
 			return 1ull;
 		}
 		else {
-			const double eval = Evaluator::evaluate(p);
+			const double eval = Evaluator::evaluate(player);
 			root->setEvaluation(eval);
 			root->setOriginEval(eval);
 			return 1ull;
 		}
 	}
-	double max = Evaluator::evaluate(p);
+	else if (hislength - 1 + tree.getMoveNum() >= drawmovenum) {
+		root->setRepetition(player.kyokumen.teban());
+		return 1ull;
+	}
+	double max = Evaluator::evaluate(player);
 	uint64_t evaluationcount = 1ull;
 	for (auto m : moves) {
 		const FeaureCache cache = player.feature.getCache();
 		const koma::Koma captured = player.proceed(m);
-		const double eval = -alphabeta(m, p, depth - 1, std::numeric_limits<double>::lowest(), -max, evaluationcount);
+		const double eval = -alphabeta(m, player, depth - 1, std::numeric_limits<double>::lowest(), -max, evaluationcount);
 		if (eval > max) {
 			max = eval;
 		}
 		player.recede(m, captured, cache);
 	}
 	root->setEvaluation(max);
-	if (use_original_kyokumen_eval) root->setOriginEval(Evaluator::evaluate(p));
+	if (use_original_kyokumen_eval) root->setOriginEval(Evaluator::evaluate(player));
 	else root->setOriginEval(max);
 	return evaluationcount;
 }

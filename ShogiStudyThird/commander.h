@@ -41,6 +41,7 @@ private:
 	std::chrono::milliseconds time_quickbm_lower{ 4000 };
 	std::chrono::milliseconds time_quickbm_upper{ 20000 };
 	std::chrono::milliseconds time_overhead {150};
+	int estimate_movesnum = 120;
 
 	std::thread go_thread;
 	std::thread info_thread;

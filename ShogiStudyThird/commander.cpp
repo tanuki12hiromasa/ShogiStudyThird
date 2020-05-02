@@ -112,7 +112,7 @@ void Commander::coutOption() {
 	cout << "option name Repetition_score type string default 0" << endl;
 	cout << "option name leave_qsearchNode type check default false" << endl;
 	cout << "option name QSearch_Use_RelativeDepth type check default false" << endl;
-	cout << "option name QSearch_depth type string default 0" << endl;
+	cout << "option name QSearch_depth type string default 8" << endl;
 	cout << "option name Use_Original_Kyokumen_Eval type check default false" << endl;
 	cout << "option name Ts_disperseFunc type spin default 0 min 0 max 4" << endl;
 	cout << "option name Ts_min type string default 40" << endl;
@@ -123,13 +123,15 @@ void Commander::coutOption() {
 	cout << "option name T_depth type string default 100" << endl;
 	cout << "option name Es_functionCode type spin default 18 min 0 max 20" << endl;
 	cout << "option name Es_funcParam type string default 0.5" << endl;
-	cout << "option name NodeMaxNum type string default 100000000" << endl;
+	//cout << "option name NodeMaxNum type string default 100000000" << endl;
+	cout << "option name DrawMoveNum type spin default 320 min 0 max 1000000" << endl;
 	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
 	cout << "option name PV_const type string default 0" << endl;
 	cout << "option name resign_matemoves type spin default 3 min 0 max 40" << endl;//投了する詰み手数
 	cout << "option name quick_bm_time_lower type spin default 4000 min 1000 max 600000" << endl;//即指しの判定時間の下限
 	cout << "option name quick_bm_time_upper type spin default 20000 min 1000 max 6000000" << endl;//即指しの判定時間の上限
 	cout << "option name overhead_time type spin default 200 min 0 max 10000" << endl;
+	cout << "option name estimate_movesnum type spin default 120 min 0 max 10000" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -195,6 +197,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "NodeMaxNum") {
 			tree.setNodeMaxsize(std::stoull(token[4]));
 		}
+		else if (token[2] == "DrawMoveNum") {
+			SearchAgent::setDrawMoveNum(std::stoi(token[4]));
+		}
 		else if (token[2] == "PV_functionCode") {
 			SearchNode::setPVFuncCode(std::stoi(token[4]));
 		}
@@ -212,6 +217,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "overhead_time") {
 			time_overhead = std::chrono::milliseconds(std::stoi(token[4]));
+		}
+		else if (token[2] == "estimate_movesnum") {
+			estimate_movesnum = std::stoi(token[4]);
 		}
 	}
 }
@@ -379,7 +387,6 @@ void Commander::go(const std::vector<std::string>& tokens) {
 
 //first:標準的な思考時間 second:思考時間の上限
 std::pair<std::chrono::milliseconds, std::chrono::milliseconds> Commander::decide_timelimit(const TimeProperty time)const {
-	constexpr int estimate_movesnum = 120;
 	using namespace std::chrono_literals;
 	switch (time.rule) {
 		case TimeProperty::TimeRule::byoyomi: {
