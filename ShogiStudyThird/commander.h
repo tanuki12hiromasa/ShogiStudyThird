@@ -37,6 +37,9 @@ private:
 	double Ts_max = 200;
 	int TsDistFuncNum = 0;
 	std::vector<double> TsDistribution;
+	int resign_border = 3;
+	std::chrono::milliseconds time_quickbm_lower{ 4000 };
+	std::chrono::milliseconds time_quickbm_upper{ 20000 };
 	std::chrono::milliseconds time_overhead {150};
 
 	std::thread go_thread;

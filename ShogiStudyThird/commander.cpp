@@ -126,6 +126,9 @@ void Commander::coutOption() {
 	cout << "option name NodeMaxNum type string default 100000000" << endl;
 	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
 	cout << "option name PV_const type string default 0" << endl;
+	cout << "option name resign_matemoves type spin default 3 min 0 max 40" << endl;//投了する詰み手数
+	cout << "option name quick_bm_time_lower type spin default 4000 min 1000 max 600000" << endl;//即指しの判定時間の下限
+	cout << "option name quick_bm_time_upper type spin default 20000 min 1000 max 6000000" << endl;//即指しの判定時間の上限
 	cout << "option name overhead_time type spin default 200 min 0 max 10000" << endl;
 }
 
@@ -197,6 +200,15 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "PV_const") {
 			SearchNode::setPVConst(std::stod(token[4]));
+		}
+		else if (token[2] == "resign_matemoves") {
+			resign_border = std::stoi(token[4]);
+		}
+		else if (token[2] == "quick_bm_time_lower") {
+			time_quickbm_lower = std::chrono::milliseconds(std::stoi(token[4]));
+		}
+		else if (token[2] == "quick_bm_time_upper") {
+			time_quickbm_upper = std::chrono::milliseconds(std::stoi(token[4]));
 		}
 		else if (token[2] == "overhead_time") {
 			time_overhead = std::chrono::milliseconds(std::stoi(token[4]));
@@ -342,7 +354,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 				continuous_counter = 1;
 			}
 			//即指しの条件を満たしたら指す
-			if (continuous_counter * sleeptime > std::min(timelimit.first / 2, 4000ms)) {
+			if (continuous_counter * sleeptime > std::min(std::max(timelimit.first / 2, time_quickbm_lower), time_quickbm_upper)) {
 				break;
 			}
 			if ((loopcounter & 0xF) == 0) {
@@ -354,7 +366,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 				break;
 			}
 			//時間上限になったら指す
-			if (std::chrono::system_clock::now() - starttime >= timelimit.second) {
+			if (std::chrono::system_clock::now() - starttime + sleeptime >= timelimit.second) {
 				break;
 			}
 			recentBestNode = bestnode;
@@ -432,7 +444,7 @@ void Commander::chakushu(SearchNode* const bestchild) {
 		return;
 	}
 	SearchNode* const root = tree.getRoot();
-	if (root->eval < -33000) {
+	if (root->eval < -SearchNode::getMateScoreBound() && root->getMateNum() >= -resign_border) {
 		std::cout << "info score cp " << static_cast<int>(root->eval) << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;

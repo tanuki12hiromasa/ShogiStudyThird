@@ -312,3 +312,16 @@ double SearchNode::getChildRate(SearchNode* const child, const double T)const {
 	}
 	return childexp / Z;
 }
+
+int SearchNode::getMateNum()const {
+	const double e = eval.load();
+	if (e >= mateScoreBound) {
+		return (mateScore - e) / mateOneScore;
+	}
+	else if(e <= -mateScoreBound) {
+		return (-mateScore - e) / mateOneScore;
+	}
+	else {
+		return -std::numeric_limits<int>::min();
+	}
+}
