@@ -313,11 +313,11 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove win" << std::endl;
 		return;
 	}
-	else if (tree.getRoot()->eval < -SearchNode::getMateScoreBound()) {
+	/*else if (tree.getRoot()->eval < -SearchNode::getMateScoreBound()) {
 		std::lock_guard<std::mutex> lock(coutmtx);
 		std::cout << "bestmove resign" << std::endl;
 		return;
-	}
+	}*/
 	tree.evaluationcount = 0ull;
 	info_prev_evcount = 0ull;
 	info_prevtime = std::chrono::system_clock::now();
@@ -341,7 +341,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		int changecounter = 0;
 		int loopcounter = 0;
 		std::cout << "info string time:" << timelimit.first.count() << ", " << timelimit.second.count() << std::endl;
-		std::this_thread::sleep_for(searchtime / 8);
+		//std::this_thread::sleep_for(searchtime / 20);
 		do {
 			loopcounter++;
 			constexpr auto sleeptime = 50ms;
