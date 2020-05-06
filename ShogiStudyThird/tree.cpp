@@ -233,6 +233,78 @@ void SearchTree::foutJoseki(int joseki_make_type,int fileCount)const {
 		fclose(fp);
 	}
 }
+void SearchTree::foutJosekiBin(int joseki_make_type, int fileCount)const {
+	time_t now = time(NULL);
+	struct tm pnow;
+	localtime_s(&pnow, &now);
+	std::cout << "開始時刻　" << pnow.tm_hour << "時" << pnow.tm_min << "分" << pnow.tm_sec << "秒" << std::endl;
+
+	time_t startTime = clock();
+	size_t index = 0;
+	int st;
+	uint16_t move;
+	double mass;
+	double eval;
+	int childCount;
+	size_t c_index = 1;
+	const unsigned int maxLength = sizeof(index) + sizeof(st) + sizeof(move) + sizeof(eval) + sizeof(mass) + sizeof(childCount) + sizeof(c_index);
+	unsigned int maxLengthTemp = maxLength;
+
+	FILE* fp;
+	std::string fileName = "treejoseki_FILE";
+	if (joseki_make_type == 1) {
+		fileName = "josekiFolder/treejoseki" + std::to_string(fileCount + 1);
+	}
+	fopen_s(&fp, (fileName + ".bin").c_str(), "wb");
+	std::queue<SearchNode*> nq;
+	nq.push(history.front());
+	int lineLen = maxLengthTemp;
+
+
+	fprintf_s(fp, "lineLen,%lu,nodeCount,%lu\n", lineLen, SearchNode::sortChildren(nq.front()));
+	fprintf_s(fp, "%s\n", startKyokumen.toSfen().c_str());
+
+	char* sp = (char*)malloc(maxLength + 1);	//ゼロ文字の分1増やしている
+	while (!nq.empty()) {
+		const SearchNode* const node = nq.front();
+		nq.pop();
+		index;
+		st = static_cast<int>(node->status.load());
+		move = node->move.getU();
+		eval = node->eval.load();
+		mass = node->mass.load();
+		childCount;
+		c_index;
+
+		childCount = 0;
+
+		for (const auto c : node->children) {
+			nq.push(c);
+			childCount++;
+		}
+		//sprintf_s(sp, "%lu,%d,%d,%lf,%lf,%d,%lu\n", index, st, node->move.getU(), node->eval.load(), node->mass.load(), childCount, c_index);
+		fwrite(&index, sizeof(index), 1, fp);
+		fwrite(&st, sizeof(st), 1, fp);
+		fwrite(&move, sizeof(move), 1, fp);
+		fwrite(&eval, sizeof(eval), 1, fp);
+		fwrite(&mass, sizeof(mass), 1, fp);
+		fwrite(&childCount, sizeof(childCount), 1, fp);
+		fwrite(&c_index, sizeof(c_index), 1, fp);
+
+		//fprintf_s(fp, "%*s", lineLen, sp);
+		//fprintf_s(fp, "%s", sp);
+
+
+		c_index += childCount;
+
+		index++;
+		if (index % (getNodeCount() / 10) == 0) {
+			std::cout << (index / (getNodeCount() / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+		}
+	}
+	fclose(fp);
+
+}
 void SearchTree::foutJoseki()const {
 	foutJoseki(0, 0);
 }

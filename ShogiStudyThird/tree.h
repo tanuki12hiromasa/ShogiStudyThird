@@ -31,6 +31,7 @@ public:
 	void foutTree()const;
 	void foutJoseki(int joseki_make_type,int fileCount)const;
 	void foutJoseki()const;
+	void foutJosekiBin(int joseki_make_type, int fileCount)const;
 
 	void setRoot(SearchNode* const root, const Kyokumen& kyokumen, size_t nodes);
 private:

@@ -121,7 +121,7 @@ double SearchNode::getTs(const double baseT) const {
 	}
 }
 
-SearchNode* SearchNode::restoreNode(const Move& move, int st, double eval, double mass)
+SearchNode* SearchNode::restoreNode(const Move& move, State st, double eval, double mass)
 {
 	SearchNode* child = new SearchNode(move);
 	child->eval = eval;

@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "commander.h"
 #include "usi.h" 
+#include "joseki.h"
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -32,7 +33,9 @@ void Commander::execute() {
 			commander.gameInit();
 			//定跡を利用する場合のみ読みこみ
 			if (commander.yomikomi_on) {
-				commander.yomikomi();
+				Joseki joseki;
+				joseki.josekiInput();
+				commander.tree.setRoot(joseki.getJosekiNodes(), joseki.getKyokumen(), joseki.getChildCount());
 			}
 			std::cout << "readyok" << std::endl;
 		}
@@ -89,21 +92,15 @@ void Commander::execute() {
 			return;
 		}
 		else if (tokens[0] == "yomikomi") {
-			//読み込みを実行
-			if (commander.yomikomi_type <= 0) {
-				commander.yomikomi();
-			}
-			else {
-				commander.yomikomiKizon();
-			}
+			Joseki joseki;
+			joseki.josekiInput();
+			commander.tree.setRoot(joseki.getJosekiNodes(), joseki.getKyokumen(), joseki.getChildCount());
+			std::cout << "yomikomi: done" << std::endl;
 		}
 		else if (tokens[0] == "foutjoseki") {
-			if (commander.joseki_make_type == 1) {
-				commander.tree.foutJoseki(commander.joseki_make_type, commander.joseki_file_count);
-			}
-			else {
-				commander.tree.foutJoseki();
-			}
+			Joseki joseki;
+			joseki.josekiOutput(commander.tree.getHistory().front(),commander.tree.startKyokumen);
+
 			std::cout << "foutjoseki: done" << std::endl;
 		}
 	}
@@ -485,933 +482,796 @@ void Commander::releaseAgentAndTree(SearchNode* const root) {
 		}));
 	agents.clear();
 }
-
-#include <Windows.h>
-#include <tchar.h>
-#include <locale.h>
-
-time_t yomikomistart;
-time_t yomikomijikan = 0;
-time_t hukugenstart;
-time_t hukugenjikan = 0;
-time_t getlinestart;
-time_t getlinejikan = 0;
-
-//1行読みこむ。返り値は子供のindexであってbeginでないことに注意
-static std::vector<int> yomikomiLine(const char* const lines, SearchNode**& sn, int*& parents, const int index, const size_t length, const int offset) {
-	yomikomistart = clock();
-
-	std::vector<int> childIndexes;
-	//\0の分+1
-	char* cstr = (char*)malloc(sizeof(char) * (length + 1));
-	//\rの分+1
-	size_t ind = offset + index * (length);
-	//読むのは\rの前まで
-	memcpy_s(cstr, length + 1, &(lines[ind]), length);
-	cstr[length] = '\0';
-	//std::string ss(cstr);
-
-	getlinejikan += clock() - yomikomistart;
-
-	int st;
-	uint16_t usiU;
-	double eval;
-	double mass;
-	int childCount;
-	int childIndex;
-
-	sscanf_s(cstr, "%d,%d,%d,%lf,%lf,%d,%d",&index, &st, &usiU, &eval, &mass, &childCount,&childIndex);
-
-	Move move = Move(usiU);
-
-	for (int i = 0; i < childCount; ++i) {		//子ノードのインデックスが読み終わるまでループ
-		childIndexes.push_back(childIndex + i);
-		parents[childIndexes.back()] = index;	 //親のインデックスを要素として持つ
-	}
-
-	yomikomijikan += (clock() - yomikomistart);
-	hukugenstart = clock();
-
-	sn[index] = (SearchNode::restoreNode(move, st, eval, mass));
-	if (index != 0) {//1つ目は親なし
-		sn[parents[index]]->children.push_back(sn[index]);
-	}
-	sn[index]->children.reserve(childCount);
-
-	hukugenjikan += (clock() - hukugenstart);
-
-	free(cstr);
-
-	return childIndexes;
-}
-
-//indexとその子供を再帰的に読みこむ
-static void yomikomiRecursive(const char* const lines, SearchNode**& sn, int*& parents, const int index, const int length, const int offset) {
-	auto children = yomikomiLine(lines, sn, parents, index, length, offset);
-	for (auto c : children) {
-		yomikomiRecursive(lines, sn, parents, c, length, offset);
-	}
-}
-
-//指定された深さまで読みこみ、子供たちを返す。0で指定されたindexのみ。並列処理はしない
-static std::vector<int> yomikomiDepth(const char* const lines, SearchNode**& sn, int*& parents, const int index, const int length, const int offset,const int depth) {
-	auto c = yomikomiLine(lines, sn, parents, index, length, offset);
-	if (depth == 0) {
-		return c;
-	}
-	else {
-		std::vector<int>children;
-		for (auto ch : c) {
-			auto v = yomikomiDepth(lines, sn, parents, ch, length, offset, depth - 1);
-			children.insert(children.end(),v.begin(),v.end());
-		}
-		return children;
-	}
-}
-
-
-
-
-//vector用
-//1行読みこむ。返り値は子供のindexであってbeginでないことに注意
-static std::vector<int> yomikomiLineV(const std::vector<std::string> vs, SearchNode**& sn, int*& parents, const int index) {
-	yomikomistart = clock();
-
-	std::vector<int> childIndexes;
-	
-	getlinejikan += clock() - yomikomistart;
-
-	int st;
-	uint16_t usiU;
-	double eval;
-	double mass;
-	int childCount;
-	int childIndex;
-
-	sscanf_s(vs[index].c_str(), "%d,%d,%d,%lf,%lf,%d,%d", &index, &st, &usiU, &eval, &mass, &childCount, &childIndex);
-
-	Move move = Move(usiU);
-
-	for (int i = 0; i < childCount; ++i) {		//子ノードのインデックスが読み終わるまでループ
-		childIndexes.push_back(childIndex + i);
-		parents[childIndexes.back()] = index;	 //親のインデックスを要素として持つ
-	}
-
-	yomikomijikan += (clock() - yomikomistart);
-	hukugenstart = clock();
-
-	sn[index] = (SearchNode::restoreNode(move, st, eval, mass));
-	if (index != 0) {//1つ目は親なし
-		sn[parents[index]]->children.push_back(sn[index]);
-	}
-	sn[index]->children.reserve(childCount);
-
-	hukugenjikan += (clock() - hukugenstart);
-
-	return childIndexes;
-}
-
-//indexとその子供を再帰的に読みこむ
-static void yomikomiRecursiveV(const std::vector<std::string> vs, SearchNode**& sn, int*& parents, const int index) {
-	auto children = yomikomiLineV(vs, sn, parents, index);
-	for (auto c : children) {
-		yomikomiRecursiveV(vs, sn, parents, c);
-	}
-}
-
-//指定された深さまで読みこみ、子供たちを返す。0で指定されたindexのみ。並列処理はしない
-static std::vector<int> yomikomiDepthV(const std::vector<std::string> vs, SearchNode**& sn, int*& parents, const int index, const int depth) {
-	auto c = yomikomiLineV(vs, sn, parents, index);
-	if (depth == 0) {
-		return c;
-	}
-	else {
-		std::vector<int>children;
-		for (auto ch : c) {
-			auto v = yomikomiDepthV(vs, sn, parents, ch, depth - 1);
-			children.insert(children.end(), v.begin(), v.end());
-		}
-		return children;
-	}
-}
-
-//char用
-//1行読みこむ。返り値は子供のindexであってbeginでないことに注意
-static std::vector<int> yomikomiLineC(char** cc, SearchNode**& sn, int*& parents, const int index) {
-	yomikomistart = clock();
-
-	std::vector<int> childIndexes;
-
-	getlinejikan += clock() - yomikomistart;
-
-	int st;
-	uint16_t usiU;
-	double eval;
-	double mass;
-	int childCount;
-	int childIndex;
-
-	sscanf_s(cc[index], "%d,%d,%d,%lf,%lf,%d,%d", &index, &st, &usiU, &eval, &mass, &childCount, &childIndex);
-
-	Move move = Move(usiU);
-
-	for (int i = 0; i < childCount; ++i) {		//子ノードのインデックスが読み終わるまでループ
-		childIndexes.push_back(childIndex + i);
-		parents[childIndexes.back()] = index;	 //親のインデックスを要素として持つ
-	}
-
-	yomikomijikan += (clock() - yomikomistart);
-	hukugenstart = clock();
-
-	sn[index] = (SearchNode::restoreNode(move, st, eval, mass));
-	if (index != 0) {//1つ目は親なし
-		sn[parents[index]]->children.push_back(sn[index]);
-	}
-	sn[index]->children.reserve(childCount);
-
-	hukugenjikan += (clock() - hukugenstart);
-
-	return childIndexes;
-}
-
-//indexとその子供を再帰的に読みこむ
-static void yomikomiRecursiveC(char** cc, SearchNode**& sn, int*& parents, const int index) {
-	auto children = yomikomiLineC(cc, sn, parents, index);
-	for (auto c : children) {
-		yomikomiRecursiveC(cc, sn, parents, c);
-	}
-}
-
-//指定された深さまで読みこみ、子供たちを返す。0で指定されたindexのみ。並列処理はしない
-static std::vector<int> yomikomiDepthC(char **cc, SearchNode**& sn, int*& parents, const int index, const int depth) {
-	auto c = yomikomiLineC(cc, sn, parents, index);
-	if (depth == 0) {
-		return c;
-	}
-	else {
-		std::vector<int>children;
-		for (auto ch : c) {
-			auto v = yomikomiDepthC(cc, sn, parents, ch, depth - 1);
-			children.insert(children.end(), v.begin(), v.end());
-		}
-		return children;
-	}
-}
-
-
-void Commander::yomikomi()
-{
-	yomikomijikan = 0;
-	hukugenjikan = 0;
-	getlinejikan = 0;
-	//実行時間計測用
-	time_t startTime = clock();
-	time_t fileYomikomi;
-	time_t tansakugiYomikomi;
-	time_t endTime;
-
-	int i = 0, j = 0;
-	//読みこむ木の入ったファイルを開く
-	std::string fileName = (yomikomi_file_name + ".txt");
-	if(joseki_make_type == 1){
-		WIN32_FIND_DATA findFileData;
-		HANDLE hFind;
-		auto target = L"josekiFolder/*.txt";
-		int fileCount = -1;
-		hFind = FindFirstFile(target, &findFileData);
-		if (hFind != INVALID_HANDLE_VALUE) {
-			do {
-				++fileCount;
-				//_tprintf(TEXT("%d: %s\n"), ++fileCount, findFileData.cFileName);
-			} while (FindNextFile(hFind, &findFileData));
-			FindClose(hFind);
-		}
-		fileName = "josekiFolder/treejoseki" + std::to_string(fileCount) + ".txt";
-		joseki_file_count = fileCount;
-	}
-
-	//メモリマップドファイルで開いてみる
-	//ファイルオープン
-	WCHAR *wStrW;
-	wStrW = (WCHAR*)malloc((fileName.length() + 1) * sizeof(WCHAR));
-	size_t wLen = 0;
-	errno_t err = 0;
-
-	//ロケール指定
-	//setlocale(LC_ALL, "japanese");
-	//変換
-	err = mbstowcs_s(&wLen, wStrW, fileName.length() + 1, fileName.c_str(), _TRUNCATE);
-	HANDLE hFile;
-	hFile = CreateFile(wStrW, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
-	if (hFile == INVALID_HANDLE_VALUE) {
-		std::cout << GetLastError() << std::endl;
-	}
-	
-	//ファイルマッピングオブジェクトを作成
-	HANDLE hMap;
-	auto mapname = _T("TestFile");
-	hMap = CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, mapname);
-	if (hMap <= 0) {
-		std::cout << "get pointa error" << std::endl;
-	}
-
-	//ファイルポインタを取得
-	char* pPointer;
-	int pointerIndex = 0;
-	pPointer = (char*)MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
-
-	fileYomikomi = clock() - startTime;
-
-	//行の数。1行目はsfenなため1引いてある
-	char* firstLine = (char*)malloc(sizeof(char) * 128);
-	int flSize = 0;
-	while (pPointer[pointerIndex] != '\n') {
-		firstLine[flSize] = pPointer[pointerIndex];
-		flSize++;
-		pointerIndex++;
-	}
-	firstLine[flSize] = '\0';
-	pointerIndex++;
-	auto flv = usi::split(firstLine, ',');
-	int lineCount = std::stoi(flv[3]);
-	int ColumnSize = std::stoi(flv[1]);
-	//ノードと親の領域を必要な数だけ確保
-	SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * lineCount);
-	int* parents = (int*)malloc(sizeof(int) * lineCount);
-
-	//ノードの部分まで進行
-	while (pPointer[pointerIndex] != '\n') {
-		pointerIndex++;
-	}
-	int offset = ++pointerIndex;
-
-	std::cout << "start \"Yomikomi!\" " << std::endl;
-
-	int depth = 0;
-	std::vector<int>childrenToThread;
-	
-	if (yomikomi_type == 0) {
-		childrenToThread = yomikomiDepth(pPointer, nodes, parents, 0, ColumnSize, offset, depth);
-	}
-	else if (yomikomi_type) {
-		childrenToThread.push_back(0);
-	}
-
-	//再帰的に読みこむ
-	std::vector<std::thread> thr;
-	for (auto c : childrenToThread) {
-		thr.push_back(std::thread(yomikomiRecursive, pPointer, std::ref(nodes), std::ref(parents), c, ColumnSize, offset));
-	}
-	for (int i = 0; i < thr.size();++i) {
-		thr[i].join();
-	}
-	tansakugiYomikomi = clock() - fileYomikomi - startTime;
-
-	//depth直後が評価値順ではないので修正する
-	SearchNode::sortChildren(nodes[0]);
-	
-	std::cout << "end \"Yomikomi!\" " << std::endl;
-	
-	//初期局面の作成(まだ初期状態から弄ってない)
-	std::vector<std::string> startpos;
-	startpos.push_back(" ");
-	startpos.push_back("startpos");
-	Kyokumen kyo = Kyokumen(startpos);
-
-	tree.setRoot(nodes[0], kyo, lineCount);
-
-	//ファイルを閉じる
-	if (UnmapViewOfFile(pPointer) == 0) {
-		std::cout << "ファイル綴じエラー" << std::endl;
-	}
-
-	CloseHandle(hMap);
-	CloseHandle(hFile);
-
-	free(wStrW);
-	free(firstLine);
-	free(nodes);
-	free(parents);
-
-	endTime = clock() - startTime;
-
-	std::ofstream ofs("time.txt",std::ios::app);
-	ofs << "読み込みタイプ," << yomikomi_type << ",ノード数," << lineCount << ",読み込み時間," << yomikomijikan / (double)CLOCKS_PER_SEC << ",復元時間," << hukugenjikan / (double)CLOCKS_PER_SEC << ",ファイル読み込み完了時刻," << fileYomikomi / (double)CLOCKS_PER_SEC << ",探索木読み込み完了時刻," << tansakugiYomikomi / (double)CLOCKS_PER_SEC << ",行読み時間," << getlinejikan / (double)CLOCKS_PER_SEC << ",総時間," << endTime / (double)CLOCKS_PER_SEC << "," << fileName << std::endl;
-	ofs.close();
-}
-
-void Commander::yomikomiKizon()
-{
-	yomikomijikan = 0;
-	hukugenjikan = 0;
-	getlinejikan = 0;
-
-	//実行時間計測用
-	time_t startTime = clock();
-	time_t fileYomikomi = 0;
-	time_t tansakugiYomikomi = 0;
-	time_t endTime = 0;
-
-	std::string ss;
-	int i = 0, j = 0;
-	size_t i_max = 0;
-	std::vector<SearchNode*> test;
-
-	SearchNode* node = NULL;
-	std::vector<int> parents = {};
-	parents.push_back(-1);
-	int index = 0;
-	int	st = 0;
-	uint16_t usiU;
-	double eval = 0.0;
-	double mass = 0.0;
-	Move move;
-	int childCount;
-	std::cout << "start \"Yomikomi!\" " << std::endl;
-	static int num = 0;
-
-	if (yomikomi_type == 1) {
-		std::ifstream ifs;
-		ifs.open(yomikomi_file_name + ".txt");
-		if (ifs.fail()) {
-			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-		std::getline(ifs, ss); //sfen
-		std::getline(ifs, ss); //sfen
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-		fileYomikomi = clock() - startTime;
-
-		while (1) {
-			yomikomistart = clock();
-
-			std::getline(ifs, ss);
-			if (ifs.eof()) {
-				break;//ファイルの終わりならブレイク
-			}
-
-			getlinejikan += clock() - yomikomistart;
-
-			auto split = usi::split(ss, ',');
-			index = std::stoi(split[0]);
-			st = std::stoi(split[1]);
-			usiU = std::stoi(split[2]);
-			eval = std::stod(split[3]);
-			mass = std::stod(split[4]);
-			childCount = std::stoi(split[5]);
-
-			move = Move(usiU);
-
-			for (int j = 0; j < childCount; ++j) {		//子ノードのインデックスが読み終わるまでループ
-				parents.push_back(index);	 //親のインデックスを要素として持つ
-			}
-
-			yomikomijikan += clock() - yomikomistart;
-			hukugenstart = clock();
-
-			if (index == 0) {//1つ目は親なし
-				test.push_back(node->restoreNode(move, st, eval, mass));
-			}
-			else {
-				test.push_back(node->restoreNode(move, st, eval, mass));
-				test[parents[index]]->children.push_back(test[index]);
-			}
-
-			hukugenjikan += clock() - hukugenstart;
-			i++;
-		}
-	}
-	else if (yomikomi_type == 2) {
-		std::ifstream ifs;
-		ifs.open(yomikomi_file_name + ".txt");
-		if (ifs.fail()) {
-			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-		std::getline(ifs, ss); //sfen
-		std::getline(ifs, ss); //sfen
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-		fileYomikomi = clock() - startTime;
-
-		while (1) {
-			yomikomistart = clock();
-
-			std::getline(ifs, ss);
-			if (ifs.eof()) {
-				break;//ファイルの終わりならブレイク
-			}
-
-			getlinejikan += clock() - yomikomistart;
-
-			sscanf_s(ss.c_str(), "%d,%d,%d,%lf,%lf,%d", &index, &st, &usiU, &eval, &mass, &childCount);
-			move = Move(usiU);
-
-			for (int j = 0; j < childCount; ++j) {		//子ノードのインデックスが読み終わるまでループ
-				parents.push_back(index);	 //親のインデックスを要素として持つ
-			}
-
-			yomikomijikan += clock() - yomikomistart;
-			hukugenstart = clock();
-
-			if (index == 0) {//1つ目は親なし
-				test.push_back(node->restoreNode(move, st, eval, mass));
-			}
-			else {
-				test.push_back(node->restoreNode(move, st, eval, mass));
-				test[parents[index]]->children.push_back(test[index]);
-			}
-
-			hukugenjikan += clock() - hukugenstart;
-			i++;
-		}
-	}
-	else if (yomikomi_type == 3) {
-		const int N = 256;
-		char buf[N];
-		FILE* fp;
-		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
-		if (err) {
-			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-
-		fgets(buf, N, fp);
-		fgets(buf, N, fp);
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-		fileYomikomi = clock() - startTime;
-
-		while (1) {
-			yomikomistart = clock();
-
-			if (fgets(buf, N, fp) == NULL) {
-				break;//ファイルの終わりならブレイク
-			}
-
-			getlinejikan += clock() - yomikomistart;
-
-			sscanf_s(buf, "%d,%d,%d,%lf,%lf,%d", &index, &st, &usiU, &eval, &mass, &childCount);
-			move = Move(usiU);
-
-			for (int j = 0; j < childCount; ++j) {		//子ノードのインデックスが読み終わるまでループ
-				parents.push_back(index);	 //親のインデックスを要素として持つ
-			}
-
-			yomikomijikan += clock() - yomikomistart;
-			hukugenstart = clock();
-
-			if (index == 0) {//1つ目は親なし
-				test.push_back(node->restoreNode(move, st, eval, mass));
-			}
-			else {
-				test.push_back(node->restoreNode(move, st, eval, mass));
-				test[parents[index]]->children.push_back(test[index]);
-			}
-
-			hukugenjikan += clock() - hukugenstart;
-			i++;
-		}
-		fclose(fp);
-	}
-	else if (yomikomi_type == 4) {
-		const int N = sizeof(char) * 1024 * 1024;
-		std::string ss;
-		char* buf = (char*)malloc(N);
-		FILE* fp;
-		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
-		if (err) {
-			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-
-		fgets(buf, N, fp);
-		fgets(buf, N, fp);
-
-		while (!feof(fp)) {
-			size_t size = fread(&buf[0], sizeof(char), N - 1, fp);
-			buf[size] = '\0';
-			ss += buf;
-		}
-		fclose(fp);
-		free(buf);
-
-		auto splitss = usi::split(ss, '\n');
-
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-		fileYomikomi = clock() - startTime;
-
-		while (i <= splitss.size()) {
-			yomikomistart = clock();
-
-			getlinejikan += clock() - yomikomistart;
-
-			sscanf_s(splitss[i].c_str(), "%d,%d,%d,%lf,%lf,%d", &index, &st, &usiU, &eval, &mass, &childCount);
-			move = Move(usiU);
-
-
-			for (int j = 0; j < childCount; ++j) {		//子ノードのインデックスが読み終わるまでループ
-				parents.push_back(index);	 //親のインデックスを要素として持つ
-			}
-
-			yomikomijikan += clock() - yomikomistart;
-			hukugenstart = clock();
-
-			if (index == 0) {//1つ目は親なし
-				test.push_back(node->restoreNode(move, st, eval, mass));
-			}
-			else {
-				test.push_back(node->restoreNode(move, st, eval, mass));
-				test[parents[index]]->children.push_back(test[index]);
-			}
-
-			hukugenjikan += clock() - hukugenstart;
-			i++;
-		}
-	}
-	else if (yomikomi_type == 5) {
-		std::string ss;
-		FILE* fp;
-		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
-		if (err) {
-			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-		char firstLine[256];
-		fgets(firstLine, 256, fp);
-		size_t lineLength = std::stoi(usi::split(firstLine, ',')[1]);
-		size_t lineSize = std::stoi(usi::split(firstLine, ',')[3]);
-
-		const size_t N = sizeof(char) * (lineLength);
-		char* buf = (char*)malloc(N);
-
-		fgets(buf, 256, fp);
-
-		std::vector<std::string> splitss;
-		splitss.reserve(lineSize + 2);
-
-		while (!feof(fp)) {
-			size_t size = fread(&buf[0], sizeof(char), N - 1, fp);
-			buf[size] = '\0';
-			splitss.push_back(std::string(buf));
-		}
-		fclose(fp);
-		free(buf);
-
-		//auto splitss = usi::split(ss, '\n');
-
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-		fileYomikomi = clock() - startTime;
-
-		while (i < splitss.size()) {
-			if (splitss[i].length() == 0) {
-				break;
-			}
-
-			yomikomistart = clock();
-
-			getlinejikan += clock() - yomikomistart;
-
-			sscanf_s(splitss[i].c_str(), "%d,%d,%d,%lf,%lf,%d", &index, &st, &usiU, &eval, &mass, &childCount);
-			move = Move(usiU);
-
-
-			for (int j = 0; j < childCount; ++j) {		//子ノードのインデックスが読み終わるまでループ
-				parents.push_back(index);	 //親のインデックスを要素として持つ
-			}
-
-			yomikomijikan += clock() - yomikomistart;
-			hukugenstart = clock();
-
-			if (index == 0) {//1つ目は親なし
-				test.push_back(node->restoreNode(move, st, eval, mass));
-			}
-			else {
-				test.push_back(node->restoreNode(move, st, eval, mass));
-				test[parents[index]]->children.push_back(test[index]);
-			}
-
-			hukugenjikan += clock() - hukugenstart;
-			i++;
-		}
-	}
-	else if (yomikomi_type == 6) {
-		std::string ss;
-		FILE* fp;
-		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
-		if (err) {
-			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-		int offset = 0;
-		char firstLine[256];
-		fgets(firstLine, 256, fp);	//1行目
-		//offset += strlen(firstLine);
-		size_t lineLength = std::stoi(usi::split(firstLine, ',')[1]) - 1;
-		size_t lineSize = std::stoi(usi::split(firstLine, ',')[3]);
-
-		const size_t fullSize = sizeof(char) * (lineLength + 2) * lineSize + 1;
-		const size_t N = fullSize;
-		char* buf = (char*)malloc(N);
-
-		fgets(buf, 256, fp);	//2行目、sfen
-		//offset += strlen(buf);
-
-		char* splitss = (char*)malloc(fullSize);
-		memset(splitss, 0, fullSize);
-
-		while (!feof(fp)) {
-			size_t size = fread(&buf[0], sizeof(char), N - 1, fp);
-			buf[size] = '\0';
-			strcat_s(splitss, fullSize, buf);
-		}
-		fclose(fp);
-		free(buf);
-
-		SearchNode** tNode = (SearchNode**)malloc(sizeof(SearchNode*) * lineSize);
-		int* tParents = (int*)malloc(sizeof(int) * lineSize);
-		//auto splitss = usi::split(ss, '\n');
-
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-		fileYomikomi = clock() - startTime;
-
-		int depth = 0;
-		std::vector<int>childrenToThread;
-		//childrenToThread = yomikomiDepth(splitss, tNode, tParents, 0, lineLength, offset, depth);
-		childrenToThread.push_back(0);
-
-		//再帰的に読みこむ
-		std::vector<std::thread> thr;
-		for (auto c : childrenToThread) {
-			thr.push_back(std::thread(yomikomiRecursive, splitss, std::ref(tNode), std::ref(tParents), c, lineLength, offset));
-		}
-		for (int i = 0; i < thr.size(); ++i) {
-			thr[i].join();
-		}
-		//yomikomiRecursive(splitss, tNode, tParents, 0, lineLength, offset);
-
-		test.push_back(tNode[0]);
-		i = lineSize;
-
-		free(tNode);
-		free(tParents);
-	}
-	else if (yomikomi_type == 7) {
-		std::string ss;
-		FILE* fp;
-		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
-		if (err) {
-			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-		int offset = 0;
-		char firstLine[256];
-		fgets(firstLine, 256, fp);	//1行目
-		//offset += strlen(firstLine);
-		size_t lineLength = std::stoi(usi::split(firstLine, ',')[1]) - 1;
-		size_t lineSize = std::stoi(usi::split(firstLine, ',')[3]);
-
-		const size_t fullSize = sizeof(char) * (lineLength + 2) * lineSize + 1;
-		const size_t N = fullSize;
-		char* buf = (char*)malloc(N);
-
-		fgets(buf, 256, fp);	//2行目、sfen
-		//offset += strlen(buf);
-
-		char* splitss = (char*)malloc(fullSize);
-		memset(splitss, 0, fullSize);
-
-		while (!feof(fp)) {
-			size_t size = fread(&buf[0], sizeof(char), N - 1, fp);
-			buf[size] = '\0';
-			strcat_s(splitss, fullSize, buf);
-		}
-		fclose(fp);
-		free(buf);
-
-		SearchNode** tNode = (SearchNode**)malloc(sizeof(SearchNode*) * lineSize);
-		int* tParents = (int*)malloc(sizeof(int) * lineSize);
-		//auto splitss = usi::split(ss, '\n');
-
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-		fileYomikomi = clock() - startTime;
-
-		int depth = 0;
-		std::vector<int>childrenToThread;
-		childrenToThread = yomikomiDepth(splitss, tNode, tParents, 0, lineLength, offset, depth);
-		//childrenToThread.push_back(0);
-
-		//再帰的に読みこむ
-		std::vector<std::thread> thr;
-		for (auto c : childrenToThread) {
-			thr.push_back(std::thread(yomikomiRecursive, splitss, std::ref(tNode), std::ref(tParents), c, lineLength, offset));
-		}
-		for (int i = 0; i < thr.size(); ++i) {
-			thr[i].join();
-		}
-		//yomikomiRecursive(splitss, tNode, tParents, 0, lineLength, offset);
-
-		test.push_back(tNode[0]);
-		i = lineSize;
-
-		free(tNode);
-		free(tParents);
-	}
-	else if (yomikomi_type == 8) {
-		std::string ss;
-		FILE* fp;
-		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
-		if (err) {
-			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-		char firstLine[256];
-		fgets(firstLine, 256, fp);
-		size_t lineLength = std::stoi(usi::split(firstLine, ',')[1]);
-		size_t lineSize = std::stoi(usi::split(firstLine, ',')[3]);
-
-		const size_t N = sizeof(char) * (lineLength);
-		char* buf = (char*)malloc(N);
-
-		fgets(buf, 256, fp);
-
-		std::vector<std::string> splitss;
-		splitss.reserve(lineSize + 2);
-
-		while (!feof(fp)) {
-			size_t size = fread(&buf[0], sizeof(char), N - 1, fp);
-			buf[size] = '\0';
-			splitss.push_back(std::string(buf));
-		}
-		fclose(fp);
-		free(buf);
-
-		//auto splitss = usi::split(ss, '\n');
-
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-		fileYomikomi = clock() - startTime;
-
-		SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * lineSize);
-		int* parents = (int*)malloc(sizeof(int) * lineSize);
-
-		yomikomiRecursiveV(splitss, nodes, parents, 0);
-
-		i = lineSize;
-	}
-	else if (yomikomi_type == 9) {
-		std::string ss;
-		FILE* fp;
-		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
-		if (err) {
-			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-		char firstLine[256];
-		fgets(firstLine, 256, fp);
-		size_t lineLength = std::stoi(usi::split(firstLine, ',')[1]);
-		size_t lineSize = std::stoi(usi::split(firstLine, ',')[3]);
-
-		const size_t N = sizeof(char) * (lineLength);
-		char* buf = (char*)malloc(N);
-
-		fgets(buf, 256, fp);
-
-		char **splitss;
-		splitss = (char**)malloc(sizeof(char) * lineLength * lineSize);
-		i = 0;
-
-		while (i < lineSize) {
-			splitss[i] = (char*)malloc(sizeof(char) * lineLength);
-			size_t size = fread(splitss[i], sizeof(char), N - 1, fp);
-			splitss[i][size] = '\0';
-			++i;
-		}
-		fclose(fp);
-		free(buf);
-
-		//auto splitss = usi::split(ss, '\n');
-
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-		fileYomikomi = clock() - startTime;
-
-		SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * lineSize);
-		int* parents = (int*)malloc(sizeof(int) * lineSize);
-
-		yomikomiRecursiveC(splitss, nodes, parents, 0);
-
-		test.push_back(nodes[0]);
-	}
-	else if (yomikomi_type == 10) {
-		std::string ss;
-		FILE* fp;
-		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
-		if (err) {
-			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-		char firstLine[256];
-		fgets(firstLine, 256, fp);
-		size_t lineLength = std::stoi(usi::split(firstLine, ',')[1]);
-		size_t lineSize = std::stoi(usi::split(firstLine, ',')[3]);
-
-		const size_t N = sizeof(char) * (lineLength);
-		char* buf = (char*)malloc(N);
-
-		fgets(buf, 256, fp);
-
-		char** splitss;
-		splitss = (char**)malloc(sizeof(char) * lineLength * lineSize);
-		i = 0;
-
-		while (i < lineSize) {
-			splitss[i] = (char*)malloc(sizeof(char) * lineLength);
-			size_t size = fread(splitss[i], sizeof(char), N - 1, fp);
-			splitss[i][size] = '\0';
-			++i;
-		}
-		fclose(fp);
-		free(buf);
-
-		//auto splitss = usi::split(ss, '\n');
-
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-		fileYomikomi = clock() - startTime;
-
-		SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * lineSize);
-		int* parents = (int*)malloc(sizeof(int) * lineSize);
-
-		 auto childrenToThread = yomikomiDepthC(splitss, nodes, parents, 0, 0);
-		 //再帰的に読みこむ
-		 std::vector<std::thread> thr;
-		 for (auto c : childrenToThread) {
-			 thr.push_back(std::thread(yomikomiRecursiveC, splitss, std::ref(nodes), std::ref(parents), c));
-		 }
-		 for (int i = 0; i < thr.size(); ++i) {
-			 thr[i].join();
-		 }
-
-		 for (int n = 0; n < lineSize; ++n) {
-			 free(splitss[n]);
-		 }
-		 free(splitss);
-		 free(parents);
-		 free(nodes);
-
-		test.push_back(nodes[0]);
-	}
-	tansakugiYomikomi = clock() - fileYomikomi - startTime;
-
-	std::cout << "end \"Yomikomi!\" " << std::endl;
-	i_max = i;
-	std::vector<std::string> startpos;
-	startpos.push_back(" ");
-	startpos.push_back("startpos");
-	Kyokumen kyo = Kyokumen(startpos);
-
-	node = test[0];
-	tree.setRoot(node, kyo, i_max);
-
-	endTime = clock() - startTime;
-
-	std::ofstream ofs("time.txt", std::ios::app);
-	ofs << "読み込みタイプ," << yomikomi_type << ",ノード数," << i_max << ",読み込み時間," << yomikomijikan / (double)CLOCKS_PER_SEC << ",復元時間," << hukugenjikan / (double)CLOCKS_PER_SEC << ",ファイル読み込み完了時刻," << fileYomikomi / (double)CLOCKS_PER_SEC << ",探索木読み込み完了時刻," << tansakugiYomikomi / (double)CLOCKS_PER_SEC << ",行読み時間," << getlinejikan / (double)CLOCKS_PER_SEC << ",総時間," << endTime / (double)CLOCKS_PER_SEC << "," << yomikomi_file_name << ".txt" << std::endl;
-	ofs.close();
-}
+//
+//#include <Windows.h>
+//#include <tchar.h>
+//#include <locale.h>
+//
+//time_t yomikomistart;
+//time_t yomikomijikan = 0;
+//time_t hukugenstart;
+//time_t hukugenjikan = 0;
+//time_t getlinestart;
+//time_t getlinejikan = 0;
+//
+////1行読みこむ。返り値は子供のindexであってbeginでないことに注意
+//static std::vector<int> yomikomiLine(const char* const lines, SearchNode**& sn, int*& parents, const int index, const size_t length, const int offset) {
+//	yomikomistart = clock();
+//
+//	std::vector<int> childIndexes;
+//	//\0の分+1
+//	char* cstr = (char*)malloc(sizeof(char) * (length + 1));
+//	//\rの分+1
+//	size_t ind = offset + index * (length);
+//	//読むのは\rの前まで
+//	memcpy_s(cstr, length + 1, &(lines[ind]), length);
+//	cstr[length] = '\0';
+//	//std::string ss(cstr);
+//
+//	getlinejikan += clock() - yomikomistart;
+//
+//	int st;
+//	uint16_t usiU;
+//	double eval;
+//	double mass;
+//	int childCount;
+//	int childIndex;
+//
+//	sscanf_s(cstr, "%d,%d,%d,%lf,%lf,%d,%d",&index, &st, &usiU, &eval, &mass, &childCount,&childIndex);
+//
+//	Move move = Move(usiU);
+//
+//	for (int i = 0; i < childCount; ++i) {		//子ノードのインデックスが読み終わるまでループ
+//		childIndexes.push_back(childIndex + i);
+//		parents[childIndexes.back()] = index;	 //親のインデックスを要素として持つ
+//	}
+//
+//	yomikomijikan += (clock() - yomikomistart);
+//	hukugenstart = clock();
+//
+//	sn[index] = (SearchNode::restoreNode(move, st, eval, mass));
+//	if (index != 0) {//1つ目は親なし
+//		sn[parents[index]]->children.push_back(sn[index]);
+//	}
+//	sn[index]->children.reserve(childCount);
+//
+//	hukugenjikan += (clock() - hukugenstart);
+//
+//	free(cstr);
+//
+//	return childIndexes;
+//}
+//
+////indexとその子供を再帰的に読みこむ
+//static void yomikomiRecursive(const char* const lines, SearchNode**& sn, int*& parents, const int index, const int length, const int offset) {
+//	auto children = yomikomiLine(lines, sn, parents, index, length, offset);
+//	for (auto c : children) {
+//		yomikomiRecursive(lines, sn, parents, c, length, offset);
+//	}
+//}
+//
+////指定された深さまで読みこみ、子供たちを返す。0で指定されたindexのみ。並列処理はしない
+//static std::vector<int> yomikomiDepth(const char* const lines, SearchNode**& sn, int*& parents, const int index, const int length, const int offset,const int depth) {
+//	auto c = yomikomiLine(lines, sn, parents, index, length, offset);
+//	if (depth == 0) {
+//		return c;
+//	}
+//	else {
+//		std::vector<int>children;
+//		for (auto ch : c) {
+//			auto v = yomikomiDepth(lines, sn, parents, ch, length, offset, depth - 1);
+//			children.insert(children.end(),v.begin(),v.end());
+//		}
+//		return children;
+//	}
+//}
+//
+//
+////1行読みこむ。fpをそのまま渡す用
+//static std::vector<int> yomikomiLineF(FILE* fp, SearchNode**& sn, int*& parents, const int index, const size_t length, const int offset) {
+//	yomikomistart = clock();
+//
+//	std::vector<int> childIndexes;
+//	//\0の分+1
+//	char* cstr = (char*)malloc(sizeof(char) * (length + 1));
+//	//\rの分+1
+//	fpos_t ind = offset + index * (length);
+//	//読むのは\rの前まで
+//	fsetpos(fp, &ind);
+//	//memcpy_s(cstr, length + 1, &(lines[ind]), length);
+//	//cstr[length] = '\0';
+//	//std::string ss(cstr);
+//
+//	getlinejikan += clock() - yomikomistart;
+//
+//	int tIndex;
+//	int st;
+//	uint16_t usiU;
+//	double eval;
+//	double mass;
+//	int childCount;
+//	int childIndex;
+//
+//	//sscanf_s(cstr, "%d,%d,%d,%lf,%lf,%d,%d", &index, &st, &usiU, &eval, &mass, &childCount, &childIndex);
+//	fread(&tIndex, sizeof(index), 1, fp);
+//	fread(&st, sizeof(st), 1, fp);
+//	fread(&usiU, sizeof(usiU), 1, fp);
+//	fread(&eval, sizeof(eval), 1, fp);
+//	fread(&mass, sizeof(mass), 1, fp);
+//	fread(&childCount, sizeof(childCount), 1, fp);
+//	fread(&childIndex, sizeof(childIndex), 1, fp);
+//
+//	Move move = Move(usiU);
+//
+//	for (int i = 0; i < childCount; ++i) {		//子ノードのインデックスが読み終わるまでループ
+//		childIndexes.push_back(childIndex + i);
+//		parents[childIndexes.back()] = index;	 //親のインデックスを要素として持つ
+//	}
+//
+//	yomikomijikan += (clock() - yomikomistart);
+//	hukugenstart = clock();
+//
+//	sn[index] = (SearchNode::restoreNode(move, st, eval, mass));
+//	if (index != 0) {//1つ目は親なし
+//		sn[parents[index]]->children.push_back(sn[index]);
+//	}
+//	sn[index]->children.reserve(childCount);
+//
+//	hukugenjikan += (clock() - hukugenstart);
+//
+//	//free(cstr);
+//
+//	return childIndexes;
+//}
+//
+////indexとその子供を再帰的に読みこむ
+//static void yomikomiRecursiveF(FILE *fp, SearchNode**& sn, int*& parents, const int index, const int length, const int offset) {
+//	auto children = yomikomiLineF(fp, sn, parents, index, length, offset);
+//	for (auto c : children) {
+//		yomikomiRecursiveF(fp, sn, parents, c, length, offset);
+//	}
+//}
+//
+////指定された深さまで読みこみ、子供たちを返す。0で指定されたindexのみ。並列処理はしない
+//static std::vector<int> yomikomiDepthF(FILE *fp, SearchNode**& sn, int*& parents, const int index, const int length, const int offset, const int depth) {
+//	auto c = yomikomiLineF(fp, sn, parents, index, length, offset);
+//	if (depth == 0) {
+//		return c;
+//	}
+//	else {
+//		std::vector<int>children;
+//		for (auto ch : c) {
+//			auto v = yomikomiDepthF(fp, sn, parents, ch, length, offset, depth - 1);
+//			children.insert(children.end(), v.begin(), v.end());
+//		}
+//		return children;
+//	}
+//}
+//
+//
+//
+//void Commander::yomikomi()
+//{
+//	yomikomijikan = 0;
+//	hukugenjikan = 0;
+//	getlinejikan = 0;
+//	//実行時間計測用
+//	time_t startTime = clock();
+//	time_t fileYomikomi;
+//	time_t tansakugiYomikomi;
+//	time_t endTime;
+//
+//	int i = 0, j = 0;
+//	//読みこむ木の入ったファイルを開く
+//	std::string fileName = (yomikomi_file_name + ".txt");
+//	if(joseki_make_type == 1){
+//		WIN32_FIND_DATA findFileData;
+//		HANDLE hFind;
+//		auto target = L"josekiFolder/*.txt";
+//		int fileCount = -1;
+//		hFind = FindFirstFile(target, &findFileData);
+//		if (hFind != INVALID_HANDLE_VALUE) {
+//			do {
+//				++fileCount;
+//				//_tprintf(TEXT("%d: %s\n"), ++fileCount, findFileData.cFileName);
+//			} while (FindNextFile(hFind, &findFileData));
+//			FindClose(hFind);
+//		}
+//		fileName = "josekiFolder/treejoseki" + std::to_string(fileCount) + ".txt";
+//		joseki_file_count = fileCount;
+//	}
+//
+//	//メモリマップドファイルで開いてみる
+//	//ファイルオープン
+//	WCHAR *wStrW;
+//	wStrW = (WCHAR*)malloc((fileName.length() + 1) * sizeof(WCHAR));
+//	size_t wLen = 0;
+//	errno_t err = 0;
+//
+//	//ロケール指定
+//	//setlocale(LC_ALL, "japanese");
+//	//変換
+//	err = mbstowcs_s(&wLen, wStrW, fileName.length() + 1, fileName.c_str(), _TRUNCATE);
+//	HANDLE hFile;
+//	hFile = CreateFile(wStrW, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
+//	if (hFile == INVALID_HANDLE_VALUE) {
+//		std::cout << GetLastError() << std::endl;
+//	}
+//	
+//	//ファイルマッピングオブジェクトを作成
+//	HANDLE hMap;
+//	auto mapname = _T("TestFile");
+//	hMap = CreateFileMapping(hFile, 0, PAGE_READONLY, 0, 0, mapname);
+//	if (hMap <= 0) {
+//		std::cout << "get pointa error" << std::endl;
+//	}
+//
+//	//ファイルポインタを取得
+//	char* pPointer;
+//	int pointerIndex = 0;
+//	pPointer = (char*)MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0);
+//
+//	fileYomikomi = clock() - startTime;
+//
+//	//行の数。1行目はsfenなため1引いてある
+//	char* firstLine = (char*)malloc(sizeof(char) * 128);
+//	int flSize = 0;
+//	while (pPointer[pointerIndex] != '\n') {
+//		firstLine[flSize] = pPointer[pointerIndex];
+//		flSize++;
+//		pointerIndex++;
+//	}
+//	firstLine[flSize] = '\0';
+//	pointerIndex++;
+//	auto flv = usi::split(firstLine, ',');
+//	int lineCount = std::stoi(flv[3]);
+//	int ColumnSize = std::stoi(flv[1]);
+//	//ノードと親の領域を必要な数だけ確保
+//	SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * lineCount);
+//	int* parents = (int*)malloc(sizeof(int) * lineCount);
+//
+//	//ノードの部分まで進行
+//	while (pPointer[pointerIndex] != '\n') {
+//		pointerIndex++;
+//	}
+//	int offset = ++pointerIndex;
+//
+//	std::cout << "start \"Yomikomi!\" " << std::endl;
+//
+//	int depth = 0;
+//	std::vector<int>childrenToThread;
+//	
+//	if (yomikomi_type == 0) {
+//		childrenToThread = yomikomiDepth(pPointer, nodes, parents, 0, ColumnSize, offset, depth);
+//	}
+//	else if (yomikomi_type) {
+//		childrenToThread.push_back(0);
+//	}
+//
+//	//再帰的に読みこむ
+//	std::vector<std::thread> thr;
+//	for (auto c : childrenToThread) {
+//		thr.push_back(std::thread(yomikomiRecursive, pPointer, std::ref(nodes), std::ref(parents), c, ColumnSize, offset));
+//	}
+//	for (int i = 0; i < thr.size();++i) {
+//		thr[i].join();
+//	}
+//	tansakugiYomikomi = clock() - fileYomikomi - startTime;
+//
+//	//depth直後が評価値順ではないので修正する
+//	SearchNode::sortChildren(nodes[0]);
+//	
+//	std::cout << "end \"Yomikomi!\" " << std::endl;
+//	
+//	//初期局面の作成(まだ初期状態から弄ってない)
+//	std::vector<std::string> startpos;
+//	startpos.push_back(" ");
+//	startpos.push_back("startpos");
+//	Kyokumen kyo = Kyokumen(startpos);
+//
+//	tree.setRoot(nodes[0], kyo, lineCount);
+//
+//	//ファイルを閉じる
+//	if (UnmapViewOfFile(pPointer) == 0) {
+//		std::cout << "ファイル綴じエラー" << std::endl;
+//	}
+//
+//	CloseHandle(hMap);
+//	CloseHandle(hFile);
+//
+//	free(wStrW);
+//	free(firstLine);
+//	free(nodes);
+//	free(parents);
+//
+//	endTime = clock() - startTime;
+//
+//	std::ofstream ofs("time.txt",std::ios::app);
+//	ofs << "読み込みタイプ," << yomikomi_type << ",ノード数," << lineCount << ",読み込み時間," << yomikomijikan / (double)CLOCKS_PER_SEC << ",復元時間," << hukugenjikan / (double)CLOCKS_PER_SEC << ",ファイル読み込み完了時刻," << fileYomikomi / (double)CLOCKS_PER_SEC << ",探索木読み込み完了時刻," << tansakugiYomikomi / (double)CLOCKS_PER_SEC << ",行読み時間," << getlinejikan / (double)CLOCKS_PER_SEC << ",総時間," << endTime / (double)CLOCKS_PER_SEC << "," << fileName << std::endl;
+//	ofs.close();
+//}
+//
+//void Commander::yomikomiKizon()
+//{
+//	yomikomijikan = 0;
+//	hukugenjikan = 0;
+//	getlinejikan = 0;
+//
+//	//実行時間計測用
+//	time_t startTime = clock();
+//	time_t fileYomikomi = 0;
+//	time_t tansakugiYomikomi = 0;
+//	time_t endTime = 0;
+//
+//	std::string ss;
+//	int i = 0, j = 0;
+//	size_t i_max = 0;
+//	std::vector<SearchNode*> test;
+//
+//	SearchNode* node = NULL;
+//	std::vector<int> parents = {};
+//	parents.push_back(-1);
+//	int index = 0;
+//	int	st = 0;
+//	uint16_t usiU;
+//	double eval = 0.0;
+//	double mass = 0.0;
+//	Move move;
+//	int childCount;
+//	std::cout << "start \"Yomikomi!\" " << std::endl;
+//	static int num = 0;
+//
+//	if (yomikomi_type == 1) {
+//		std::ifstream ifs;
+//		ifs.open(yomikomi_file_name + ".txt");
+//		if (ifs.fail()) {
+//			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+//		}
+//		std::getline(ifs, ss); //sfen
+//		std::getline(ifs, ss); //sfen
+//		//std::string sfen = "position " + ss;
+//		//tree.makeNewTree(usi::split(sfen, ' '));
+//		fileYomikomi = clock() - startTime;
+//
+//		while (1) {
+//			yomikomistart = clock();
+//
+//			std::getline(ifs, ss);
+//			if (ifs.eof()) {
+//				break;//ファイルの終わりならブレイク
+//			}
+//
+//			getlinejikan += clock() - yomikomistart;
+//
+//			auto split = usi::split(ss, ',');
+//			index = std::stoi(split[0]);
+//			st = std::stoi(split[1]);
+//			usiU = std::stoi(split[2]);
+//			eval = std::stod(split[3]);
+//			mass = std::stod(split[4]);
+//			childCount = std::stoi(split[5]);
+//
+//			move = Move(usiU);
+//
+//			for (int j = 0; j < childCount; ++j) {		//子ノードのインデックスが読み終わるまでループ
+//				parents.push_back(index);	 //親のインデックスを要素として持つ
+//			}
+//
+//			yomikomijikan += clock() - yomikomistart;
+//			hukugenstart = clock();
+//
+//			if (index == 0) {//1つ目は親なし
+//				test.push_back(node->restoreNode(move, st, eval, mass));
+//			}
+//			else {
+//				test.push_back(node->restoreNode(move, st, eval, mass));
+//				test[parents[index]]->children.push_back(test[index]);
+//			}
+//
+//			hukugenjikan += clock() - hukugenstart;
+//			i++;
+//		}
+//	}
+//	else if (yomikomi_type == 2) {
+//		std::ifstream ifs;
+//		ifs.open(yomikomi_file_name + ".txt");
+//		if (ifs.fail()) {
+//			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+//		}
+//		std::getline(ifs, ss); //sfen
+//		std::getline(ifs, ss); //sfen
+//		//std::string sfen = "position " + ss;
+//		//tree.makeNewTree(usi::split(sfen, ' '));
+//		fileYomikomi = clock() - startTime;
+//
+//		while (1) {
+//			yomikomistart = clock();
+//
+//			std::getline(ifs, ss);
+//			if (ifs.eof()) {
+//				break;//ファイルの終わりならブレイク
+//			}
+//
+//			getlinejikan += clock() - yomikomistart;
+//
+//			sscanf_s(ss.c_str(), "%d,%d,%d,%lf,%lf,%d", &index, &st, &usiU, &eval, &mass, &childCount);
+//			move = Move(usiU);
+//
+//			for (int j = 0; j < childCount; ++j) {		//子ノードのインデックスが読み終わるまでループ
+//				parents.push_back(index);	 //親のインデックスを要素として持つ
+//			}
+//
+//			yomikomijikan += clock() - yomikomistart;
+//			hukugenstart = clock();
+//
+//			if (index == 0) {//1つ目は親なし
+//				test.push_back(node->restoreNode(move, st, eval, mass));
+//			}
+//			else {
+//				test.push_back(node->restoreNode(move, st, eval, mass));
+//				test[parents[index]]->children.push_back(test[index]);
+//			}
+//
+//			hukugenjikan += clock() - hukugenstart;
+//			i++;
+//		}
+//	}
+//	else if (yomikomi_type == 3) {
+//		const int N = 256;
+//		char buf[N];
+//		FILE* fp;
+//		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
+//		if (err) {
+//			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+//		}
+//
+//		fgets(buf, N, fp);
+//		fgets(buf, N, fp);
+//		//std::string sfen = "position " + ss;
+//		//tree.makeNewTree(usi::split(sfen, ' '));
+//		fileYomikomi = clock() - startTime;
+//
+//		while (1) {
+//			yomikomistart = clock();
+//
+//			if (fgets(buf, N, fp) == NULL) {
+//				break;//ファイルの終わりならブレイク
+//			}
+//
+//			getlinejikan += clock() - yomikomistart;
+//
+//			sscanf_s(buf, "%d,%d,%d,%lf,%lf,%d", &index, &st, &usiU, &eval, &mass, &childCount);
+//			move = Move(usiU);
+//
+//			for (int j = 0; j < childCount; ++j) {		//子ノードのインデックスが読み終わるまでループ
+//				parents.push_back(index);	 //親のインデックスを要素として持つ
+//			}
+//
+//			yomikomijikan += clock() - yomikomistart;
+//			hukugenstart = clock();
+//
+//			if (index == 0) {//1つ目は親なし
+//				test.push_back(node->restoreNode(move, st, eval, mass));
+//			}
+//			else {
+//				test.push_back(node->restoreNode(move, st, eval, mass));
+//				test[parents[index]]->children.push_back(test[index]);
+//			}
+//
+//			hukugenjikan += clock() - hukugenstart;
+//			i++;
+//		}
+//		fclose(fp);
+//	}
+//	else if (yomikomi_type == 4) {
+//		const int N = sizeof(char) * 1024 * 1024;
+//		std::string ss;
+//		char* buf = (char*)malloc(N);
+//		FILE* fp;
+//		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
+//		if (err) {
+//			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+//		}
+//
+//		fgets(buf, N, fp);
+//		fgets(buf, N, fp);
+//
+//		while (!feof(fp)) {
+//			size_t size = fread(&buf[0], sizeof(char), N - 1, fp);
+//			buf[size] = '\0';
+//			ss += buf;
+//		}
+//		fclose(fp);
+//		free(buf);
+//
+//		auto splitss = usi::split(ss, '\n');
+//
+//		//std::string sfen = "position " + ss;
+//		//tree.makeNewTree(usi::split(sfen, ' '));
+//		fileYomikomi = clock() - startTime;
+//
+//		while (i <= splitss.size()) {
+//			yomikomistart = clock();
+//
+//			getlinejikan += clock() - yomikomistart;
+//
+//			sscanf_s(splitss[i].c_str(), "%d,%d,%d,%lf,%lf,%d", &index, &st, &usiU, &eval, &mass, &childCount);
+//			move = Move(usiU);
+//
+//
+//			for (int j = 0; j < childCount; ++j) {		//子ノードのインデックスが読み終わるまでループ
+//				parents.push_back(index);	 //親のインデックスを要素として持つ
+//			}
+//
+//			yomikomijikan += clock() - yomikomistart;
+//			hukugenstart = clock();
+//
+//			if (index == 0) {//1つ目は親なし
+//				test.push_back(node->restoreNode(move, st, eval, mass));
+//			}
+//			else {
+//				test.push_back(node->restoreNode(move, st, eval, mass));
+//				test[parents[index]]->children.push_back(test[index]);
+//			}
+//
+//			hukugenjikan += clock() - hukugenstart;
+//			i++;
+//		}
+//	}
+//	else if (yomikomi_type == 5) {
+//		std::string ss;
+//		FILE* fp;
+//		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
+//		if (err) {
+//			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+//		}
+//		char firstLine[256];
+//		fgets(firstLine, 256, fp);
+//		size_t lineLength = std::stoi(usi::split(firstLine, ',')[1]);
+//		size_t lineSize = std::stoi(usi::split(firstLine, ',')[3]);
+//
+//		const size_t N = sizeof(char) * (lineLength);
+//		char* buf = (char*)malloc(N);
+//
+//		fgets(buf, 256, fp);
+//
+//		std::vector<std::string> splitss;
+//		splitss.reserve(lineSize + 2);
+//
+//		while (!feof(fp)) {
+//			size_t size = fread(&buf[0], sizeof(char), N - 1, fp);
+//			buf[size] = '\0';
+//			splitss.push_back(std::string(buf));
+//		}
+//		fclose(fp);
+//		free(buf);
+//
+//		//auto splitss = usi::split(ss, '\n');
+//
+//		//std::string sfen = "position " + ss;
+//		//tree.makeNewTree(usi::split(sfen, ' '));
+//		fileYomikomi = clock() - startTime;
+//
+//		while (i < splitss.size()) {
+//			if (splitss[i].length() == 0) {
+//				break;
+//			}
+//
+//			yomikomistart = clock();
+//
+//			getlinejikan += clock() - yomikomistart;
+//
+//			sscanf_s(splitss[i].c_str(), "%d,%d,%d,%lf,%lf,%d", &index, &st, &usiU, &eval, &mass, &childCount);
+//			move = Move(usiU);
+//
+//
+//			for (int j = 0; j < childCount; ++j) {		//子ノードのインデックスが読み終わるまでループ
+//				parents.push_back(index);	 //親のインデックスを要素として持つ
+//			}
+//
+//			yomikomijikan += clock() - yomikomistart;
+//			hukugenstart = clock();
+//
+//			if (index == 0) {//1つ目は親なし
+//				test.push_back(node->restoreNode(move, st, eval, mass));
+//			}
+//			else {
+//				test.push_back(node->restoreNode(move, st, eval, mass));
+//				test[parents[index]]->children.push_back(test[index]);
+//			}
+//
+//			hukugenjikan += clock() - hukugenstart;
+//			i++;
+//		}
+//	}
+//	else if (yomikomi_type == 6) {
+//		std::string ss;
+//		FILE* fp;
+//		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
+//		if (err) {
+//			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+//		}
+//		int offset = 0;
+//		char firstLine[256];
+//		fgets(firstLine, 256, fp);	//1行目
+//		//offset += strlen(firstLine);
+//		size_t lineLength = std::stoi(usi::split(firstLine, ',')[1]) - 1;
+//		size_t lineSize = std::stoi(usi::split(firstLine, ',')[3]);
+//
+//		const size_t fullSize = sizeof(char) * (lineLength + 2) * lineSize + 1;
+//		const size_t N = fullSize;
+//		char* buf = (char*)malloc(N);
+//
+//		fgets(buf, 256, fp);	//2行目、sfen
+//		//offset += strlen(buf);
+//
+//		char* splitss = (char*)malloc(fullSize);
+//		memset(splitss, 0, fullSize);
+//
+//		while (!feof(fp)) {
+//			size_t size = fread(&buf[0], sizeof(char), N - 1, fp);
+//			buf[size] = '\0';
+//			strcat_s(splitss, fullSize, buf);
+//		}
+//		fclose(fp);
+//		free(buf);
+//
+//		SearchNode** tNode = (SearchNode**)malloc(sizeof(SearchNode*) * lineSize);
+//		int* tParents = (int*)malloc(sizeof(int) * lineSize);
+//		//auto splitss = usi::split(ss, '\n');
+//
+//		//std::string sfen = "position " + ss;
+//		//tree.makeNewTree(usi::split(sfen, ' '));
+//		fileYomikomi = clock() - startTime;
+//
+//		int depth = 0;
+//		std::vector<int>childrenToThread;
+//		//childrenToThread = yomikomiDepth(splitss, tNode, tParents, 0, lineLength, offset, depth);
+//		childrenToThread.push_back(0);
+//
+//		//再帰的に読みこむ
+//		std::vector<std::thread> thr;
+//		for (auto c : childrenToThread) {
+//			thr.push_back(std::thread(yomikomiRecursive, splitss, std::ref(tNode), std::ref(tParents), c, lineLength, offset));
+//		}
+//		for (int i = 0; i < thr.size(); ++i) {
+//			thr[i].join();
+//		}
+//		//yomikomiRecursive(splitss, tNode, tParents, 0, lineLength, offset);
+//
+//		test.push_back(tNode[0]);
+//		i = lineSize;
+//
+//		free(tNode);
+//		free(tParents);
+//	}
+//	else if (yomikomi_type == 7) {
+//		std::string ss;
+//		FILE* fp;
+//		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".txt").c_str(), "r");
+//		if (err) {
+//			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+//		}
+//		int offset = 0;
+//		char firstLine[256];
+//		fgets(firstLine, 256, fp);	//1行目
+//		//offset += strlen(firstLine);
+//		size_t lineLength = std::stoi(usi::split(firstLine, ',')[1]) - 1;
+//		size_t lineSize = std::stoi(usi::split(firstLine, ',')[3]);
+//
+//		const size_t fullSize = sizeof(char) * (lineLength + 2) * lineSize + 1;
+//		const size_t N = fullSize;
+//		char* buf = (char*)malloc(N);
+//
+//		fgets(buf, 256, fp);	//2行目、sfen
+//		//offset += strlen(buf);
+//
+//		char* splitss = (char*)malloc(fullSize);
+//		memset(splitss, 0, fullSize);
+//
+//		while (!feof(fp)) {
+//			size_t size = fread(&buf[0], sizeof(char), N - 1, fp);
+//			buf[size] = '\0';
+//			strcat_s(splitss, fullSize, buf);
+//		}
+//		fclose(fp);
+//		free(buf);
+//
+//		SearchNode** tNode = (SearchNode**)malloc(sizeof(SearchNode*) * lineSize);
+//		int* tParents = (int*)malloc(sizeof(int) * lineSize);
+//		//auto splitss = usi::split(ss, '\n');
+//
+//		//std::string sfen = "position " + ss;
+//		//tree.makeNewTree(usi::split(sfen, ' '));
+//		fileYomikomi = clock() - startTime;
+//
+//		int depth = 0;
+//		std::vector<int>childrenToThread;
+//		childrenToThread = yomikomiDepth(splitss, tNode, tParents, 0, lineLength, offset, depth);
+//		//childrenToThread.push_back(0);
+//
+//		//再帰的に読みこむ
+//		std::vector<std::thread> thr;
+//		for (auto c : childrenToThread) {
+//			thr.push_back(std::thread(yomikomiRecursive, splitss, std::ref(tNode), std::ref(tParents), c, lineLength, offset));
+//		}
+//		for (int i = 0; i < thr.size(); ++i) {
+//			thr[i].join();
+//		}
+//		//yomikomiRecursive(splitss, tNode, tParents, 0, lineLength, offset);
+//
+//		test.push_back(tNode[0]);
+//		i = lineSize;
+//
+//		free(tNode);
+//		free(tParents);
+//	}
+//	else if (yomikomi_type == 11) {
+//		std::string ss;
+//		FILE* fp;
+//		errno_t err = fopen_s(&fp, (yomikomi_file_name + ".bin").c_str(), "rb");
+//		if (err) {
+//			std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
+//		}
+//		int offset = 0;
+//		char firstLine[256];
+//		fgets(firstLine, 256, fp);	//1行目
+//		offset += strlen(firstLine);
+//		size_t lineLength = std::stoi(usi::split(firstLine, ',')[1]) - 1;
+//		size_t lineSize = std::stoi(usi::split(firstLine, ',')[3]);
+//
+//		const size_t fullSize = sizeof(char) * (lineLength + 2) * lineSize + 1;
+//		const size_t N = fullSize;
+//		char* buf = (char*)malloc(N);
+//
+//		fgets(buf, 256, fp);	//2行目、sfen
+//		offset += strlen(buf);
+//
+//		
+//		SearchNode** tNode = (SearchNode**)malloc(sizeof(SearchNode*) * lineSize);
+//		int* tParents = (int*)malloc(sizeof(int) * lineSize);
+//		//auto splitss = usi::split(ss, '\n');
+//
+//		//std::string sfen = "position " + ss;
+//		//tree.makeNewTree(usi::split(sfen, ' '));
+//		fileYomikomi = clock() - startTime;
+//
+//		int depth = 0;
+//		std::vector<int>childrenToThread;
+//		childrenToThread = yomikomiDepthF(fp, tNode, tParents, 0, lineLength, offset, depth);
+//		//childrenToThread.push_back(0);
+//
+//		//再帰的に読みこむ
+//		std::vector<std::thread> thr;
+//		for (auto c : childrenToThread) {
+//			thr.push_back(std::thread(yomikomiRecursiveF, fp, std::ref(tNode), std::ref(tParents), c, lineLength, offset));
+//		}
+//		for (int i = 0; i < thr.size(); ++i) {
+//			thr[i].join();
+//		}
+//		//yomikomiRecursive(splitss, tNode, tParents, 0, lineLength, offset);
+//
+//		test.push_back(tNode[0]);
+//		i = lineSize;
+//
+//		free(tNode);
+//		free(tParents);
+//	}
+//	tansakugiYomikomi = clock() - fileYomikomi - startTime;
+//
+//	std::cout << "end \"Yomikomi!\" " << std::endl;
+//	i_max = i;
+//	std::vector<std::string> startpos;
+//	startpos.push_back(" ");
+//	startpos.push_back("startpos");
+//	Kyokumen kyo = Kyokumen(startpos);
+//
+//	node = test[0];
+//	tree.setRoot(node, kyo, i_max);
+//
+//	endTime = clock() - startTime;
+//
+//	std::ofstream ofs("time.txt", std::ios::app);
+//	ofs << "読み込みタイプ," << yomikomi_type << ",ノード数," << i_max << ",読み込み時間," << yomikomijikan / (double)CLOCKS_PER_SEC << ",復元時間," << hukugenjikan / (double)CLOCKS_PER_SEC << ",ファイル読み込み完了時刻," << fileYomikomi / (double)CLOCKS_PER_SEC << ",探索木読み込み完了時刻," << tansakugiYomikomi / (double)CLOCKS_PER_SEC << ",行読み時間," << getlinejikan / (double)CLOCKS_PER_SEC << ",総時間," << endTime / (double)CLOCKS_PER_SEC << "," << yomikomi_file_name << ".txt" << std::endl;
+//	ofs.close();
+//}

@@ -79,8 +79,9 @@ public:
 	double getEs()const;
 	SearchNode* getBestChild()const;
 
-	static SearchNode* restoreNode(const Move& move, int st, double eval, double mass);
-
+	static SearchNode* restoreNode(const Move& move, State st, double eval, double mass);
+	State getState() const{ return status.load(); }
+	double getMass() const{ return mass.load(); }
 private:
 	double getTcMcVariance()const;
 	double getTcMcVarianceExpection()const;
