@@ -39,7 +39,7 @@ private:
 	std::vector<double> TsDistribution;
 	int resign_border = 3;
 	std::chrono::milliseconds time_quickbm_lower{ 4000 };
-	std::chrono::milliseconds time_quickbm_upper{ 20000 };
+	std::chrono::milliseconds time_standard_upper{ 20000 };
 	std::chrono::milliseconds time_overhead {150};
 	int estimate_movesnum = 120;
 
