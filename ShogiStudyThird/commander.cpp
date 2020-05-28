@@ -33,9 +33,12 @@ void Commander::execute() {
 			commander.gameInit();
 			//定跡を利用する場合のみ読みこみ
 			if (commander.yomikomi_on) {
-				Joseki joseki;
-				joseki.josekiInput();
-				commander.tree.setRoot(joseki.getJosekiNodes(), joseki.getKyokumen(), joseki.getChildCount());
+				//Joseki joseki;
+				//joseki.josekiInput();
+				//commander.tree.setRoot(joseki.getJosekiNodes(), joseki.getKyokumen(), joseki.getChildCount());
+				commander.joseki.readBook("joseki/user_book1.db");
+				std::cout << "read book" << std::endl;
+
 			}
 			std::cout << "readyok" << std::endl;
 		}
@@ -102,6 +105,10 @@ void Commander::execute() {
 			joseki.josekiOutput(commander.tree.getHistory().front(),commander.tree.startKyokumen);
 
 			std::cout << "foutjoseki: done" << std::endl;
+		}
+		else if (tokens[0] == "yomikomibook") {
+			commander.joseki.readBook("joseki/user_book1.db");
+			std::cout << "read book" << std::endl;
 		}
 	}
 }
@@ -336,6 +343,16 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		return;
 	}
 
+	if (yomikomi_on) {
+		//Softmax以外の定跡を読み込んであったら、それを利用する
+		auto bm = joseki.getBestMove(Joseki::getSfenTrimed(kyokumen.toSfen()));
+		if (bm.num != -1) {
+			auto bestChild = bm.bestMove;
+			std::cout << "bestmove " << bestChild.toUSI() << std::endl;
+			return;
+		}
+	}
+
 	startAgent();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
@@ -440,13 +457,13 @@ void Commander::position(const std::vector<std::string>& tokens) {
 			releaseAgentAndBranch(prevRoot, std::move(result.second));
 		}
 		else {
-			if (!yomikomi_on) {
+			//if (!yomikomi_on) {
 				tree.makeNewTree(tokens);
 				releaseAgentAndTree(prevRoot);
-			}
-			else {
-				yomikomi_on = false;
-			}
+			//}
+			//else {
+			//	yomikomi_on = false;
+			//}
 		}
 	}
 	else {

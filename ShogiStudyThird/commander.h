@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "agent.h"
 #include "time_property.h"
+#include "joseki.h"
 
 class Commander {
 public:
@@ -51,6 +52,7 @@ private:
 	int yomikomi_type = 0;
 	int joseki_make_type = 0;
 	int joseki_file_count;
+	Joseki joseki;	//定跡の読み込みや出力を管理
 	
 	friend class ShogiTest;
 };

@@ -4,12 +4,13 @@
 #include <iostream>
 #include <fstream>
 #include "usi.h"
-#include <atomic>
+#include <unordered_map>
 
 class Joseki {
     //共通
 public:
 private:
+    //保存するノード
     struct josekinode {
         size_t index = -1;
         SearchNode::State st = SearchNode::State::N;
@@ -37,6 +38,7 @@ private:
         }
     };
     
+    //時間計測用
     time_t startTime;
     std::string timerStart() {
         startTime = clock();
@@ -52,8 +54,8 @@ private:
 
     //出力
 public:
-    void josekiOutput(SearchNode* root,const Kyokumen rootKyokumen) ;
-    SearchNode* getJosekiNodes()const { return josekiNodes;}
+    void josekiOutput(SearchNode* root,const Kyokumen rootKyokumen);    //定跡書き出し
+    SearchNode* getJosekiNodes()const { return josekiNodes;}            //
     Kyokumen getKyokumen()const { return kyokumen; }
     size_t getChildCount()const { return childCount; }
 
@@ -88,15 +90,13 @@ private:
             std::getline(ifs, nodeCountStr);
             std::getline(ifs, sfen);
             ifs.close();
-            nodeCount = std::stol(usi::split(nodeCountStr, ',')[1]);
+            nodeCount = std::stol(usi::split(nodeCountStr, ',')[1]);    //infoファイルからノード数を取得
 
             errno_t err = fopen_s(&fp, (filename).c_str(), "rb");
             fgetpos(fp, &firstPos);
             
             nodes = (SearchNode**)malloc(sizeof(SearchNode*) * nodeCount);
-            //memset(nodes, 0, sizeof(SearchNode*) * nodeCount);
             parents = (size_t*)malloc(sizeof(size_t) * nodeCount);
-            //memset(parents, 0, sizeof(size_t) * nodeCount);
             josekiNodes = (josekinode*)malloc(sizeof(josekinode) * nodeCount);
             fread(josekiNodes, sizeof(josekinode), nodeCount, fp);
         }
@@ -118,5 +118,20 @@ private:
 
     std::string inputFileName = "treejoseki.bin";       //定跡木を格納しておくファイル
     std::string inputFileInfoName = "treejoseki_info.txt";   //定跡木の情報を格納しておくファイル
-};
 
+
+    //従来の定跡を読み込んで利用する
+public:
+    struct bookNode {
+        Move bestMove;  //盤面におけるベストな指し手
+        Move nextMove;  //相手の最適な指し手
+        double value = 0;   //評価値
+        double depth = -1;   //深さ
+        int num = -1;   //出現回数
+    }; 
+    void readBook(std::string fileName);
+    bookNode getBestMove(std::string sfen);
+    static std::string getSfenTrimed(std::string sfen);    //末尾の数字を取り除いたsfen列を返す
+private:
+    std::unordered_map<std::string,bookNode> bookJoseki;
+};

@@ -5,6 +5,7 @@
 #include <queue>
 #include <Windows.h>
 
+//定跡フォルダーの中のファイル数を数える
 static int getFileCount() {
 	WIN32_FIND_DATA findFileData;
 	HANDLE hFind;
@@ -21,81 +22,87 @@ static int getFileCount() {
 	return fileCount;
 }
 
+//定跡書き出し
 void Joseki::josekiOutput(SearchNode* root,const Kyokumen rootKyokumen)  {
-	WIN32_FIND_DATA findFileData;
-	HANDLE hFind;
-	auto target = L"josekiFolder/*.bin";
-	int fileCount = 0;
-	hFind = FindFirstFile(target, &findFileData);
-	if (hFind != INVALID_HANDLE_VALUE) {
-		do {
-			++fileCount;
-			//_tprintf(TEXT("%d: %s\n"), ++fileCount, findFileData.cFileName);
-		} while (FindNextFile(hFind, &findFileData));
-		FindClose(hFind);
-	}
-	auto fc = fileCount;
-	setOutputFileName(("josekiFolder/treejoseki_" + std::to_string(fc)));
-
+	setOutputFileName("treejoseki_output");
 	std::cout << timerStart() << std::endl;
 	
+	//書き出しファイルオープン
 	FILE* fp;
 	fopen_s(&fp, (outputFileName).c_str(), "wb");
+
+	//書き出しノード保存用キュー
 	std::queue<SearchNode*> nq;
 	nq.push(root);
-
+	
+	//ノードの数を数え、infoファイルに出力する
 	size_t nodeCount = SearchNode::sortChildren(nq.front());
 	std::ofstream ofs(outputFileInfoName);
 	ofs << "nodeCount," << nodeCount << std::endl;
 	ofs << rootKyokumen.toSfen() << std::endl;
+	ofs << "depth," << nq.front()->getMass() << std::endl;
+	ofs.close();	//書き出し中にファイル情報を確認するため、いったん閉じる
 
+	//ここからファイルに書き出し
 	size_t index = 0;
 	size_t childIndex = 1;
-	while (!nq.empty()) {
-		const SearchNode* const node = nq.front();
-		nq.pop();
-		for (const auto c : node->children) {
-			nq.push(c);
-		}
-		josekinode jNode(index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), node->children.size(), childIndex);
+	if (false) {
+		while (!nq.empty()) {
+			const SearchNode* const node = nq.front();	//キューの先頭からノード取り出し
+			nq.pop();
+			for (const auto c : node->children) {	//注目ノードの子ノードをキューに収める
+				nq.push(c);
+			}
+			josekinode jNode(index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), node->children.size(), childIndex);
 
-		fwrite(&jNode, sizeof(jNode), 1, fp);
+			fwrite(&jNode, sizeof(jNode), 1, fp);
 
-		childIndex += jNode.childCount;
+			childIndex += jNode.childCount;
 
-		index++;
-		if (index % (nodeCount / 10) == 0) {
-			std::cout << (index / (nodeCount / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+			index++;
+			if (index % (nodeCount / 10) == 0) {	//途中経過
+				std::cout << (index / (nodeCount / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+			}
 		}
 	}
+	else {
+		SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * nodeCount);
+		josekinode* jn = (josekinode*)malloc(sizeof(josekinode) * nodeCount);
+		nodes[0] = root;
+		for (index = 0; index < nodeCount; ++index) {
+			const auto node = nodes[index];	//nodesから注目ノードを取り出し
+			const auto childCount = node->children.size();
+			jn[index] = josekinode(index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
+			for (int i = 0; i < childCount;++i) {	//子ノードをnodesに格納
+				nodes[childIndex + i] = node->children[i];
+			}
+			childIndex += childCount;	//子ノードの数だけchildIndexを進める
+			if (index % (nodeCount / 10) == 0) {	//途中経過
+				std::cout << (index / (nodeCount / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+			}
+		}
+
+		fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
+
+		free(jn);
+		free(nodes);
+	}
+
+	//時間出力
+	ofs.open(outputFileInfoName,std::ios::app);
 	ofs << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
 	ofs.close();
 	fclose(fp);
-
-
 }
 
 void Joseki::josekiInput() {
-	WIN32_FIND_DATA findFileData;
-	HANDLE hFind;
-	auto target = L"josekiFolder/*.bin";
-	int fileCount = 0;
-	hFind = FindFirstFile(target, &findFileData);
-	if (hFind != INVALID_HANDLE_VALUE) {
-		do {
-			++fileCount;
-			//_tprintf(TEXT("%d: %s\n"), ++fileCount, findFileData.cFileName);
-		} while (FindNextFile(hFind, &findFileData));
-		FindClose(hFind);
-	}
-	auto fc = fileCount - 1;
-	setInputFileName(("josekiFolder/treejoseki_" + std::to_string(fc)));
-
 	std::cout << timerStart() << std::endl;
 
 	inputfile inputFile;
 	inputFile.open(inputFileName, inputFileInfoName);
 	std::cout << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+
+	std::cout << "ノード数:" << inputFile.nodeCount << std::endl;
 
 	if (true) {
 		int depth = 0;
@@ -211,4 +218,58 @@ void Joseki::yomikomiBreath(inputfile& inputFile, const size_t index) {
 			children.push(c);
 		}
 	}
+}
+
+//末尾の数字を取り除く
+std::string Joseki::getSfenTrimed(std::string sfen) {
+	int i = sfen.length() - 1;
+	while (sfen[i] == ' ') { --i; }
+	while (isdigit(sfen[i])) { --i; }
+	while (sfen[i] == ' ') { --i; }
+	return sfen.substr(0, i);
+}
+
+//ひとまずstdを使用して実装
+void Joseki::readBook(std::string fileName) {
+	std::ifstream ifs(fileName);
+	while (!ifs.eof()) {
+		std::string line;
+		std::getline(ifs, line);
+		//sfenを見つけたら格納
+		if (line.length() >= 4 && line.substr(0, 4) == "sfen") {
+			bookNode bn;
+
+			//末尾の数字を取り除く
+			std::string sfen = getSfenTrimed(line);
+			//次の行に最善手があるので読む
+			std::getline(ifs, line);
+			auto column = usi::split(line, ' ');
+			
+			//最善手
+			bn.bestMove = Move(column[0],true);
+			/* 最善手以外要らない？
+			//次の相手の指し手の最善手
+			bn.nextMove = Move(column[1], false);
+			//その指し手の価値
+			bn.value = std::stod(column[2]);
+			//深さ
+			bn.depth = std::stod(column[3]);
+			//出現回数
+			bn.num = std::stod(column[4]);
+			*/
+			//仮に出現回数を0にしておく
+			bn.num = 0;
+
+			bookJoseki.emplace(sfen, bn);
+		}
+	}
+}
+
+Joseki::bookNode Joseki::getBestMove(std::string sfen)
+{
+	bookNode bn;	//出現回数には-1が入っている
+	if (bookJoseki.find(sfen) != bookJoseki.end()) {
+		return bookJoseki[sfen];
+	}
+	return bn;
 }
