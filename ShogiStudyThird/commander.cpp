@@ -316,6 +316,7 @@ void Commander::setTsDistribution() {
 }
 
 void Commander::startAgent() {
+	SearchAgent::resetSimCount();
 	assert(agents.empty());
 	assert(TsDistribution.size() == agentNum);
 	for (int i = 0; i < agentNum; i++) {
@@ -324,6 +325,7 @@ void Commander::startAgent() {
 	}
 }
 void Commander::stopAgent() {
+	std::cout << "simcount " << SearchAgent::getSimCount() << std::endl;
 	for (auto& ag : agents) {
 		ag->stop();
 	}

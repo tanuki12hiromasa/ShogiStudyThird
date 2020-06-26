@@ -22,6 +22,9 @@ public:
 	void loop();
 	void stop() { alive = false; }
 	void terminate() { alive = false; th.join(); }
+
+	static void resetSimCount() { simCount.store(0); }
+	static size_t getSimCount() { return simCount.load(); }
 private:
 	size_t simulate(SearchNode* const root);
 	void qsimulate(SearchNode* const root, SearchPlayer& player, const int hislength);
@@ -39,4 +42,6 @@ private:
 	std::mt19937_64 engine; //初期シードはコンストラクタで受け取る
 
 	friend class ShogiTest;
+
+	static std::atomic<size_t> simCount;
 };
