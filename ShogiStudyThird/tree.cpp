@@ -309,6 +309,34 @@ void SearchTree::foutJoseki()const {
 	foutJoseki(0, 0);
 }
 
+void SearchTree::setRoot(SearchNode* const root, std::vector<std::string> tokens ,size_t nodes) {
+	//makeNewTree(tokens);
+	//history.push_back(root);
+
+	history.clear();
+	startKyokumen = Kyokumen(tokens);
+	history.push_back(root);
+	rootPlayer = SearchPlayer(startKyokumen);
+	const auto usihis = Move::usiToMoves(tokens);
+	for (auto& usimove : usihis) {
+		SearchNode* rootNode = getRoot();
+		//MoveGenerator::genAllMove(rootNode, rootPlayer.kyokumen);
+		SearchNode* next = nullptr;
+		for (const auto& child : rootNode->children) {
+			assert(child != nullptr);
+			if (child->move == usimove) {
+				next = child;
+				break;
+			}
+		}
+		if (next == nullptr) {
+			next = rootNode->addChild(usimove);
+		}
+		proceed(next);
+	}
+	nodecount = nodes;
+}
+
 void SearchTree::setRoot(SearchNode* const root, const Kyokumen& kyokumen, size_t nodes) {
 	SearchNode* motoroot = history.front();
 	motoroot->deleteTree();

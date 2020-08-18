@@ -34,6 +34,7 @@ public:
 	void foutJosekiBin(int joseki_make_type, int fileCount)const;
 
 	void setRoot(SearchNode* const root, const Kyokumen& kyokumen, size_t nodes);
+	void setRoot(SearchNode* const root, std::vector<std::string> tokens, size_t nodes);
 private:
 
 	std::unordered_multimap<std::uint64_t, std::pair<std::array<uint8_t, 95>, uint16_t>> historymap;

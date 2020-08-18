@@ -2,6 +2,7 @@
 #include "agent.h"
 #include "time_property.h"
 #include "joseki.h"
+#include "Timer.h"
 
 class Commander {
 public:
@@ -24,7 +25,7 @@ private:
 	void releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes);
 	void releaseAgentAndTree(SearchNode* const root);
 
-	//void yomikomi();
+	void yomikomi();
 	//void yomikomiKizon();
 
 	SearchTree tree;
@@ -47,11 +48,6 @@ private:
 	std::mutex coutmtx;
 	std::mutex treemtx;
 
-	bool yomikomi_on = false;	//定跡を有効化
-	std::string yomikomi_file_name = "treejoseki";	//定跡木の名前(.txtは不要)
-	int yomikomi_type = 0;
-	int joseki_make_type = 0;
-	int joseki_file_count;
 	Joseki joseki;	//定跡の読み込みや出力を管理
 	
 	friend class ShogiTest;
