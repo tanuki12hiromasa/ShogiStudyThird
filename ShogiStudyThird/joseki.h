@@ -61,7 +61,7 @@ private:
     //出力
 public:
     void josekiOutput(const std::vector<SearchNode*> const history);    //定跡書き出し
-    SearchNode* getJosekiNodes()const { return josekiNodes;}            //
+    SearchNode* getJosekiNodes()const { return nodesForProgram[0];}            //
     Kyokumen getKyokumen()const { return kyokumen; }
     size_t getChildCount()const { return childCount; }
 
@@ -82,62 +82,29 @@ public:
     }
 
 private:
-    struct inputfile {  //読み込む定跡木の情報を格納
-        FILE* fp;
-        SearchNode** nodes;
-        size_t* parents;
-        std::vector<std::string> position;
-        fpos_t firstPos;
-        size_t nodeCount;
-        josekinode *josekiNodes;
-        void open(std::string filename,std::string fileinfoname) {
-            std::ifstream ifs(fileinfoname);
-            if (!ifs.is_open()) {
-                std::cout << fileinfoname << "が開けませんでした。" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            //ノード数の取得
-            std::string nodeCountStr;
-            std::getline(ifs, nodeCountStr);
-            nodeCount = std::stol(usi::split(nodeCountStr, ',')[1]);    //infoファイルからノード数を取得
-            //positionの取得
-            std::string pos;
-            std::getline(ifs, pos); //moveが保存された行
-            std::getline(ifs, pos); //positionが保存された行
-            position = usi::split(pos, ' ');
-            ifs.close();
+    FILE* fp;	//定跡本体の読み込み用ファイル
+    SearchNode** nodesForProgram;	//実際にプログラム内で活用していく定跡が格納されるところ
+    size_t* parentsIndex;	//ノードのインデックスと親ノードの対応
+    std::vector<std::string> tokenOfPosition;	//定跡が指し示す局面
+    size_t nodeCount;	//ノード数
+    josekinode* nodesFromFile;	//定跡本体から読みこんだ定跡を収めるところ
 
-            errno_t err = fopen_s(&fp, (filename).c_str(), "rb");
-            if (err) {
-                std::cout << filename << "が開けませんでした。" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            fgetpos(fp, &firstPos);
-            
-            nodes = (SearchNode**)calloc(nodeCount,sizeof(SearchNode*));
-            parents = (size_t*)calloc(nodeCount,sizeof(size_t));
-            josekiNodes = (josekinode*)calloc(nodeCount,sizeof(josekinode));
-            fread(josekiNodes, sizeof(josekinode), nodeCount, fp);
-        }
-        void close() {
-            free(nodes);
-            free(parents);
-            fclose(fp);
-        }
-    } inputFile;
-    
-    SearchNode* josekiNodes;
+
+    SearchNode* root;
     Kyokumen kyokumen;
     size_t childCount;
 
-    std::vector<size_t> yomikomiLine(inputfile &inputFile, const size_t index);
-    void yomikomiRecursive(inputfile &inputFile, const size_t index);
-    std::vector<size_t> yomikomiDepth(inputfile &inputFile, const size_t index, const int depth);
-    void yomikomiBreath(inputfile& inputFile, const size_t index);
+    std::vector<size_t> yomikomiLine(const size_t index);
+    void yomikomiRecursive(const size_t index);
+    std::vector<size_t> yomikomiDepth(const size_t index, const int depth);
+    void yomikomiBreath(const size_t index);
 
     std::string inputFileName = "treejoseki_input.bin";       //定跡木を格納しておくファイル
     std::string inputFileInfoName = "treejoseki_input_info.txt";   //定跡木の情報を格納しておくファイル
 
+    //枝刈り
+public:
+private:
 
     //従来の定跡を読み込んで利用する
 public:

@@ -114,22 +114,54 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 
 void Joseki::josekiInput(SearchTree* tree) {
 	setInputFileName("treejoseki_input");
+
+	//定跡の情報が入ったファイルを開く
+	std::ifstream ifs(inputFileInfoName);
+	if (!ifs.is_open()) {
+		std::cout << inputFileInfoName << "が開けませんでした。" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	//ノード数の取得
+	std::string nodeCountStr;
+	std::getline(ifs, nodeCountStr);
+	nodeCount = std::stol(usi::split(nodeCountStr, ',')[1]);    //infoファイルからノード数を取得
+
+	//positionの取得
+	std::string pos;
+	std::getline(ifs, pos); //moveが保存された行
+	std::getline(ifs, pos); //positionが保存された行
+	tokenOfPosition = usi::split(pos, ' ');
+	ifs.close();
+
+	//定跡本体を開く
+	errno_t err = fopen_s(&fp, (inputFileName).c_str(), "rb");
+	if (err) {
+		std::cout << inputFileName << "が開けませんでした。" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	
+	nodesForProgram = (SearchNode**)calloc(nodeCount, sizeof(SearchNode*));	//プログラム内で使用するnode
+	parentsIndex = (size_t*)calloc(nodeCount, sizeof(size_t));
+	nodesFromFile = (josekinode*)calloc(nodeCount, sizeof(josekinode));	//定跡の復元に一時的に利用するノード
+	fread(nodesFromFile, sizeof(josekinode), nodeCount, fp);	//定跡本体をバイナリファイルから読み込み
+
+
+	setInputFileName("treejoseki_input");
 	std::cout << timerStart() << std::endl;
 
-	inputfile inputFile;
-	inputFile.open(inputFileName, inputFileInfoName);
 	std::cout << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
 
-	std::cout << "ノード数:" << inputFile.nodeCount << std::endl;
+	std::cout << "ノード数:" << nodeCount << std::endl;
 
 	//すぐ下の子ノード達だけ展開する
 	int depth = 0;
-	std::vector<size_t>childrenToThread = yomikomiDepth(inputFile, 0, depth);
+	std::vector<size_t>childrenToThread = yomikomiDepth(0, depth);
 
 	//子ノードの数だけ再帰的に読みこむ
 	std::vector<std::thread> thr;
 	for (auto c : childrenToThread) {
-		thr.push_back(std::thread(&Joseki::yomikomiRecursive, this, std::ref(inputFile), c));
+		thr.push_back(std::thread(&Joseki::yomikomiRecursive, this, c));
 	}
 	std::cout << "スレッド数：" << thr.size() << std::endl;
 	for (int i = 0; i < thr.size(); ++i) {
@@ -140,8 +172,8 @@ void Joseki::josekiInput(SearchTree* tree) {
 	//	inputFile.nodes[inputFile.parents[i]]->children.push_back(inputFile.nodes[i]);
 	//}
 
-	josekiNodes = &(inputFile.josekiNodes[0]);
-	tree->setRoot(josekiNodes,inputFile.position,inputFile.nodeCount);
+	root = nodesForProgram[0];
+	tree->setRoot(root,tokenOfPosition,nodeCount);
 	
 	//josekiNodes = inputFile.nodes[0];
 	////初期局面の作成(まだ初期状態から弄ってない)
@@ -152,30 +184,22 @@ void Joseki::josekiInput(SearchTree* tree) {
 	//kyokumen = kyo;
 	
 
-	inputFile.close();
 
 	//SearchNode::sortChildren(josekiNodes);
+	free(nodesFromFile);
+	free(parentsIndex);
+	fclose(fp);
 
 	std::cout << timerInterval() << "秒経過" << std::endl;
 }
 
 static std::mutex mtx;
 //1行読みこむ。fpをそのまま渡す用
-std::vector<size_t> Joseki::yomikomiLine(inputfile &inputFile, const size_t index) {
+std::vector<size_t> Joseki::yomikomiLine(const size_t index) {
 	std::vector<size_t> childIndexes;
-	josekinode node = inputFile.josekiNodes[index];
+	josekinode node = nodesFromFile[index];
 
 	
-	fpos_t ind = inputFile.firstPos + index * (sizeof(node));
-	//読むのは\rの前まで
-	//fsetpos(inputFile.fp, &ind);
-
-	
-	/*if (index != node.index) {
-		std::cout << "index Error" << std::endl;
-	}*/
-
-	//size_t tIndex = node.index;
 	size_t tIndex = index;
 
 	Move move = Move(node.move);
@@ -183,53 +207,50 @@ std::vector<size_t> Joseki::yomikomiLine(inputfile &inputFile, const size_t inde
 	childIndexes.reserve(node.childCount);
 	for (int i = 0; i < node.childCount; ++i) {		//子ノードのインデックスが読み終わるまでループ
 		childIndexes.push_back(node.childIndex + i);
-		inputFile.parents[childIndexes.back()] = tIndex;	 //親のインデックスを要素として持つ
+		parentsIndex[childIndexes.back()] = tIndex;	 //親のインデックスを要素として持つ
 	}
-	//std::lock_guard<std::mutex>lock(mtx);
 	
-	inputFile.nodes[tIndex] = (SearchNode::restoreNode(move, node.st, node.eval, node.mass));
-	inputFile.nodes[tIndex]->children.reserve(node.childCount);
+	nodesForProgram[tIndex] = (SearchNode::restoreNode(move, node.st, node.eval, node.mass));
+	nodesForProgram[tIndex]->children.reserve(node.childCount);
 
 	if (tIndex != 0) {//1つ目は親なし
-		auto p = inputFile.parents[tIndex];
-		auto t = inputFile.nodes[p];
-		t->children.push_back(inputFile.nodes[tIndex]);
+		auto p = parentsIndex[tIndex];
+		auto t = nodesForProgram[p];
+		t->children.push_back(nodesForProgram[tIndex]);
 	}
-
-	//node.viewNode();
 
 	return childIndexes;
 }
 
 //indexとその子供を再帰的に読みこむ
-void Joseki::yomikomiRecursive(inputfile &inputFile, const size_t index) {
-	auto children = yomikomiLine(inputFile, index);
+void Joseki::yomikomiRecursive(const size_t index) {
+	auto children = yomikomiLine(index);
 	for (auto c : children) {
-		yomikomiRecursive(inputFile, c);
+		yomikomiRecursive(c);
 	}
 }
 
 //指定された深さまで読みこみ、子供たちを返す。0で指定されたindexのみ。並列処理はしない
-std::vector<size_t> Joseki::yomikomiDepth(inputfile &inputFile, const size_t index, const int depth) {
-	auto c = yomikomiLine(inputFile, index);
+std::vector<size_t> Joseki::yomikomiDepth(const size_t index, const int depth) {
+	auto c = yomikomiLine(index);
 	if (depth == 0) {
 		return c;
 	}
 	else {
 		std::vector<size_t>children;
 		for (auto ch : c) {
-			auto v = yomikomiDepth(inputFile, ch, depth - 1);
+			auto v = yomikomiDepth(ch, depth - 1);
 			children.insert(children.end(), v.begin(), v.end());
 		}
 		return children;
 	}
 }
 
-void Joseki::yomikomiBreath(inputfile& inputFile, const size_t index) {
+void Joseki::yomikomiBreath(const size_t index) {
 	std::queue<size_t> children;
 	children.push(index);
 	while (!children.empty()) {
-		auto t = yomikomiLine(inputFile, children.front());
+		auto t = yomikomiLine(children.front());
 		children.pop();
 		for (auto c : t) {
 			children.push(c);
