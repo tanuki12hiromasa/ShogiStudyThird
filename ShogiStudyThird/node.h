@@ -70,6 +70,7 @@ public:
 	void setRepetition(const bool teban);
 	void setRepetitiveCheck();
 	void setOriginEval(const double evaluation) { origin_eval = evaluation; }
+	void setState(const State state) { status.store(state); }
 
 	double getEvaluation()const { return eval.load(); }
 	bool isLeaf()const { const auto s = status.load(); return s == State::N || s == State::iE; }
@@ -82,6 +83,7 @@ public:
 	static SearchNode* restoreNode(const Move& move, State st, double eval, double mass);
 	State getState() const{ return status.load(); }
 	double getMass() const{ return mass.load(); }
+
 private:
 	double getTcMcVariance()const;
 	double getTcMcVarianceExpection()const;

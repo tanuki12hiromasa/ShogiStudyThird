@@ -4,6 +4,7 @@
 #include <fstream>
 #include <queue>
 #include <Windows.h>
+#include <climits>
 
 //定跡フォルダーの中のファイル数を数える
 static int getFileCount() {
@@ -63,47 +64,27 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	//ここからファイルに書き出し
 	size_t index = 0;
 	size_t childIndex = 1;
-	if (false) {
-		while (!nq.empty()) {
-			const SearchNode* const node = nq.front();	//キューの先頭からノード取り出し
-			nq.pop();
-			for (const auto c : node->children) {	//注目ノードの子ノードをキューに収める
-				nq.push(c);
-			}
-			josekinode jNode(index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), node->children.size(), childIndex);
 
-			fwrite(&jNode, sizeof(jNode), 1, fp);
-
-			childIndex += jNode.childCount;
-
-			index++;
-			//if (index % (nodeCount / 10) == 0) {	//途中経過
-			//	std::cout << (index / (nodeCount / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
-			//}
+	SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * nodeCount);
+	josekinode* jn = (josekinode*)malloc(sizeof(josekinode) * nodeCount);
+	nodes[0] = history.front();
+	for (index = 0; index < nodeCount; ++index) {
+		const auto node = nodes[index];	//nodesから注目ノードを取り出し
+		const auto childCount = node->children.size();
+		jn[index] = josekinode(index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
+		for (int i = 0; i < childCount;++i) {	//子ノードをnodesに格納
+			nodes[childIndex + i] = node->children[i];
 		}
+		childIndex += childCount;	//子ノードの数だけchildIndexを進める
+		//if (index % (nodeCount / 10) == 0) {	//途中経過
+		//	std::cout << (index / (nodeCount / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+		//}
 	}
-	else {
-		SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * nodeCount);
-		josekinode* jn = (josekinode*)malloc(sizeof(josekinode) * nodeCount);
-		nodes[0] = history.front();
-		for (index = 0; index < nodeCount; ++index) {
-			const auto node = nodes[index];	//nodesから注目ノードを取り出し
-			const auto childCount = node->children.size();
-			jn[index] = josekinode(index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
-			for (int i = 0; i < childCount;++i) {	//子ノードをnodesに格納
-				nodes[childIndex + i] = node->children[i];
-			}
-			childIndex += childCount;	//子ノードの数だけchildIndexを進める
-			//if (index % (nodeCount / 10) == 0) {	//途中経過
-			//	std::cout << (index / (nodeCount / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
-			//}
-		}
 
-		fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
+	fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
 
-		free(jn);
-		free(nodes);
-	}
+	free(jn);
+	free(nodes);
 
 	//時間出力
 	ofs.open(outputFileInfoName,std::ios::app);
@@ -111,6 +92,74 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	ofs.close();
 	fclose(fp);
 }
+
+//定跡書き出し
+void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
+	std::cout << timerStart() << std::endl;
+
+	//書き出しファイルオープン
+	FILE* fp;
+	fopen_s(&fp, "joseki\\joseki_text_output.txt", "w");
+
+	//書き出しノード保存用キュー
+	std::queue<SearchNode*> nq;
+	nq.push(history.front());
+
+	//ノードの数を数え、infoファイルに出力する
+	size_t nodeCount = SearchNode::sortChildren(nq.front());
+	std::ofstream ofs("joseki\\joseki_text_output_info.txt");
+	ofs << "nodeCount," << nodeCount << std::endl;
+	for (auto his : history) {
+		ofs << his->move.getU();
+		ofs << ",";
+	}
+	ofs << std::endl;
+	ofs << "position ";
+	for (auto his : history) {
+		if (his->move.toUSI() == "nullmove") {
+			ofs << "startpos moves";
+		}
+		else {
+			ofs << his->move.toUSI();
+		}
+		ofs << " ";
+	}
+	ofs << std::endl;
+
+	ofs << "depth," << nq.front()->getMass() << std::endl;
+	ofs.close();	//書き出し中にファイル情報を確認するため、いったん閉じる
+
+	//ここからファイルに書き出し
+	size_t index = 0;
+	size_t childIndex = 1;
+
+	SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * nodeCount);
+	josekinode* jn = (josekinode*)malloc(sizeof(josekinode) * nodeCount);
+	nodes[0] = history.front();
+	fprintf(fp, "インデックス,展開状態,指し手,探索深さ指標,価値,子ノードの数,子ノードの先頭インデックス\n");
+	for (index = 0; index < nodeCount; ++index) {
+		const auto node = nodes[index];	//nodesから注目ノードを取り出し
+		const auto childCount = node->children.size();
+		jn[index] = josekinode(index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
+		for (int i = 0; i < childCount; ++i) {	//子ノードをnodesに格納
+			nodes[childIndex + i] = node->children[i];
+		}
+		fprintf(fp,"%d,%d,%d,%f,%f,%d,%d\n", index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);
+		childIndex += childCount;	//子ノードの数だけchildIndexを進める
+	}
+
+	//fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
+
+	free(jn);
+	free(nodes);
+
+	//時間出力
+	ofs.open(outputFileInfoName, std::ios::app);
+	ofs << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+	ofs.close();
+	fclose(fp);
+}
+
 
 void Joseki::josekiInput(SearchTree* tree) {
 	setInputFileName("treejoseki_input");
@@ -168,23 +217,9 @@ void Joseki::josekiInput(SearchTree* tree) {
 		thr[i].join();
 	}
 
-	//for (int i = 1; i < inputFile.nodeCount; ++i) {
-	//	inputFile.nodes[inputFile.parents[i]]->children.push_back(inputFile.nodes[i]);
-	//}
-
 	root = nodesForProgram[0];
 	tree->setRoot(root,tokenOfPosition,nodeCount);
 	
-	//josekiNodes = inputFile.nodes[0];
-	////初期局面の作成(まだ初期状態から弄ってない)
-	//std::vector<std::string> startpos;
-	//startpos.push_back(" ");
-	//startpos.push_back("startpos");
-	//Kyokumen kyo = Kyokumen(startpos);
-	//kyokumen = kyo;
-	
-
-
 	//SearchNode::sortChildren(josekiNodes);
 	free(nodesFromFile);
 	free(parentsIndex);
@@ -256,6 +291,94 @@ void Joseki::yomikomiBreath(const size_t index) {
 			children.push(c);
 		}
 	}
+}
+
+size_t Joseki::pruning(SearchNode* root){
+	size_t r;
+	std::vector<SearchNode*>history;
+	r = partialPruning(root,history);
+	return r;
+}
+
+size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history){
+	size_t r = 0;
+	double mass = node->getMass();
+	history.push_back(node);
+	//枝刈り判定を行う
+	if (isPruning(node)) {
+		//for (SearchNode* child : node->children) {
+		//	r += pruningExecuter(child, history);
+		//}
+		r += pruningExecuter(node, history);
+		
+	}
+	else {
+		//再帰的に枝刈りを行う
+		for (SearchNode* child : node->children) {
+			r += partialPruning(child, history);
+		}
+	}
+	return r;
+}
+
+size_t Joseki::pruningExecuter(SearchNode* node, std::vector<SearchNode*> history){
+	
+	size_t r = node->deleteTree();
+	/*for (SearchNode* child : node->children) {
+		auto tstate = child->getState();
+		r += child->deleteTree();
+		if (tstate == SearchNode::State::Expanded) {
+			child->setState(SearchNode::State::NotExpanded);
+		}
+	}*/
+	node->setState(SearchNode::State::NotExpanded);
+	node->setMass(0);
+
+	typedef std::pair<double, double>dd;
+	for (int i = history.size() - 2; i >= 0; i--) {
+		SearchNode* tNode = history[i];
+		bool maxInserted = false;
+		double emin = 9999999;
+		std::vector<dd> emvec;
+		for (const auto& child : tNode->children) {
+			const double eval = child->getEvaluation();
+			const double mass = child->mass;
+			emvec.push_back(std::make_pair(eval, mass));
+			if (maxInserted == false || eval < emin) {
+				emin = eval;
+			}
+		}
+		if (std::abs(emin) > SearchNode::getMateScoreBound()) {
+			tNode->setMateVariation(emin);
+		}
+		else {
+			//double Z_e = 0;
+			double Z_d = 0;
+			for (const auto& em : emvec) {
+				const double eval = em.first;
+				//Z_e += std::exp(-(eval - emin) / T_e);
+				Z_d += std::exp(-(eval - emin) / T_d);
+			}
+			double E = 0;
+			double M = 1;
+			for (const auto& em : emvec) {
+				const double eval = em.first;
+				const double mass = em.second;
+				//E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
+				M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
+			}
+			//node->setEvaluation(E);
+			tNode->setMass(M);
+		}
+	}
+	return r;
+}
+
+bool Joseki::isPruning(SearchNode* node){
+	if (node->getMass() < 4) {
+		return true;
+	}
+	return false;
 }
 
 //末尾の数字を取り除く

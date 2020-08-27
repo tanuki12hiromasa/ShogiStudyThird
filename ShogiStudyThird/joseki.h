@@ -60,8 +60,11 @@ private:
 
     //出力
 public:
-    void josekiOutput(const std::vector<SearchNode*> const history);    //定跡書き出し
-    SearchNode* getJosekiNodes()const { return nodesForProgram[0];}            //
+    //定跡書き出し
+    void josekiOutput(const std::vector<SearchNode*> const history);
+    //定跡をテキスト形式で書き出し。人の目で見てわかりやすいように。
+    void josekiTextOutput(const std::vector<SearchNode*> const history);
+    SearchNode* getJosekiNodes()const { return nodesForProgram[0];}
     Kyokumen getKyokumen()const { return kyokumen; }
     size_t getChildCount()const { return childCount; }
 
@@ -104,7 +107,17 @@ private:
 
     //枝刈り
 public:
+    //指定されたノードから下を全て枝刈りする。返り値は刈ったノードの数
+    size_t pruning(SearchNode* root);
 private:
+    //指定されたノードに対して再帰的に枝刈りを行う
+    size_t partialPruning(SearchNode* node, std::vector<SearchNode*>history);
+    //実際の枝刈り処理を行う
+    size_t pruningExecuter(SearchNode* node, std::vector<SearchNode*>history);
+    //枝刈りを行うものの設定を呼び出す関数
+    bool isPruning(SearchNode* node);
+    //深さバックアップ温度再計算用の温度
+    double T_d = 100;
 
     //従来の定跡を読み込んで利用する
 public:

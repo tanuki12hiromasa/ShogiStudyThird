@@ -88,6 +88,12 @@ void Commander::execute() {
 		else if (tokens[0] == "foutjoseki") {
 			commander.joseki.josekiOutput(commander.tree.getHistory());
 		}
+		else if (tokens[0] == "foutjosekitext") {
+			commander.joseki.josekiTextOutput(commander.tree.getHistory());
+		}
+		else if (tokens[0] == "pruning") {
+			commander.joseki.pruning(commander.tree.getHistory().front());
+		}
 		else if (tokens[0] == "yomikomibook") {
 			commander.joseki.readBook("joseki/user_book1.db");
 			std::cout << "read book" << std::endl;
