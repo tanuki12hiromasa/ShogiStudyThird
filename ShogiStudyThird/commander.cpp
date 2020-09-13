@@ -92,6 +92,7 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "foutjoseki") {
 			commander.joseki.josekiOutput(commander.tree.getHistory());
+			std::cout << "定跡出力完了" << std::endl;
 		}
 		else if (tokens[0] == "foutjosekitext") {
 			commander.joseki.josekiTextOutput(commander.tree.getHistory());

@@ -80,6 +80,21 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	ofs << std::endl;
 
 	ofs << "depth," << nq.front()->getMass() << std::endl;
+
+	//ノードの数が多すぎるとメモリの限界を超えるため、出力を中止する
+	size_t fileSize = nodeCount * sizeof(josekinode);
+	size_t gigabyte = 1024 * 1024 * 1024;
+	ofs << "推定ファイルサイズ：" << std::to_string(fileSize) << "バイト" << std::endl;
+	std::cout << "推定ファイルサイズ：" << std::to_string(fileSize) << "バイト" << std::endl;
+	std::cout << "推定ファイルサイズ：" << std::to_string((double)fileSize / gigabyte) << "ギガバイト" << std::endl;
+	if (fileSize > (32 / 3) * gigabyte) {
+		std::cout << "書き出そうとしているファイルサイズが大きすぎます。" << std::endl;
+		std::cout << "出力を中止します。" << std::endl;
+		ofs.close();
+		return;
+		fclose(fp);
+	}
+
 	ofs.close();	//書き出し中にファイル情報を確認するため、いったん閉じる
 
 	//ここからファイルに書き出し
@@ -148,6 +163,7 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 	ofs << std::endl;
 
 	ofs << "depth," << nq.front()->getMass() << std::endl;
+
 	ofs.close();	//書き出し中にファイル情報を確認するため、いったん閉じる
 
 	//ここからファイルに書き出し
