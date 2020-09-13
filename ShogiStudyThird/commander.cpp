@@ -20,10 +20,12 @@ void Commander::execute() {
 #ifdef _DEBUG
 			std::cout << "id name ShibauraSoftmaxThird_debug" << std::endl;
 #else
-			std::cout << "id name ShibauraSoftmaxThird" << std::endl;
+			//std::cout << "id name ShibauraSoftmaxThird" << std::endl;
+			std::cout << "id name ShibauraSoftmaxThirdJoseki" << std::endl;
 #endif
 			std::cout << "id author Iwamoto" << std::endl;
 			coutOption();
+			commander.joseki.printOption();
 			std::cout << "usiok" << std::endl;
 		}
 		else if (tokens[0] == "setoption") {
@@ -31,6 +33,7 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "isready") {
 			commander.gameInit();
+			commander.joseki.josekiInput(&(commander.tree));
 			std::cout << "readyok" << std::endl;
 		}
 		else if (tokens[0] == "usinewgame") {
@@ -62,6 +65,8 @@ void Commander::execute() {
 				continue;
 			}
 			commander.go(tokens);
+			//エージェントの探索が終わるまで待つ。本来は不要
+			if (commander.go_thread.joinable()) commander.go_thread.join();
 		}
 		else if (tokens[0] == "stop") {
 			commander.chakushu();
@@ -97,6 +102,9 @@ void Commander::execute() {
 		else if (tokens[0] == "yomikomibook") {
 			commander.joseki.readBook("joseki/user_book1.db");
 			std::cout << "read book" << std::endl;
+		}
+		else if (tokens[0] == "makejobanjoseki") {
+			commander.makeJobanJoseki(tokens[1], std::stoi(tokens[2]), std::stoi(tokens[3]), std::stoi(tokens[4]));
 		}
 	}
 }
@@ -145,11 +153,6 @@ void Commander::coutOption() {
 	cout << "option name NodeMaxNum type string default 100000000" << endl;
 	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
 	cout << "option name PV_const type string default 0" << endl;
-	cout << "option name yomikomi_on type check default false" << endl;
-	cout << "option name yomikomi_file_name type string default treemake" << endl;
-	cout << "option name yomikomi_type type string default 0" << endl;
-	cout << "option name joseki_make_type type string default 0" << endl;
-
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -220,6 +223,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "PV_const") {
 			SearchNode::setPVConst(std::stod(token[4]));
+		}
+		else {
+			joseki.setOption(token);
 		}
 	}
 }
@@ -571,4 +577,23 @@ void Commander::yomikomi()
 	node = test[0];
 	tree.setRoot(node, kyo, i_max);
 
+}
+
+//定跡を入れるファイル名と、定跡つくりのための実行回数、序盤定跡の深さを指定
+void Commander::makeJobanJoseki(std::string folderName,int count,int depth,int second){
+	for (int i = 0; i < count; ++i) {
+		joseki.setInputFileName(folderName + "\\joseki" + std::to_string(i));
+		joseki.setOutputFileName(folderName + "\\joseki" + std::to_string(i + 1));
+		gameInit();
+		joseki.josekiInput(&(tree));
+		
+		std::vector<std::string>tokens = {"go","btime","0","wtime","0","byoyomi",std::to_string(second)};
+		for (int j = 0; j < depth; ++j) {
+			go(tokens);
+			//エージェントの探索が終わるまで待つ。本来は不要
+			if (go_thread.joinable()) go_thread.join();
+		}
+
+		joseki.josekiOutput(tree.getHistory());
+	}
 }

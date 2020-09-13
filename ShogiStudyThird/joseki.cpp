@@ -23,9 +23,26 @@ static int getFileCount() {
 	return fileCount;
 }
 
+void Joseki::setOption(std::vector<std::string> tokens){
+	auto t = tokens[2];
+	if (t == "joseki_on") {
+		yomikomi_on = (tokens[4] == "true");
+	}
+	else if (t == "josekiinputname") {
+		setInputFileName(tokens[4]);
+	}
+	else if (t == "josekioutputname") {
+		setOutputFileName(tokens[4]);
+	}
+}
+void Joseki::printOption() {
+	std::cout << "option name joseki_on type check default false" << std::endl;
+	std::cout << "option name josekiinputname type string default foutjoseki" << std::endl;
+	std::cout << "option name josekioutputname type string default foutjoseki" << std::endl;
+}
+
 //定跡書き出し
 void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
-	setOutputFileName("treejoseki_output");
 	std::cout << timerStart() << std::endl;
 	
 	//書き出しファイルオープン
@@ -47,14 +64,18 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	}
 	ofs << std::endl;
 	ofs << "position ";
-	for (auto his : history) {
-		if (his->move.toUSI() == "nullmove") {
-			ofs << "startpos moves";
-		}
-		else {
-			ofs << his->move.toUSI();
-		}
-		ofs << " ";
+	{
+		//ポジションはひとまず初手のみ指定
+		ofs << "startpos";
+		/*for (auto his : history) {
+			if (his->move.toUSI() == "nullmove") {
+				ofs << "startpos moves";
+			}
+			else {
+				ofs << his->move.toUSI();
+			}
+			ofs << " ";
+		}*/
 	}
 	ofs << std::endl;
 
@@ -76,9 +97,9 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 			nodes[childIndex + i] = node->children[i];
 		}
 		childIndex += childCount;	//子ノードの数だけchildIndexを進める
-		//if (index % (nodeCount / 10) == 0) {	//途中経過
-		//	std::cout << (index / (nodeCount / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
-		//}
+		if (index % (nodeCount / 10) == 0) {	//途中経過
+			std::cout << (index / (nodeCount / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+		}
 	}
 
 	fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
@@ -162,13 +183,17 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 
 
 void Joseki::josekiInput(SearchTree* tree) {
-	setInputFileName("treejoseki_input");
+	if (yomikomi_on == false) {
+		return;
+	}
 
 	//定跡の情報が入ったファイルを開く
 	std::ifstream ifs(inputFileInfoName);
 	if (!ifs.is_open()) {
 		std::cout << inputFileInfoName << "が開けませんでした。" << std::endl;
-		exit(EXIT_FAILURE);
+		std::cout << "定跡なしで開始します。" << std::endl;
+		return;
+		//exit(EXIT_FAILURE);
 	}
 
 	//ノード数の取得
@@ -196,7 +221,6 @@ void Joseki::josekiInput(SearchTree* tree) {
 	fread(nodesFromFile, sizeof(josekinode), nodeCount, fp);	//定跡本体をバイナリファイルから読み込み
 
 
-	setInputFileName("treejoseki_input");
 	std::cout << timerStart() << std::endl;
 
 	std::cout << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
@@ -218,9 +242,10 @@ void Joseki::josekiInput(SearchTree* tree) {
 	}
 
 	root = nodesForProgram[0];
+	nodeCount = SearchNode::sortChildren(root);
+
 	tree->setRoot(root,tokenOfPosition,nodeCount);
 	
-	//SearchNode::sortChildren(josekiNodes);
 	free(nodesFromFile);
 	free(parentsIndex);
 	fclose(fp);
@@ -375,7 +400,7 @@ size_t Joseki::pruningExecuter(SearchNode* node, std::vector<SearchNode*> histor
 }
 
 bool Joseki::isPruning(SearchNode* node){
-	if (node->getMass() < 4) {
+	if (node->getEvaluation() < 0) {
 		return true;
 	}
 	return false;

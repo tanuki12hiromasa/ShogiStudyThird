@@ -10,6 +10,8 @@
 class Joseki {
     //共通
 public:
+    void setOption(std::vector<std::string>tokens);
+    void printOption();
 private:
     //定跡を利用するか等の変数
     bool yomikomi_on;

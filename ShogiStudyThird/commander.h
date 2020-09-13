@@ -49,6 +49,7 @@ private:
 	std::mutex treemtx;
 
 	Joseki joseki;	//定跡の読み込みや出力を管理
+	void makeJobanJoseki(std::string folderName,int count,int depth,int second);
 	
 	friend class ShogiTest;
 };
