@@ -77,6 +77,9 @@ void Commander::execute(const std::string& enginename) {
 			std::cout << commander.tree.getRootPlayer().kyokumen.toBanFigure() << std::endl;
 		}
 		else if (tokens[0] == "quit") {
+			std::ofstream fs("logname", std::ios::app);
+			fs << std::endl;
+			fs.close();
 			return;
 		}
 	}
@@ -132,6 +135,7 @@ void Commander::coutOption() {
 	cout << "option name standard_time_upper type spin default 20000 min 1000 max 6000000" << endl;//即指しの判定時間の上限
 	cout << "option name overhead_time type spin default 200 min 0 max 10000" << endl;
 	cout << "option name estimate_movesnum type spin default 120 min 0 max 10000" << endl;
+	cout << "option name LogName type string default log_bestmoveCut.txt" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -220,6 +224,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "estimate_movesnum") {
 			estimate_movesnum = std::stoi(token[4]);
+		}
+		else if (token[2] == "LogName") {
+			logname = token[4];
 		}
 	}
 }
@@ -460,6 +467,18 @@ void Commander::chakushu(SearchNode* const bestchild) {
 		//std::cout << "info string error no children" << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;
+	}
+	//いくつ切り捨ててるか数えてログ出力する処理を書く
+	{
+		int cutcounter = 0;
+		for (auto child : root->children) {
+			if (child->eval > bestchild->eval) {
+				cutcounter++;
+			}
+		}
+		std::ofstream fs(logname, std::ios::app);
+		fs << cutcounter << ",";
+		fs.close();
 	}
 	std::string pvstr;
 	int depth = 1;

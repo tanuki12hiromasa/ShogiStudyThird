@@ -55,4 +55,6 @@ private:
 	std::mutex treemtx;
 
 	friend class ShogiTest;
+
+	std::string logname = "log_bestmoveCut.txt";
 };
