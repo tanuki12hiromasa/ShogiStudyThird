@@ -85,11 +85,13 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	ofs << "nodesize" << "," << sizeof(josekinode) << std::endl;
 	size_t fileSize = nodeCount * sizeof(josekinode);
 	size_t gigabyte = 1024 * 1024 * 1024;
+	size_t maxByte = (32 / 3) * gigabyte;
 	ofs << "推定ファイルサイズ：" << std::to_string(fileSize) << "バイト" << std::endl;
 	std::cout << "推定ファイルサイズ：" << std::to_string(fileSize) << "バイト" << std::endl;
 	std::cout << "推定ファイルサイズ：" << std::to_string((double)fileSize / gigabyte) << "ギガバイト" << std::endl;
-	if (fileSize > (32 / 3) * gigabyte) {
+	if (fileSize > maxByte) {
 		std::cout << "書き出そうとしているファイルサイズが大きすぎます。" << std::endl;
+		std::cout << "最大サイズ：" << maxByte << std::endl;
 		std::cout << "出力を中止します。" << std::endl;
 		ofs.close();
 		return;
@@ -121,6 +123,9 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
 
 	free(jn);
+	/*for (int i = 0; i < nodeCount; ++i) {
+		free(nodes[i]);
+	}*/
 	free(nodes);
 
 	//時間出力
@@ -265,6 +270,7 @@ void Joseki::josekiInput(SearchTree* tree) {
 	
 	free(nodesFromFile);
 	free(parentsIndex);
+	free(nodesForProgram);
 	fclose(fp);
 
 	std::cout << timerInterval() << "秒経過" << std::endl;

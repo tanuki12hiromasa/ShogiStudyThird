@@ -583,6 +583,7 @@ void Commander::yomikomi()
 //定跡を入れるファイル名と、定跡つくりのための実行回数、序盤定跡の深さを指定
 void Commander::makeJobanJoseki(std::string folderName,int count,int depth,int second){
 	for (int i = 0; i < count; ++i) {
+		std::cout << i + 1 << "回目" << std::endl;
 		joseki.setInputFileName(folderName + "\\joseki" + std::to_string(i));
 		joseki.setOutputFileName(folderName + "\\joseki" + std::to_string(i + 1));
 		gameInit();
@@ -594,7 +595,10 @@ void Commander::makeJobanJoseki(std::string folderName,int count,int depth,int s
 			//エージェントの探索が終わるまで待つ。本来は不要
 			if (go_thread.joinable()) go_thread.join();
 		}
-
+		
 		joseki.josekiOutput(tree.getHistory());
+		tree.leave_branchNode = false;
+		releaseAgentAndTree(tree.getRoot());
+		tree.leave_branchNode = true;
 	}
 }
