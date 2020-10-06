@@ -66,7 +66,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	ofs << "position ";
 	{
 		//ポジションはひとまず初手のみ指定
-		ofs << "startpos";
+		ofs << "startpos moves";
 		/*for (auto his : history) {
 			if (his->move.toUSI() == "nullmove") {
 				ofs << "startpos moves";
@@ -82,6 +82,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	ofs << "depth," << nq.front()->getMass() << std::endl;
 
 	//ノードの数が多すぎるとメモリの限界を超えるため、出力を中止する
+	ofs << "nodesize" << "," << sizeof(josekinode) << std::endl;
 	size_t fileSize = nodeCount * sizeof(josekinode);
 	size_t gigabyte = 1024 * 1024 * 1024;
 	ofs << "推定ファイルサイズ：" << std::to_string(fileSize) << "バイト" << std::endl;
@@ -105,8 +106,8 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	josekinode* jn = (josekinode*)malloc(sizeof(josekinode) * nodeCount);
 	nodes[0] = history.front();
 	for (index = 0; index < nodeCount; ++index) {
-		const auto node = nodes[index];	//nodesから注目ノードを取り出し
-		const auto childCount = node->children.size();
+		const SearchNode * node = nodes[index];	//nodesから注目ノードを取り出し
+		const size_t childCount = node->children.size();
 		jn[index] = josekinode(index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
 		for (int i = 0; i < childCount;++i) {	//子ノードをnodesに格納
 			nodes[childIndex + i] = node->children[i];
@@ -173,7 +174,7 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 	SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * nodeCount);
 	josekinode* jn = (josekinode*)malloc(sizeof(josekinode) * nodeCount);
 	nodes[0] = history.front();
-	fprintf(fp, "インデックス,展開状態,指し手,探索深さ指標,価値,子ノードの数,子ノードの先頭インデックス\n");
+	fprintf(fp, "インデックス,展開状態,指し手,USI指し手,探索深さ指標,価値,子ノードの数,子ノードの先頭インデックス\n");
 	for (index = 0; index < nodeCount; ++index) {
 		const auto node = nodes[index];	//nodesから注目ノードを取り出し
 		const auto childCount = node->children.size();
@@ -181,7 +182,7 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 		for (int i = 0; i < childCount; ++i) {	//子ノードをnodesに格納
 			nodes[childIndex + i] = node->children[i];
 		}
-		fprintf(fp,"%d,%d,%d,%f,%f,%d,%d\n", index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);
+		fprintf(fp,"%d,%d,%d,%s,%f,%f,%d,%d\n", index, node->getState(), node->move.getU(),node->move.toUSI().c_str(), node->getMass(), node->getEvaluation(), childCount, childIndex);
 		childIndex += childCount;	//子ノードの数だけchildIndexを進める
 	}
 
