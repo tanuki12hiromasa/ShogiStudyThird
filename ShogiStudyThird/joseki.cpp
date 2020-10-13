@@ -34,21 +34,48 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "josekioutputname") {
 		setOutputFileName(tokens[4]);
 	}
+	else if (t == "josekikakidashi") {
+		kakidashi_on = (tokens[4] == "true");
+	}
+	else if (t == "joseki_loop") {
+		joseki_loop = (tokens[4] == "true");
+	}
+	else if (t == "pruningborder") {
+		pruningBorder = std::stoi(tokens[4]) * 0.001;
+	}
+	else if (t == "pruning_on") {
+		pruning_on = (tokens[4] == "true");
+	}
+	else if (t == "pruning_type") {
+		pruning_type = std::stoi(tokens[4]);
+	}
 }
 void Joseki::printOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
+	std::cout << "option name joseki_loop type check default false" << std::endl;
 	std::cout << "option name josekiinputname type string default foutjoseki" << std::endl;
 	std::cout << "option name josekioutputname type string default foutjoseki" << std::endl;
+	std::cout << "option name josekikakidashi type check default false" << std::endl;
+	std::cout << "option name pruningborder type string default 100" << std::endl;
+	std::cout << "option name pruning_on type check default false" << std::endl;
+	std::cout << "option name pruning_type type string default 0" << std::endl;
+}
+
+void Joseki::josekiOutputIfKakidashiOn(const std::vector<SearchNode*> const history) {
+	if (kakidashi_on) {
+		josekiOutput(history);
+	}
 }
 
 //定跡書き出し
 void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	std::cout << timerStart() << std::endl;
 	
-	//書き出しファイルオープン
-	FILE* fp;
-	fopen_s(&fp, (outputFileName).c_str(), "wb");
-	//fopen_s(&fp, "testjoseki.txt", "w");
+	size_t pruningedNodeCount = 0;
+	if (pruning_on) {
+		pruningedNodeCount = pruning(history[0]);
+		std::cout << "枝刈りされたノードの数：" << pruningedNodeCount << std::endl;
+	}
 
 	//書き出しノード保存用キュー
 	std::queue<SearchNode*> nq;
@@ -56,11 +83,18 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	
 	//ノードの数を数え、infoファイルに出力する
 	size_t nodeCount = SearchNode::sortChildren(nq.front());
+
+	//書き出しファイルオープン
+	FILE* fp;
+	fopen_s(&fp, (outputFileName).c_str(), "wb");
+	//fopen_s(&fp, "testjoseki.txt", "w");
+
+
 	std::ofstream ofs(outputFileInfoName);
 	ofs << "nodeCount," << nodeCount << std::endl;
 	for (auto his : history) {
-		ofs << his->move.getU();
-		ofs << ",";
+		//ofs << his->move.getU();
+		//ofs << ",";
 	}
 	ofs << std::endl;
 	ofs << "position ";
@@ -86,7 +120,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	size_t fileSize = nodeCount * sizeof(josekinode);
 	size_t gigabyte = 1024 * 1024 * 1024;
 	size_t maxByte = (32 / 3) * gigabyte;
-	ofs << "推定ファイルサイズ：" << std::to_string(fileSize) << "バイト" << std::endl;
+	ofs << "推定ファイルサイズ：" << std::to_string(fileSize) << "バイト(" << (double)fileSize / gigabyte << "ギガバイト)" << std::endl;
 	std::cout << "推定ファイルサイズ：" << std::to_string(fileSize) << "バイト" << std::endl;
 	std::cout << "推定ファイルサイズ：" << std::to_string((double)fileSize / gigabyte) << "ギガバイト" << std::endl;
 	if (fileSize > maxByte) {
@@ -94,8 +128,18 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 		std::cout << "最大サイズ：" << maxByte << std::endl;
 		std::cout << "出力を中止します。" << std::endl;
 		ofs.close();
-		return;
 		fclose(fp);
+		nextSubForJosekiLoop();
+		return;
+	}
+
+	//枝刈りに関する情報
+	ofs << "枝刈りの有無：" << (pruning_on ? "有り" : "無し") << std::endl;
+	if (pruning_on) {
+		ofs << "枝刈りタイプ：" << pruning_type << std::endl;
+		ofs << "枝刈りボーダー：" << pruningBorder << std::endl;
+		ofs << "枝刈りされたノードの数：" << pruningedNodeCount << std::endl;
+		ofs << "削減されたバイト数：" << pruningedNodeCount * sizeof(josekinode) << "(" << (double)(pruningedNodeCount * sizeof(josekinode)) / gigabyte << "GB)" << std::endl;
 	}
 
 	ofs.close();	//書き出し中にファイル情報を確認するため、いったん閉じる
@@ -130,7 +174,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 
 	//時間出力
 	ofs.open(outputFileInfoName,std::ios::app);
-	ofs << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+	ofs << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒で出力完了" << std::endl;
 	ofs.close();
 	fclose(fp);
 }
@@ -344,26 +388,51 @@ void Joseki::yomikomiBreath(const size_t index) {
 size_t Joseki::pruning(SearchNode* root){
 	size_t r;
 	std::vector<SearchNode*>history;
-	r = partialPruning(root,history);
+	r = partialPruning(root,history,1);
 	return r;
 }
 
-size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history){
+size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history, double select){
 	size_t r = 0;
+	//末端ならその場で終了
+	if (node->children.size() == 0) {
+		return r;
+	}
 	double mass = node->getMass();
 	history.push_back(node);
 	//枝刈り判定を行う
-	if (isPruning(node)) {
-		//for (SearchNode* child : node->children) {
-		//	r += pruningExecuter(child, history);
-		//}
+	if (isPruning(node,select)) {
 		r += pruningExecuter(node, history);
-		
 	}
 	else {
-		//再帰的に枝刈りを行う
-		for (SearchNode* child : node->children) {
-			r += partialPruning(child, history);
+		double nextSelect = -1;
+		
+		//実現確率の計算
+		if (select != -1) {
+			double CE = node->children[0]->getEvaluation();
+			//評価値の最大値の取得
+			for (const SearchNode* child : node->children) {
+				if (CE < child->getEvaluation()) {
+					CE = child->getEvaluation();
+				}
+			}
+			//バックアップ温度
+			double T_c = 40;
+			double Z = 0;
+			for (const SearchNode* child : node->children) {
+				Z += std::exp(-(child->getEvaluation() - CE) / T_c);
+			}
+			for (SearchNode* child : node->children) {
+				//再帰的に枝刈りを行う
+				double s = std::exp(-(child->getEvaluation() - CE) / T_c) / Z;
+				r += partialPruning(child, history, s);
+			}
+		}
+		else {
+			//再帰的に枝刈りを行う
+			for (SearchNode* child : node->children) {
+				r += partialPruning(child, history);
+			}
 		}
 	}
 	return r;
@@ -372,59 +441,27 @@ size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history
 size_t Joseki::pruningExecuter(SearchNode* node, std::vector<SearchNode*> history){
 	
 	size_t r = node->deleteTree();
-	/*for (SearchNode* child : node->children) {
-		auto tstate = child->getState();
-		r += child->deleteTree();
-		if (tstate == SearchNode::State::Expanded) {
-			child->setState(SearchNode::State::NotExpanded);
-		}
-	}*/
 	node->setState(SearchNode::State::NotExpanded);
-	node->setMass(0);
 
-	typedef std::pair<double, double>dd;
-	for (int i = history.size() - 2; i >= 0; i--) {
-		SearchNode* tNode = history[i];
-		bool maxInserted = false;
-		double emin = 9999999;
-		std::vector<dd> emvec;
-		for (const auto& child : tNode->children) {
-			const double eval = child->getEvaluation();
-			const double mass = child->mass;
-			emvec.push_back(std::make_pair(eval, mass));
-			if (maxInserted == false || eval < emin) {
-				emin = eval;
-			}
-		}
-		if (std::abs(emin) > SearchNode::getMateScoreBound()) {
-			tNode->setMateVariation(emin);
-		}
-		else {
-			//double Z_e = 0;
-			double Z_d = 0;
-			for (const auto& em : emvec) {
-				const double eval = em.first;
-				//Z_e += std::exp(-(eval - emin) / T_e);
-				Z_d += std::exp(-(eval - emin) / T_d);
-			}
-			double E = 0;
-			double M = 1;
-			for (const auto& em : emvec) {
-				const double eval = em.first;
-				const double mass = em.second;
-				//E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
-				M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
-			}
-			//node->setEvaluation(E);
-			tNode->setMass(M);
-		}
-	}
 	return r;
 }
 
-bool Joseki::isPruning(SearchNode* node){
-	if (node->getEvaluation() < 0) {
-		return true;
+bool Joseki::isPruning(SearchNode* node,double select){
+	//実現確率がpruningBorder%以下なら切り捨て
+	switch (pruning_type)
+	{
+	case 0:
+		if (select < pruningBorder * 0.01) {
+			return true;
+		}
+		break;
+	case 1:
+		if (node->getMass() < pruningBorder) {
+			return true;
+		}
+		break;
+	default:
+		break;
 	}
 	return false;
 }

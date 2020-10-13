@@ -82,6 +82,7 @@ void Commander::execute() {
 			commander.go_alive = false;
 			commander.info_alive = false;
 			commander.stopAgent();
+			commander.joseki.josekiOutputIfKakidashiOn(commander.tree.getHistory());
 			std::cout << "gameoverok" << std::endl;
 		}
 		else if (tokens[0] == "quit") {
@@ -98,7 +99,7 @@ void Commander::execute() {
 			commander.joseki.josekiTextOutput(commander.tree.getHistory());
 		}
 		else if (tokens[0] == "pruning") {
-			commander.joseki.pruning(commander.tree.getHistory().front());
+			std::cout << commander.joseki.pruning(commander.tree.getHistory().front()) << "ノードが削除されました" << std::endl;
 		}
 		else if (tokens[0] == "yomikomibook") {
 			commander.joseki.readBook("joseki/user_book1.db");
@@ -438,7 +439,7 @@ void Commander::position(const std::vector<std::string>& tokens) {
 	const auto prevRoot = tree.getRoot();
 	if (continuousTree) {
 		auto result = tree.set(tokens);
-		if (result.first) {
+		if (result.first || joseki.getYomikomiOn()) {
 			releaseAgentAndBranch(prevRoot, std::move(result.second));
 		}
 		else {

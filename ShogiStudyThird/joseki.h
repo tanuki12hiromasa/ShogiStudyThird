@@ -12,10 +12,35 @@ class Joseki {
 public:
     void setOption(std::vector<std::string>tokens);
     void printOption();
+    bool getYomikomiOn() { return yomikomi_on; }
 private:
     //定跡を利用するか等の変数
     bool yomikomi_on;
+    //対局終了時に書き出すかどうかの変数
+    bool kakidashi_on;
+    //複数回対局を行って拡大させるかどうかの変数
+    bool joseki_loop = false;
+    std::string loopFileName = "joseki\\next.txt";
+    //ループ用のファイルの中身を増減させる。返り値は増減前
+    int nextAddForJosekiLoop() {
+        return nextForJosekiLoop(1);
+    }
+    int nextSubForJosekiLoop() {
+        return nextForJosekiLoop(-1);
+    }
+    int nextForJosekiLoop(int add) {
+        std::ifstream ifs(loopFileName);
+        int r = 0;
+        if (ifs.is_open()) {
+            ifs >> r;
+            ifs.close();
+        }
 
+        std::ofstream ofs(loopFileName);
+        ofs << r + add << std::endl;
+        ofs.close();
+        return r;
+    }
 
     //保存するノード
     struct josekinode {
@@ -64,6 +89,8 @@ private:
 public:
     //定跡書き出し
     void josekiOutput(const std::vector<SearchNode*> const history);
+    //定跡書き出し判定付きの書き出し
+    void josekiOutputIfKakidashiOn(const std::vector<SearchNode*> const history);
     //定跡をテキスト形式で書き出し。人の目で見てわかりやすいように。
     void josekiTextOutput(const std::vector<SearchNode*> const history);
     SearchNode* getJosekiNodes()const { return nodesForProgram[0];}
@@ -71,19 +98,30 @@ public:
     size_t getChildCount()const { return childCount; }
 
     void setOutputFileName(std::string filename) {
-        this->outputFileName = folderName + filename + ".bin";
-        this->outputFileInfoName = folderName + filename + "_info.txt";
+        std::string add = "";
+        if (joseki_loop) {
+            int num = nextForJosekiLoop(0);
+            add = std::to_string(num);
+        }
+
+        this->outputFileName = folderName + filename + add + ".bin";
+        this->outputFileInfoName = folderName + filename + add + "_info.txt";
     }
 private:
-    std::string outputFileName = "treejoseki.bin";
-    std::string outputFileInfoName = "treejoseki_info.txt";
+    std::string outputFileName = "joseki\\defaultjoseki_output.bin";
+    std::string outputFileInfoName = "joseki\\defaultjoseki_output_info.txt";
 
     //入力
 public:
     void josekiInput(SearchTree* tree);
     void setInputFileName(std::string filename) {
-        this->inputFileName = folderName + filename + ".bin";
-        this->inputFileInfoName = folderName + filename + "_info.txt";
+        std::string add = "";
+        if (true) {
+            int num = nextAddForJosekiLoop();
+            add = std::to_string(num);
+        }
+        this->inputFileName = folderName + filename + add + ".bin";
+        this->inputFileInfoName = folderName + filename + add + "_info.txt";
     }
 
 private:
@@ -104,8 +142,8 @@ private:
     std::vector<size_t> yomikomiDepth(const size_t index, const int depth);
     void yomikomiBreath(const size_t index);
 
-    std::string inputFileName = "treejoseki_input.bin";       //定跡木を格納しておくファイル
-    std::string inputFileInfoName = "treejoseki_input_info.txt";   //定跡木の情報を格納しておくファイル
+    std::string inputFileName = "joseki\\defaultjoseki_input.bin";       //定跡木を格納しておくファイル
+    std::string inputFileInfoName = "joseki\\defaultjoseki_input_info.txt";   //定跡木の情報を格納しておくファイル
 
     //枝刈り
 public:
@@ -113,13 +151,17 @@ public:
     size_t pruning(SearchNode* root);
 private:
     //指定されたノードに対して再帰的に枝刈りを行う
-    size_t partialPruning(SearchNode* node, std::vector<SearchNode*>history);
+    size_t partialPruning(SearchNode* node, std::vector<SearchNode*>history,double select = -1);
     //実際の枝刈り処理を行う
     size_t pruningExecuter(SearchNode* node, std::vector<SearchNode*>history);
     //枝刈りを行うものの設定を呼び出す関数
-    bool isPruning(SearchNode* node);
-    //深さバックアップ温度再計算用の温度
-    double T_d = 100;
+    bool isPruning(SearchNode* node, double select = 1);
+    ////深さバックアップ温度再計算用の温度
+    //double T_d = 100;
+    double pruningBorder = 0.1;
+    bool pruning_on = false;
+    //枝刈りのタイプ。0は実現確率
+    int pruning_type = 0;
 
     //従来の定跡を読み込んで利用する
 public:
