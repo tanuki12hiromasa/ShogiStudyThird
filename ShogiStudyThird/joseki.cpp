@@ -61,8 +61,9 @@ void Joseki::printOption() {
 	std::cout << "option name pruning_type type string default 0" << std::endl;
 }
 
-void Joseki::josekiOutputIfKakidashiOn(const std::vector<SearchNode*> const history) {
+void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens) {
 	if (kakidashi_on) {
+		result = tokens[1];
 		josekiOutput(history);
 	}
 }
@@ -71,6 +72,9 @@ void Joseki::josekiOutputIfKakidashiOn(const std::vector<SearchNode*> const hist
 void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	std::cout << timerStart() << std::endl;
 	
+	backUp(history);
+
+
 	size_t pruningedNodeCount = 0;
 	if (pruning_on) {
 		pruningedNodeCount = pruning(history[0]);
@@ -93,15 +97,14 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	std::ofstream ofs(outputFileInfoName);
 	ofs << "nodeCount," << nodeCount << std::endl;
 	for (auto his : history) {
-		//ofs << his->move.getU();
-		//ofs << ",";
+		ofs << his->move.getU();
+		ofs << ",";
 	}
 	ofs << std::endl;
 	ofs << "position ";
 	{
-		//ポジションはひとまず初手のみ指定
-		ofs << "startpos moves";
-		/*for (auto his : history) {
+		//ofs << "startpos moves";
+		for (auto his : history) {
 			if (his->move.toUSI() == "nullmove") {
 				ofs << "startpos moves";
 			}
@@ -109,7 +112,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 				ofs << his->move.toUSI();
 			}
 			ofs << " ";
-		}*/
+		}
 	}
 	ofs << std::endl;
 
@@ -132,6 +135,8 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 		nextSubForJosekiLoop();
 		return;
 	}
+
+	ofs << "result " << result << std::endl;
 
 	//枝刈りに関する情報
 	ofs << "枝刈りの有無：" << (pruning_on ? "有り" : "無し") << std::endl;
@@ -179,9 +184,55 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	fclose(fp);
 }
 
+void Joseki::backUp(std::vector<SearchNode*> history)
+{
+	const double MateScoreBound = 30000.0;
+	typedef std::pair<double, double> dd;
+	double T_e = 120;
+	double T_d = 80;
+	SearchNode* node = history.back();
+
+	for (int i = history.size() - 2; i >= 0; i--) {
+		node = history[i];
+		double emin = 99999;
+		std::vector<dd> emvec;
+		for (const auto& child : node->children) {
+			const double eval = child->getEvaluation();
+			const double mass = child->mass;
+			emvec.push_back(std::make_pair(eval, mass));
+			if (eval < emin) {
+				emin = eval;
+			}
+		}
+		if (std::abs(emin) > MateScoreBound) {
+			node->setMateVariation(emin);
+		}
+		else {
+			double Z_e = 0;
+			double Z_d = 0;
+			for (const auto& em : emvec) {
+				const double eval = em.first;
+				Z_e += std::exp(-(eval - emin) / T_e);
+				Z_d += std::exp(-(eval - emin) / T_d);
+			}
+			double E = 0;
+			double M = 1;
+			for (const auto& em : emvec) {
+				const double eval = em.first;
+				const double mass = em.second;
+				E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
+				M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
+			}
+			node->setEvaluation(E);
+			node->setMass(M);
+		}
+	}
+}
+
 //定跡書き出し
 void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 	std::cout << timerStart() << std::endl;
+
 
 	//書き出しファイルオープン
 	FILE* fp;
@@ -201,6 +252,7 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 	}
 	ofs << std::endl;
 	ofs << "position ";
+	
 	for (auto his : history) {
 		if (his->move.toUSI() == "nullmove") {
 			ofs << "startpos moves";

@@ -90,12 +90,14 @@ public:
     //定跡書き出し
     void josekiOutput(const std::vector<SearchNode*> const history);
     //定跡書き出し判定付きの書き出し
-    void josekiOutputIfKakidashiOn(const std::vector<SearchNode*> const history);
+    void josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens);
     //定跡をテキスト形式で書き出し。人の目で見てわかりやすいように。
     void josekiTextOutput(const std::vector<SearchNode*> const history);
     SearchNode* getJosekiNodes()const { return nodesForProgram[0];}
     Kyokumen getKyokumen()const { return kyokumen; }
     size_t getChildCount()const { return childCount; }
+    //末端からのバックアップ
+    void backUp(std::vector<SearchNode*> history);
 
     void setOutputFileName(std::string filename) {
         std::string add = "";
@@ -110,7 +112,7 @@ public:
 private:
     std::string outputFileName = "joseki\\defaultjoseki_output.bin";
     std::string outputFileInfoName = "joseki\\defaultjoseki_output_info.txt";
-
+    std::string result = "none";
     //入力
 public:
     void josekiInput(SearchTree* tree);
