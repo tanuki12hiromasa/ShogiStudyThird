@@ -74,6 +74,19 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	
 	backUp(history);
 
+	std::string moveHis = "";
+	std::string usiHis = "";
+	for (SearchNode* his : history) {
+		moveHis += std::to_string(his->move.getU());
+		moveHis += ",";
+		if (his->move.toUSI() == "nullmove") {
+			usiHis += "position startpos moves";
+		}
+		else {
+			usiHis += his->move.toUSI();
+		}
+		usiHis += " ";
+	}
 
 	size_t pruningedNodeCount = 0;
 	if (pruning_on) {
@@ -96,26 +109,8 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 
 	std::ofstream ofs(outputFileInfoName);
 	ofs << "nodeCount," << nodeCount << std::endl;
-	for (auto his : history) {
-		ofs << his->move.getU();
-		ofs << ",";
-	}
-	ofs << std::endl;
-	ofs << "position ";
-	{
-		//ofs << "startpos moves";
-		for (auto his : history) {
-			if (his->move.toUSI() == "nullmove") {
-				ofs << "startpos moves";
-			}
-			else {
-				ofs << his->move.toUSI();
-			}
-			ofs << " ";
-		}
-	}
-	ofs << std::endl;
-
+	ofs << moveHis << std::endl;
+	ofs << usiHis << std::endl;
 	ofs << "depth," << nq.front()->getMass() << std::endl;
 
 	//ノードの数が多すぎるとメモリの限界を超えるため、出力を中止する
@@ -323,7 +318,11 @@ void Joseki::josekiInput(SearchTree* tree) {
 	std::string pos;
 	std::getline(ifs, pos); //moveが保存された行
 	std::getline(ifs, pos); //positionが保存された行
-	tokenOfPosition = usi::split(pos, ' ');
+	//tokenOfPosition = usi::split(pos, ' ');
+	tokenOfPosition.push_back("position");
+	tokenOfPosition.push_back("startpos");
+	tokenOfPosition.push_back("moves");
+
 	ifs.close();
 
 	//定跡本体を開く
