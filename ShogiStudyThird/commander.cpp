@@ -129,7 +129,7 @@ void Commander::coutOption() {
 	cout << "option name PV_const type string default 0" << endl;
 	cout << "option name resign_matemoves type spin default 3 min 0 max 40" << endl;//投了する詰み手数
 	cout << "option name quick_bm_time_lower type spin default 4000 min 1000 max 600000" << endl;//即指しの判定時間の下限
-	cout << "option name quick_bm_time_upper type spin default 20000 min 1000 max 6000000" << endl;//即指しの判定時間の上限
+	cout << "option name standard_time_upper type spin default 20000 min 1000 max 6000000" << endl;//即指しの判定時間の上限
 	cout << "option name overhead_time type spin default 200 min 0 max 10000" << endl;
 	cout << "option name estimate_movesnum type spin default 120 min 0 max 10000" << endl;
 }
@@ -212,8 +212,8 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "quick_bm_time_lower") {
 			time_quickbm_lower = std::chrono::milliseconds(std::stoi(token[4]));
 		}
-		else if (token[2] == "quick_bm_time_upper") {
-			time_quickbm_upper = std::chrono::milliseconds(std::stoi(token[4]));
+		else if (token[2] == "standard_time_upper") {
+			time_standard_upper = std::chrono::milliseconds(std::stoi(token[4]));
 		}
 		else if (token[2] == "overhead_time") {
 			time_overhead = std::chrono::milliseconds(std::stoi(token[4]));
@@ -341,7 +341,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		int changecounter = 0;
 		int loopcounter = 0;
 		std::cout << "info string time:" << timelimit.first.count() << ", " << timelimit.second.count() << std::endl;
-		std::this_thread::sleep_for(searchtime / 8);
+		std::this_thread::sleep_for(searchtime / 32);
 		do {
 			loopcounter++;
 			constexpr auto sleeptime = 50ms;
@@ -361,8 +361,9 @@ void Commander::go(const std::vector<std::string>& tokens) {
 				pi_average = pi;
 				continuous_counter = 1;
 			}
+			recentBestNode = bestnode;
 			//即指しの条件を満たしたら指す
-			if (continuous_counter * sleeptime > std::min(std::max(timelimit.first / 2, time_quickbm_lower), time_quickbm_upper)) {
+			if (continuous_counter * sleeptime > std::max(timelimit.first / 2, time_quickbm_lower)) {
 				break;
 			}
 			if ((loopcounter & 0xF) == 0) {
@@ -377,7 +378,6 @@ void Commander::go(const std::vector<std::string>& tokens) {
 			if (std::chrono::system_clock::now() - starttime + sleeptime >= timelimit.second) {
 				break;
 			}
-			recentBestNode = bestnode;
 		} while (std::abs(root->eval) < SearchNode::getMateScoreBound());
 		if (provisonalBestMove == nullptr) provisonalBestMove = recentBestNode;
 		chakushu(provisonalBestMove);
@@ -390,13 +390,13 @@ std::pair<std::chrono::milliseconds, std::chrono::milliseconds> Commander::decid
 	using namespace std::chrono_literals;
 	switch (time.rule) {
 		case TimeProperty::TimeRule::byoyomi: {
-			const auto standerd_time = std::max(time.left / std::max(estimate_movesnum - tree.getMoveNum(), 5), time.added) - time_overhead;
+			const auto standerd_time = std::min(std::max(time.left / std::max(estimate_movesnum - tree.getMoveNum(), 5), time.added), time_standard_upper) - time_overhead;
 			const auto limit_time = time.left + time.added - time_overhead;
 			return std::make_pair(standerd_time, limit_time);
 		}
 		case TimeProperty::TimeRule::fischer: {
 			const int expected_movesleft = std::max(estimate_movesnum - tree.getMoveNum(), 2);
-			const auto standerd_time = time.left / expected_movesleft + time.added - time_overhead;
+			const auto standerd_time = std::min(time.left / expected_movesleft + time.added, time_standard_upper) - time_overhead;
 			const auto limit_time = time.left + time.added - time_overhead;
 			return std::make_pair(standerd_time, limit_time);
 		}
