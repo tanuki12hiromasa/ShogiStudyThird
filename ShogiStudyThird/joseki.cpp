@@ -49,6 +49,12 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "pruning_type") {
 		pruning_type = std::stoi(tokens[4]);
 	}
+	else if (t == "joseki_backup_T_e") {
+		backup_T_e = std::stoi(tokens[4]);
+	}
+	else if (t == "joseki_backup_T_d") {
+		backup_T_d = std::stoi(tokens[4]);
+	}
 }
 void Joseki::printOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
@@ -59,11 +65,18 @@ void Joseki::printOption() {
 	std::cout << "option name pruningborder type string default 100" << std::endl;
 	std::cout << "option name pruning_on type check default false" << std::endl;
 	std::cout << "option name pruning_type type string default 0" << std::endl;
+	std::cout << "option name joseki_backup_T_e type string default 1" << std::endl;
+	std::cout << "option name joseki_backup_T_d type string default 1" << std::endl;
 }
 
 void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens) {
 	if (kakidashi_on) {
 		result = tokens[1];
+
+		//setOutputFileName("backuptest-nobackup");
+		//josekiOutput(history);
+		backUp(history);
+		//setOutputFileName("backuptest-backup");
 		josekiOutput(history);
 	}
 }
@@ -72,7 +85,7 @@ void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,
 void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	std::cout << timerStart() << std::endl;
 	
-	backUp(history);
+	//backUp(history);
 
 	std::string moveHis = "";
 	std::string usiHis = "";
@@ -183,8 +196,8 @@ void Joseki::backUp(std::vector<SearchNode*> history)
 {
 	const double MateScoreBound = 30000.0;
 	typedef std::pair<double, double> dd;
-	double T_e = 120;
-	double T_d = 80;
+	double T_e = 30;
+	double T_d = 30;
 	SearchNode* node = history.back();
 
 	for (int i = history.size() - 2; i >= 0; i--) {

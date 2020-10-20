@@ -113,6 +113,10 @@ private:
     std::string outputFileName = "joseki\\defaultjoseki_output.bin";
     std::string outputFileInfoName = "joseki\\defaultjoseki_output_info.txt";
     std::string result = "none";
+    
+    double backup_T_e = 1;
+    double backup_T_d = 1;
+
     //入力
 public:
     void josekiInput(SearchTree* tree);
