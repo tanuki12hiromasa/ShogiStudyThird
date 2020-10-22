@@ -2,7 +2,6 @@
 #include "node.h"
 #include "kyokumen.h"
 #include "evaluator.h"
-#include "player.h"
 #include <unordered_map>
 
 class SearchTree {

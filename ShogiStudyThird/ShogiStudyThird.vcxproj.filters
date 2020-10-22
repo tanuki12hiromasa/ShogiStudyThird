@@ -155,9 +155,6 @@
     <ClInclude Include="time_property.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="feature.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="stest.h">
       <Filter>debug</Filter>
     </ClInclude>
