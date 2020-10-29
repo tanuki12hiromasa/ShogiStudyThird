@@ -122,7 +122,7 @@ public:
     void josekiInput(SearchTree* tree);
     void setInputFileName(std::string filename) {
         std::string add = "";
-        if (true) {
+        if (joseki_loop) {
             int num = nextAddForJosekiLoop();
             add = std::to_string(num);
         }
@@ -157,17 +157,20 @@ public:
     size_t pruning(SearchNode* root);
 private:
     //指定されたノードに対して再帰的に枝刈りを行う
-    size_t partialPruning(SearchNode* node, std::vector<SearchNode*>history,double select = -1);
+    size_t partialPruning(SearchNode* node, std::vector<SearchNode*>history,double select = -1,int depth = 10,double backupRate = 1);
     //実際の枝刈り処理を行う
     size_t pruningExecuter(SearchNode* node, std::vector<SearchNode*>history);
     //枝刈りを行うものの設定を呼び出す関数
-    bool isPruning(SearchNode* node, double select = 1);
+    bool isPruning(SearchNode* node, double select = 1,int depth = 10,double backupRate = 1);
     ////深さバックアップ温度再計算用の温度
     //double T_d = 100;
     double pruningBorder = 0.1;
+    double pruningBorder2 = 0.1;
     bool pruning_on = false;
     //枝刈りのタイプ。0は実現確率
     int pruning_type = 0;
+    //枝刈りをしない深さ
+    int pruning_depth = 5;
 
     //従来の定跡を読み込んで利用する
 public:
