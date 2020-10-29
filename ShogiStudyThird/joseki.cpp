@@ -73,10 +73,7 @@ void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,
 	if (kakidashi_on) {
 		result = tokens[1];
 
-		//setOutputFileName("backuptest-nobackup");
-		//josekiOutput(history);
 		backUp(history);
-		//setOutputFileName("backuptest-backup");
 		josekiOutput(history);
 	}
 }
@@ -85,8 +82,6 @@ void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,
 void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	std::cout << timerStart() << std::endl;
 	
-	//backUp(history);
-
 	std::string moveHis = "";
 	std::string usiHis = "";
 	for (SearchNode* his : history) {
