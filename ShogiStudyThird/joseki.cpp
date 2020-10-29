@@ -43,6 +43,9 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "pruningborder") {
 		pruningBorder = std::stoi(tokens[4]) * 0.001;
 	}
+	else if (t == "pruningborder2") {
+		pruningBorder2 = std::stoi(tokens[4]) * 0.001;
+	}
 	else if (t == "pruning_on") {
 		pruning_on = (tokens[4] == "true");
 	}
@@ -55,6 +58,9 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "joseki_backup_T_d") {
 		backup_T_d = std::stoi(tokens[4]);
 	}
+	else if (t == "pruning_depth") {
+		pruning_depth = std::stoi(tokens[4]);
+	}
 }
 void Joseki::printOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
@@ -63,10 +69,12 @@ void Joseki::printOption() {
 	std::cout << "option name josekioutputname type string default foutjoseki" << std::endl;
 	std::cout << "option name josekikakidashi type check default false" << std::endl;
 	std::cout << "option name pruningborder type string default 100" << std::endl;
+	std::cout << "option name pruningborder2 type string default 100" << std::endl;
 	std::cout << "option name pruning_on type check default false" << std::endl;
 	std::cout << "option name pruning_type type string default 0" << std::endl;
 	std::cout << "option name joseki_backup_T_e type string default 1" << std::endl;
 	std::cout << "option name joseki_backup_T_d type string default 1" << std::endl;
+	std::cout << "option name pruning_depth type string default 5" << std::endl;
 }
 
 void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens) {
@@ -196,8 +204,8 @@ void Joseki::backUp(std::vector<SearchNode*> history)
 {
 	const double MateScoreBound = 30000.0;
 	typedef std::pair<double, double> dd;
-	double T_e = 30;
-	double T_d = 30;
+	double T_e = backup_T_e;
+	double T_d = backup_T_d;
 	SearchNode* node = history.back();
 
 	for (int i = history.size() - 2; i >= 0; i--) {
@@ -345,17 +353,16 @@ void Joseki::josekiInput(SearchTree* tree) {
 		exit(EXIT_FAILURE);
 	}
 	
-	nodesForProgram = (SearchNode**)calloc(nodeCount, sizeof(SearchNode*));	//プログラム内で使用するnode
-	parentsIndex = (size_t*)calloc(nodeCount, sizeof(size_t));
-	nodesFromFile = (josekinode*)calloc(nodeCount, sizeof(josekinode));	//定跡の復元に一時的に利用するノード
-	fread(nodesFromFile, sizeof(josekinode), nodeCount, fp);	//定跡本体をバイナリファイルから読み込み
-
-
 	std::cout << timerStart() << std::endl;
 
 	std::cout << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
 
 	std::cout << "ノード数:" << nodeCount << std::endl;
+
+	nodesForProgram = (SearchNode**)calloc(nodeCount, sizeof(SearchNode*));	//プログラム内で使用するnode
+	parentsIndex = (size_t*)calloc(nodeCount, sizeof(size_t));
+	nodesFromFile = (josekinode*)calloc(nodeCount, sizeof(josekinode));	//定跡の復元に一時的に利用するノード
+	fread(nodesFromFile, sizeof(josekinode), nodeCount, fp);	//定跡本体をバイナリファイルから読み込み
 
 	//すぐ下の子ノード達だけ展開する
 	int depth = 0;
@@ -452,11 +459,11 @@ void Joseki::yomikomiBreath(const size_t index) {
 size_t Joseki::pruning(SearchNode* root){
 	size_t r;
 	std::vector<SearchNode*>history;
-	r = partialPruning(root,history,1);
+	r = partialPruning(root,history,1,0);
 	return r;
 }
 
-size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history, double select){
+size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history, double select,int depth,double backupRate){
 	size_t r = 0;
 	//末端ならその場で終了
 	if (node->children.size() == 0) {
@@ -465,37 +472,61 @@ size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history
 	double mass = node->getMass();
 	history.push_back(node);
 	//枝刈り判定を行う
-	if (isPruning(node,select)) {
+	if (isPruning(node,select,depth,backupRate)) {
 		r += pruningExecuter(node, history);
 	}
 	else {
-		double nextSelect = -1;
-		
-		//実現確率の計算
-		if (select != -1) {
-			double CE = node->children[0]->getEvaluation();
-			//評価値の最大値の取得
-			for (const SearchNode* child : node->children) {
-				if (CE < child->getEvaluation()) {
-					CE = child->getEvaluation();
+		if (pruning_type == 0) {
+			//実現確率の計算
+			if (select != -1) {
+				double CE = node->children[0]->getEvaluation();
+				//評価値の最大値の取得
+				for (const SearchNode* child : node->children) {
+					if (CE < child->getEvaluation()) {
+						CE = child->getEvaluation();
+					}
+				}
+				//バックアップ温度
+				double T_c = 40;
+				double Z = 0;
+				for (const SearchNode* child : node->children) {
+					Z += std::exp(-(child->getEvaluation() - CE) / T_c);
+				}
+				for (SearchNode* child : node->children) {
+					//再帰的に枝刈りを行う
+					double s = std::exp(-(child->getEvaluation() - CE) / T_c) / Z;
+					r += partialPruning(child, history, s * select, depth + 1);
 				}
 			}
-			//バックアップ温度
-			double T_c = 40;
-			double Z = 0;
-			for (const SearchNode* child : node->children) {
-				Z += std::exp(-(child->getEvaluation() - CE) / T_c);
-			}
-			for (SearchNode* child : node->children) {
+			else {
 				//再帰的に枝刈りを行う
-				double s = std::exp(-(child->getEvaluation() - CE) / T_c) / Z;
-				r += partialPruning(child, history, s);
+				for (SearchNode* child : node->children) {
+					r += partialPruning(child, history);
+				}
 			}
 		}
-		else {
-			//再帰的に枝刈りを行う
-			for (SearchNode* child : node->children) {
-				r += partialPruning(child, history);
+		else if (pruning_type == 2 || pruning_type == 3) {
+			//実現確率の計算
+			if (select != -1) {
+				double CE = node->children[0]->getEvaluation();
+				//評価値の最大値の取得
+				for (const SearchNode* child : node->children) {
+					if (CE < child->getEvaluation()) {
+						CE = child->getEvaluation();
+					}
+				}
+				//バックアップ温度
+				double T_c = 40;
+				double Z = 0;
+				for (const SearchNode* child : node->children) {
+					Z += std::exp(-(child->getEvaluation() - CE) / T_c);
+				}
+				for (SearchNode* child : node->children) {
+					//再帰的に枝刈りを行う
+					double s = std::exp(-(child->getEvaluation() - CE) / T_c) / Z;
+					double sr = select * (depth < pruning_depth ? 1 : s);
+					r += partialPruning(child, history, sr, depth + 1,s);
+				}
 			}
 		}
 	}
@@ -510,7 +541,7 @@ size_t Joseki::pruningExecuter(SearchNode* node, std::vector<SearchNode*> histor
 	return r;
 }
 
-bool Joseki::isPruning(SearchNode* node,double select){
+bool Joseki::isPruning(SearchNode* node,double select,int depth,double backupRate){
 	//実現確率がpruningBorder%以下なら切り捨て
 	switch (pruning_type)
 	{
@@ -521,6 +552,16 @@ bool Joseki::isPruning(SearchNode* node,double select){
 		break;
 	case 1:
 		if (node->getMass() < pruningBorder) {
+			return true;
+		}
+		break;
+	case 2:
+		if (depth >= pruning_depth && select < pruningBorder * 0.01) {
+			return true;
+		}
+		break;
+	case 3:
+		if ((depth >= pruning_depth && select < pruningBorder * 0.01) || (depth < pruning_depth && backupRate < pruningBorder2 * 0.01)) {
 			return true;
 		}
 		break;
