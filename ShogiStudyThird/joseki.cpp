@@ -170,7 +170,11 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	for (index = 0; index < nodeCount; ++index) {
 		const SearchNode * node = nodes[index];	//nodesから注目ノードを取り出し
 		const size_t childCount = node->children.size();
-		jn[index] = josekinode(index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
+		SearchNode::State state = node->getState();
+		if (childCount > 0) {
+			state = SearchNode::State::Expanded;
+		}
+		jn[index] = josekinode(index, state, node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
 		for (int i = 0; i < childCount;++i) {	//子ノードをnodesに格納
 			nodes[childIndex + i] = node->children[i];
 		}
@@ -290,11 +294,15 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 	for (index = 0; index < nodeCount; ++index) {
 		const auto node = nodes[index];	//nodesから注目ノードを取り出し
 		const auto childCount = node->children.size();
-		jn[index] = josekinode(index, node->getState(), node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
+		SearchNode::State state = node->getState();
+		if (childCount > 0) {
+			state = SearchNode::State::Expanded;
+		}
+		jn[index] = josekinode(index, state, node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
 		for (int i = 0; i < childCount; ++i) {	//子ノードをnodesに格納
 			nodes[childIndex + i] = node->children[i];
 		}
-		fprintf(fp,"%d,%d,%d,%s,%f,%f,%d,%d\n", index, node->getState(), node->move.getU(),node->move.toUSI().c_str(), node->getMass(), node->getEvaluation(), childCount, childIndex);
+		fprintf(fp,"%d,%d,%d,%s,%f,%f,%d,%d\n", index, state, node->move.getU(),node->move.toUSI().c_str(), node->getMass(), node->getEvaluation(), childCount, childIndex);
 		childIndex += childCount;	//子ノードの数だけchildIndexを進める
 	}
 
