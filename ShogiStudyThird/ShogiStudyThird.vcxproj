@@ -143,6 +143,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -155,6 +156,7 @@
     <ClCompile Include="agent.cpp" />
     <ClCompile Include="apery_evaluate.cpp" />
     <ClCompile Include="apery_feature.cpp" />
+    <ClCompile Include="apery_learn.cpp" />
     <ClCompile Include="bb_kiki.cpp" />
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="commander.cpp" />
@@ -162,6 +164,7 @@
     <ClCompile Include="koma.cpp" />
     <ClCompile Include="kyokumen.cpp" />
     <ClCompile Include="leaf_guard.cpp" />
+    <ClCompile Include="leaner.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
@@ -180,6 +183,7 @@
     <ClInclude Include="agent.h" />
     <ClInclude Include="apery_evaluate.h" />
     <ClInclude Include="apery_feature.h" />
+    <ClInclude Include="apery_learn.h" />
     <ClInclude Include="apery_param.h" />
     <ClInclude Include="bb_kiki.h" />
     <ClInclude Include="bitboard.h" />
@@ -190,6 +194,7 @@
     <ClInclude Include="koma_motion.h" />
     <ClInclude Include="kyokumen.h" />
     <ClInclude Include="leaf_guard.h" />
+    <ClInclude Include="leaner.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_gen.h" />
     <ClInclude Include="node.h" />

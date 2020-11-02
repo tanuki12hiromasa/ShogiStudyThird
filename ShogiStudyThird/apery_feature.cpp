@@ -2,6 +2,7 @@
 #include "apery_feature.h"
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 namespace apery {
 	void EvalList::set(const Kyokumen& kyokumen) {
@@ -43,11 +44,11 @@ namespace apery {
 		assert(nlist == 38);
 	}
 
-	std::string apery_feat::folderpath = "data/kppt_apery";
 	KPPEvalElementType1* apery_feat::KPP;
 	KKPEvalElementType1* apery_feat::KKP;
 	bool apery_feat::allocated = false;
-	void apery_feat::init() {
+
+	void apery_feat::init(const std::string& folderpath) {
 		if (!allocated) {
 			allocated = true;
 			KPP = new KPPEvalElementType1[SquareNum];
@@ -79,6 +80,27 @@ namespace apery {
 				fs.read(it, size);
 			}
 		}
+	}
+
+	void apery_feat::save(const std::string& folderpath) {
+		std::filesystem::create_directories(folderpath);
+		{
+			std::ofstream fs(folderpath + "/KPP.bin", std::ios::binary);
+			if (!fs) {
+				std::cerr << "error:file(KPP.bin) cannot open" << std::endl;
+				return;
+			}
+			fs.write(reinterpret_cast<char*>(KPP), sizeof(KPPEvalElementType2));
+		}
+		{
+			std::ofstream fs(folderpath + "/KKP.bin", std::ios::binary);
+			if (!fs) {
+				std::cerr << "error:file(KKP.bin) cannot open" << std::endl;
+				return;
+			}
+			fs.write(reinterpret_cast<char*>(KKP), sizeof(KKPEvalElementType2));
+		}
+		std::cout << "Parameters have been written to " << folderpath << std::endl;
 	}
 
 	EvalSum apery_feat::EvalFull(const Kyokumen& kyokumen, const EvalList& elist) {
