@@ -165,6 +165,8 @@
     <ClCompile Include="kyokumen.cpp" />
     <ClCompile Include="leaf_guard.cpp" />
     <ClCompile Include="leaner.cpp" />
+    <ClCompile Include="learn_method.cpp" />
+    <ClCompile Include="learn_util.cpp" />
     <ClCompile Include="main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
@@ -195,6 +197,8 @@
     <ClInclude Include="kyokumen.h" />
     <ClInclude Include="leaf_guard.h" />
     <ClInclude Include="leaner.h" />
+    <ClInclude Include="learn_method.h" />
+    <ClInclude Include="learn_util.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_gen.h" />
     <ClInclude Include="node.h" />

@@ -234,7 +234,7 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 		return eval;
 	}
 	for (auto& m : moves) {
-		const FeaureCache cache = player.feature.getCache();
+		const FeatureCache cache = player.feature.getCache();
 		const koma::Koma captured = player.proceed(m);
 		alpha = std::max(-alphabeta(m, player, depth - 1, -beta, -alpha, evalcount), alpha);
 		player.recede(m, captured, cache);
@@ -273,7 +273,7 @@ uint64_t SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& player, co
 	double max = Evaluator::evaluate(player);
 	uint64_t evaluationcount = 1ull;
 	for (auto m : moves) {
-		const FeaureCache cache = player.feature.getCache();
+		const FeatureCache cache = player.feature.getCache();
 		const koma::Koma captured = player.proceed(m);
 		const double eval = -alphabeta(m, player, depth - 1, std::numeric_limits<double>::lowest(), -max, evaluationcount);
 		if (eval > max) {

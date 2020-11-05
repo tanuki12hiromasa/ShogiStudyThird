@@ -19,7 +19,7 @@
 #ifdef USE_KPPT
 using Evaluator = apery::apery_evaluator;
 using Feature = apery::apery_feat;
-using FeaureCache = apery::EvalSum;
+using FeatureCache = apery::EvalSum;
 #endif
 
-using SearchPlayer = Player<Feature, FeaureCache>;
+using SearchPlayer = Player<Feature, FeatureCache>;

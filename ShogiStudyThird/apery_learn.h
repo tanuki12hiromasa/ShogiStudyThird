@@ -46,7 +46,7 @@ namespace apery {
 		apery_paramVector& operator+=(const fvpair& rhs);
 		apery_paramVector& operator*=(const double c);
 
-		void showLearnVec_apery(double displaymin, int isKPP)const;
+		void showLearnVec(double displaymin, int isKPP)const;
 
 		friend class ShogiTest;
 	};

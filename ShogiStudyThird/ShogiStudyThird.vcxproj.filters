@@ -31,6 +31,12 @@
     <Filter Include="debug">
       <UniqueIdentifier>{abaaf2e8-17c3-4249-8ff3-8d19cc2af1ba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\learn">
+      <UniqueIdentifier>{904a8859-6515-437c-881c-70cfd307a811}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\learn">
+      <UniqueIdentifier>{f771c548-3950-43e6-bdef-ff2b03dfff3c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -90,11 +96,17 @@
     <ClCompile Include="leaf_guard.cpp">
       <Filter>ソース ファイル\search</Filter>
     </ClCompile>
-    <ClCompile Include="leaner.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="apery_learn.cpp">
       <Filter>apery</Filter>
+    </ClCompile>
+    <ClCompile Include="leaner.cpp">
+      <Filter>ソース ファイル\learn</Filter>
+    </ClCompile>
+    <ClCompile Include="learn_util.cpp">
+      <Filter>ソース ファイル\learn</Filter>
+    </ClCompile>
+    <ClCompile Include="learn_method.cpp">
+      <Filter>ソース ファイル\learn</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -167,11 +179,17 @@
     <ClInclude Include="leaf_guard.h">
       <Filter>ヘッダー ファイル\search</Filter>
     </ClInclude>
-    <ClInclude Include="leaner.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="apery_learn.h">
       <Filter>apery</Filter>
+    </ClInclude>
+    <ClInclude Include="leaner.h">
+      <Filter>ヘッダー ファイル\learn</Filter>
+    </ClInclude>
+    <ClInclude Include="learn_util.h">
+      <Filter>ヘッダー ファイル\learn</Filter>
+    </ClInclude>
+    <ClInclude Include="learn_method.h">
+      <Filter>ヘッダー ファイル\learn</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
