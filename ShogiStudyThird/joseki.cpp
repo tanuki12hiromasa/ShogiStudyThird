@@ -129,10 +129,6 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	//ノードの数を数え、infoファイルに出力する
 	size_t nodeCount = SearchNode::sortChildren(nq.front());
 
-	//書き出しファイルオープン
-	FILE* fp;
-	fopen_s(&fp, (outputFileName).c_str(), "wb");
-	//fopen_s(&fp, "testjoseki.txt", "w");
 
 
 	std::ofstream ofs(outputFileInfoName);
@@ -154,7 +150,6 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 		std::cout << "最大サイズ：" << maxByte << std::endl;
 		std::cout << "出力を中止します。" << std::endl;
 		ofs.close();
-		fclose(fp);
 		nextSubForJosekiLoop();
 		return;
 	}
@@ -196,6 +191,9 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 		}
 	}
 
+	//書き出しファイルオープン
+	FILE* fp;
+	fopen_s(&fp, (outputFileName).c_str(), "wb");
 	fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
 
 	free(jn);
