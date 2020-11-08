@@ -18,9 +18,14 @@ private:
     bool yomikomi_on;
     //対局終了時に書き出すかどうかの変数
     bool kakidashi_on;
+    //定跡フォルダ名
+    std::string josekiFolderName = "joseki";
     //複数回対局を行って拡大させるかどうかの変数
     bool joseki_loop = false;
-    std::string loopFileName = "joseki\\next.txt";
+    //定跡の保存を何回に一度行うか(保存自体は毎回行っているので、何回に一回上書きしないか)
+    int joseki_loop_interval = 50;
+    //ループ時に指定する定跡
+    std::string loopFileName = josekiFolderName + "\\next.txt";
     //ループ用のファイルの中身を増減させる。返り値は増減前
     int nextAddForJosekiLoop() {
         return nextForJosekiLoop(1);
@@ -83,8 +88,7 @@ private:
         return std::to_string((clock() - startTime) / (double)CLOCKS_PER_SEC);
     }
 
-    std::string folderName = "joseki\\";
-
+    
     //出力
 public:
     //定跡書き出し
@@ -100,14 +104,16 @@ public:
     void backUp(std::vector<SearchNode*> history);
 
     void setOutputFileName(std::string filename) {
-        std::string add = "";
+        int add = -1;
         if (joseki_loop) {
             int num = nextForJosekiLoop(0);
-            add = std::to_string(num);
+            add = num;
         }
 
-        this->outputFileName = folderName + filename + add + ".bin";
-        this->outputFileInfoName = folderName + filename + add + "_info.txt";
+        std::string fileadd = add == -1 ? "" : std::to_string(add / joseki_loop_interval);
+        std::string infoadd = add == -1 ? "" : std::to_string(add);
+        this->outputFileName = josekiFolderName + "\\" + filename + fileadd + ".bin";
+        this->outputFileInfoName = josekiFolderName + "\\" + filename + infoadd + "_info.txt";
     }
 private:
     std::string outputFileName = "joseki\\defaultjoseki_output.bin";
@@ -121,13 +127,17 @@ private:
 public:
     void josekiInput(SearchTree* tree);
     void setInputFileName(std::string filename) {
-        std::string add = "";
+        int add = -1;
         if (joseki_loop) {
             int num = nextAddForJosekiLoop();
-            add = std::to_string(num);
+            add = num;
         }
-        this->inputFileName = folderName + filename + add + ".bin";
-        this->inputFileInfoName = folderName + filename + add + "_info.txt";
+
+        std::string fileadd = add == -1 ? "" : std::to_string(add / joseki_loop_interval);
+        std::string infoadd = add == -1 ? "" : std::to_string(add);
+
+        this->inputFileName = josekiFolderName + "\\" + filename + fileadd + ".bin";
+        this->inputFileInfoName = josekiFolderName + "\\" + filename + infoadd + "_info.txt";
     }
 
 private:

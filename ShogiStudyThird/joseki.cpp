@@ -28,6 +28,10 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	if (t == "joseki_on") {
 		yomikomi_on = (tokens[4] == "true");
 	}
+	else if (t == "josekifoldername") {
+		josekiFolderName = tokens[4];
+		loopFileName = josekiFolderName + "\\next.txt";
+	}
 	else if (t == "josekiinputname") {
 		setInputFileName(tokens[4]);
 	}
@@ -40,11 +44,14 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "joseki_loop") {
 		joseki_loop = (tokens[4] == "true");
 	}
+	else if (t == "joseki_loop_interval") {
+		joseki_loop = std::stoi(tokens[4]);
+	}
 	else if (t == "pruningborder") {
-		pruningBorder = std::stoi(tokens[4]) * 0.001;
+		pruningBorder = std::stod(tokens[4]) * 0.001;
 	}
 	else if (t == "pruningborder2") {
-		pruningBorder2 = std::stoi(tokens[4]) * 0.001;
+		pruningBorder2 = std::stod(tokens[4]) * 0.001;
 	}
 	else if (t == "pruning_on") {
 		pruning_on = (tokens[4] == "true");
@@ -65,6 +72,8 @@ void Joseki::setOption(std::vector<std::string> tokens){
 void Joseki::printOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
 	std::cout << "option name joseki_loop type check default false" << std::endl;
+	std::cout << "option name joseki_loop_interval type string default 50" << std::endl;
+	std::cout << "option name josekifoldername type string default joseki" << std::endl;
 	std::cout << "option name josekiinputname type string default foutjoseki" << std::endl;
 	std::cout << "option name josekioutputname type string default foutjoseki" << std::endl;
 	std::cout << "option name josekikakidashi type check default false" << std::endl;
@@ -83,6 +92,9 @@ void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,
 
 		backUp(history);
 		josekiOutput(history);
+		std::cout << "josekiinfoname " << outputFileInfoName << std::endl;
+		std::cout << "josekiname " << outputFileName << std::endl;
+		
 	}
 }
 
