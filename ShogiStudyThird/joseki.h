@@ -18,7 +18,7 @@ public:
     bool notEndGo(const SearchNode* root) {
         if (pruning_type == 5) {
             //std::cout << root->getMass() << std::endl;
-            if (root->getMass() > 5.5) {
+            if (root->getMass() > pruningBorder2) {
                 return false;
             }
             else {
@@ -32,7 +32,7 @@ public:
     //評価値の絶対値が600を超えたら対局終了
     bool endBattle(const SearchNode* root) {
         if (pruning_type == 5) {
-            std::cout << root->getEvaluation() << std::endl;
+            //std::cout << root->getEvaluation() << std::endl;
             if (abs(root->getEvaluation()) > pruningBorder) {
                 endBattleResult = root->getEvaluation() > 0 ? 1 : -1;
                 return true;

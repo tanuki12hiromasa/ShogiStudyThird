@@ -48,10 +48,10 @@ void Joseki::setOption(std::vector<std::string> tokens){
 		joseki_loop_interval = std::stoi(tokens[4]);
 	}
 	else if (t == "pruningborder") {
-		pruningBorder = std::stod(tokens[4]) * 0.001;
+		pruningBorder = std::stod(tokens[4]);
 	}
 	else if (t == "pruningborder2") {
-		pruningBorder2 = std::stod(tokens[4]) * 0.001;
+		pruningBorder2 = std::stod(tokens[4]);
 	}
 	else if (t == "pruning_on") {
 		pruning_on = (tokens[4] == "true");
