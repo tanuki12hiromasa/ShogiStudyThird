@@ -89,6 +89,9 @@ void Joseki::printOption() {
 void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens) {
 	if (kakidashi_on) {
 		result = tokens[1];
+		if (endBattleResult != 0) {
+			result = endBattleResult == 1 ? "win" : "lose";
+		}
 
 		backUp(history);
 		josekiOutput(history);
@@ -562,6 +565,12 @@ size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history
 				}
 			}
 		}
+		else if (pruning_type == 5) {
+			//再帰的に枝刈りを行う
+			for (SearchNode* child : node->children) {
+				r += partialPruning(child, history);
+			}
+		}
 	}
 	return r;
 }
@@ -596,6 +605,11 @@ bool Joseki::isPruning(SearchNode* node,double select,int depth,double backupRat
 		break;
 	case 3:
 		if ((depth >= pruning_depth && select < pruningBorder * 0.01) || (depth < pruning_depth && backupRate < pruningBorder2 * 0.01)) {
+			return true;
+		}
+		break;
+	case 5:
+		if (abs(node->getEvaluation()) > pruningBorder) {
 			return true;
 		}
 		break;

@@ -14,6 +14,37 @@ public:
     void printOption();
     bool getYomikomiOn() { return yomikomi_on; }
     void setNodeCount(size_t count) { treeNodeCount = count; };
+    //探索深さ指標が5.5を超えたら探索を終了
+    bool notEndGo(const SearchNode* root) {
+        if (pruning_type == 5) {
+            //std::cout << root->getMass() << std::endl;
+            if (root->getMass() > 5.5) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        else {
+            return false;
+        }
+    }
+    //評価値の絶対値が600を超えたら対局終了
+    bool endBattle(const SearchNode* root) {
+        if (pruning_type == 5) {
+            std::cout << root->getEvaluation() << std::endl;
+            if (abs(root->getEvaluation()) > pruningBorder) {
+                endBattleResult = root->getEvaluation() > 0 ? 1 : -1;
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else {
+            return false;
+        }
+    }
 private:
     //定跡を利用するか等の変数
     bool yomikomi_on;
@@ -90,6 +121,9 @@ private:
     std::string timerInterval() {
         return std::to_string((clock() - startTime) / (double)CLOCKS_PER_SEC);
     }
+
+    //評価値によって強制終了した際の評価値に応じた勝敗
+    int endBattleResult = 0;
 
     
     //出力

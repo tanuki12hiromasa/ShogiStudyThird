@@ -345,15 +345,19 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	go_alive = false;
 	if(go_thread.joinable()) go_thread.join();
 	go_alive = true;
-	go_thread = std::thread([this,tp]() {
+	go_thread = std::thread([this, tp]() {
 		using namespace std::chrono_literals;
 		const auto starttime = std::chrono::system_clock::now();
 		const SearchNode* root = tree.getRoot();
+
+		while (joseki.notEndGo(root)) {
+			std::this_thread::sleep_for(1000ms);
+		};
 		if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
 			do {
 				auto t = std::max((tp.added / 5), 50ms);
 				std::this_thread::sleep_for(t);
-			} while (((std::chrono::system_clock::now()-starttime) < tp.added - 110ms)
+			} while (((std::chrono::system_clock::now() - starttime) < tp.added - 110ms)
 				&& std::abs(root->eval) < SearchNode::getMateScoreBound());
 			chakushu();
 		}
@@ -361,7 +365,9 @@ void Commander::go(const std::vector<std::string>& tokens) {
 			std::this_thread::sleep_for(5s);
 			chakushu();
 		}
-	});
+
+		}
+	);
 	info_enable = true;
 }
 
@@ -405,7 +411,7 @@ void Commander::chakushu() {
 		return;
 	}
 	SearchNode* const root = tree.getRoot();
-	if (root->eval < -33000) {
+	if (root->eval < -33000 || joseki.endBattle(root)) {
 		std::cout << "info score cp " << static_cast<int>(root->eval) << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;
