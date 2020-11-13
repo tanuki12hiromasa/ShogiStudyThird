@@ -13,6 +13,7 @@ public:
     void setOption(std::vector<std::string>tokens);
     void printOption();
     bool getYomikomiOn() { return yomikomi_on; }
+    void setNodeCount(size_t count) { treeNodeCount = count; };
 private:
     //定跡を利用するか等の変数
     bool yomikomi_on;
@@ -46,6 +47,8 @@ private:
         ofs.close();
         return r;
     }
+    //ノード数を改めて計算しなくて済むように格納する
+    size_t treeNodeCount = 0;
 
     //保存するノード
     struct josekinode {

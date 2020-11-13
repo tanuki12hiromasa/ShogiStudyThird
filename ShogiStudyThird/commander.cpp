@@ -82,6 +82,7 @@ void Commander::execute() {
 			commander.go_alive = false;
 			commander.info_alive = false;
 			commander.stopAgent();
+			commander.joseki.setNodeCount(commander.tree.nodecount);
 			commander.joseki.josekiOutputIGameOver(commander.tree.getHistory(),tokens);
 			std::cout << "gameoverok" << std::endl;
 		}

@@ -45,7 +45,7 @@ void Joseki::setOption(std::vector<std::string> tokens){
 		joseki_loop = (tokens[4] == "true");
 	}
 	else if (t == "joseki_loop_interval") {
-		joseki_loop = std::stoi(tokens[4]);
+		joseki_loop_interval = std::stoi(tokens[4]);
 	}
 	else if (t == "pruningborder") {
 		pruningBorder = std::stod(tokens[4]) * 0.001;
@@ -127,8 +127,9 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	nq.push(history.front());
 	
 	//ノードの数を数え、infoファイルに出力する
+	//std::cout << "ソート完了" << std::endl;
 	size_t nodeCount = SearchNode::sortChildren(nq.front());
-
+	
 
 
 	std::ofstream ofs(outputFileInfoName);
@@ -141,11 +142,11 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	ofs << "nodesize" << "," << sizeof(josekinode) << std::endl;
 	size_t fileSize = nodeCount * sizeof(josekinode);
 	size_t gigabyte = 1024 * 1024 * 1024;
-	size_t maxByte = (32 / 3) * gigabyte;
+	size_t maxByte = 10 * gigabyte;
 	ofs << "推定ファイルサイズ：" << std::to_string(fileSize) << "バイト(" << (double)fileSize / gigabyte << "ギガバイト)" << std::endl;
 	std::cout << "推定ファイルサイズ：" << std::to_string(fileSize) << "バイト" << std::endl;
 	std::cout << "推定ファイルサイズ：" << std::to_string((double)fileSize / gigabyte) << "ギガバイト" << std::endl;
-	if (fileSize > maxByte) {
+	if (fileSize >= maxByte) {
 		std::cout << "書き出そうとしているファイルサイズが大きすぎます。" << std::endl;
 		std::cout << "最大サイズ：" << maxByte << std::endl;
 		std::cout << "出力を中止します。" << std::endl;
@@ -470,9 +471,28 @@ void Joseki::yomikomiBreath(const size_t index) {
 }
 
 size_t Joseki::pruning(SearchNode* root){
-	size_t r;
+	size_t r = 0;
+
+	//pruning_typeが4なら、探索木が大きくなければ枝刈りしない
+	if (pruning_type == 4) {
+		
+		//ノードの数が多すぎるとメモリの限界を超えるため、出力を中止する
+		size_t fileSize = treeNodeCount * sizeof(josekinode);
+		size_t gigabyte = 1024 * 1024 * 1024;
+		size_t maxByte = 10 * gigabyte;
+
+		//上限まで行ってないので枝刈りせず終了。
+		if (fileSize < maxByte) {
+			std::cout << "ファイルサイズが小さいので枝刈りはしません" << std::endl;
+			return r;
+		}
+	}
+
+	std::cout << "枝刈りを行います(ノード数:" << treeNodeCount << ")" << std::endl;
+
 	std::vector<SearchNode*>history;
 	r = partialPruning(root,history,1,0);
+	
 	return r;
 }
 
@@ -489,7 +509,7 @@ size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history
 		r += pruningExecuter(node, history);
 	}
 	else {
-		if (pruning_type == 0) {
+		if (pruning_type == 0 || pruning_type == 4) {
 			//実現確率の計算
 			if (select != -1) {
 				double CE = node->children[0]->getEvaluation();
@@ -559,6 +579,7 @@ bool Joseki::isPruning(SearchNode* node,double select,int depth,double backupRat
 	switch (pruning_type)
 	{
 	case 0:
+	case 4:
 		if (select < pruningBorder * 0.01) {
 			return true;
 		}
