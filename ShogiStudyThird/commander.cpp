@@ -109,6 +109,9 @@ void Commander::execute() {
 		else if (tokens[0] == "makejobanjoseki") {
 			commander.makeJobanJoseki(tokens[1], std::stoi(tokens[2]), std::stoi(tokens[3]), std::stoi(tokens[4]));
 		}
+		else if (tokens[0] == "foutjosekiasyaneura") {
+			commander.joseki.outputJosekiAsYaneura(commander.tree.getHistory().front());
+		}
 	}
 }
 
