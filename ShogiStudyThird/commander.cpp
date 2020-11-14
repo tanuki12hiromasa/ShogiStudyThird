@@ -82,6 +82,7 @@ void Commander::execute() {
 			commander.go_alive = false;
 			commander.info_alive = false;
 			commander.stopAgent();
+			commander.joseki.setIsSente(commander.tree.getRootPlayer().kyokumen.teban());
 			commander.joseki.setNodeCount(commander.tree.nodecount);
 			commander.joseki.josekiOutputIGameOver(commander.tree.getHistory(),tokens);
 			std::cout << "gameoverok" << std::endl;
@@ -350,8 +351,8 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		const auto starttime = std::chrono::system_clock::now();
 		const SearchNode* root = tree.getRoot();
 
-		while (joseki.notEndGo(root)) {
-			std::this_thread::sleep_for(1000ms);
+		if (joseki.notEndGo(root)) {
+			std::this_thread::sleep_for(10000ms);
 		};
 		if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
 			do {

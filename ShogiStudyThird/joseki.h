@@ -16,9 +16,9 @@ public:
     void setNodeCount(size_t count) { treeNodeCount = count; };
     //探索深さ指標が5.5を超えたら探索を終了
     bool notEndGo(const SearchNode* root) {
-        if (pruning_type == 5) {
+        if (pruning_on) {
             //std::cout << root->getMass() << std::endl;
-            if (root->getMass() > pruningBorder2) {
+            if (root->getMass() > pruning_depth) {
                 return false;
             }
             else {
@@ -31,10 +31,10 @@ public:
     }
     //評価値の絶対値が600を超えたら対局終了
     bool endBattle(const SearchNode* root) {
-        if (pruning_type == 5) {
+        if (pruning_on) {
             //std::cout << root->getEvaluation() << std::endl;
-            if (abs(root->getEvaluation()) > pruningBorder) {
-                endBattleResult = root->getEvaluation() > 0 ? 1 : -1;
+            if (abs(root->eval) > pruningBorder2) {
+                endBattleResult = root->eval > 0 ? 1 : -1;
                 return true;
             }
             else {
@@ -45,6 +45,7 @@ public:
             return false;
         }
     }
+    void setIsSente(bool is) { isSente = is; }
 private:
     //定跡を利用するか等の変数
     bool yomikomi_on;
@@ -80,6 +81,8 @@ private:
     }
     //ノード数を改めて計算しなくて済むように格納する
     size_t treeNodeCount = 0;
+    //先手かどうか。とりあえず勝敗判定に使用
+    bool isSente = false;
 
     //保存するノード
     struct josekinode {

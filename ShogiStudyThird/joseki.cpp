@@ -90,7 +90,7 @@ void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,
 	if (kakidashi_on) {
 		result = tokens[1];
 		if (endBattleResult != 0) {
-			result = endBattleResult == 1 ? "win" : "lose";
+			result = (endBattleResult == 1) ? "win" : "lose";
 		}
 
 		backUp(history);
