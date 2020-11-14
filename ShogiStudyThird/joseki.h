@@ -33,7 +33,7 @@ public:
     bool endBattle(const SearchNode* root) {
         if (pruning_on) {
             //std::cout << root->getEvaluation() << std::endl;
-            if (abs(root->eval) > pruningBorder2) {
+            if (abs(root->eval) > pruningBorderEval) {
                 endBattleResult = root->eval > 0 ? 1 : -1;
                 return true;
             }
@@ -267,12 +267,13 @@ private:
     ////深さバックアップ温度再計算用の温度
     //double T_d = 100;
     double pruningBorder = 0.1;
-    double pruningBorder2 = 0.1;
+    double pruningBorderEval = 0.1;
     bool pruning_on = false;
     //枝刈りのタイプ。0は実現確率
     int pruning_type = 0;
     //枝刈りをしない深さ
     int pruning_depth = 5;
+    double pruning_T_c = 40;
 
     //従来の定跡を読み込んで利用する
 public:
