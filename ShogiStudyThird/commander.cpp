@@ -415,9 +415,15 @@ void Commander::chakushu() {
 		return;
 	}
 	SearchNode* const root = tree.getRoot();
-	if (root->eval < -33000 || joseki.endBattle(root)) {
+	if (root->eval < -33000) {
 		std::cout << "info score cp " << static_cast<int>(root->eval) << std::endl;
 		std::cout << "bestmove resign" << std::endl;
+		return;
+	}
+	if (joseki.endBattle(root)) {
+		std::cout << "info score cp " << static_cast<int>(root->eval) << std::endl;
+		std::string rr = static_cast<int>(root->eval) > 0?"win" : "resign";
+		std::cout << "bestmove " << rr << std::endl;
 		return;
 	}
 	const auto PV = tree.getPV();

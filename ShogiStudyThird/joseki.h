@@ -34,7 +34,7 @@ public:
         if (pruning_on) {
             //std::cout << root->getEvaluation() << std::endl;
             if (abs(root->eval) > pruningBorderEval) {
-                endBattleResult = root->eval > 0 ? 1 : -1;
+                //endBattleResult = root->eval > 0 ? 1 : -1;
                 return true;
             }
             else {
@@ -68,7 +68,7 @@ private:
     }
     int nextForJosekiLoop(int add) {
         std::ifstream ifs(loopFileName);
-        int r = 0;
+        int r = -1;
         if (ifs.is_open()) {
             ifs >> r;
             ifs.close();
@@ -144,14 +144,14 @@ public:
     void backUp(std::vector<SearchNode*> history);
 
     void setOutputFileName(std::string filename) {
-        int add = -1;
+        int add = -5;
         if (joseki_loop) {
             int num = nextForJosekiLoop(0);
             add = num;
         }
 
-        std::string fileadd = add == -1 ? "" : std::to_string(add / joseki_loop_interval);
-        std::string infoadd = add == -1 ? "" : std::to_string(add);
+        std::string fileadd = add == -5 ? "" : std::to_string(add / joseki_loop_interval);
+        std::string infoadd = add == -5 ? "" : std::to_string(add);
         this->outputFileName = josekiFolderName + "\\" + filename + fileadd + ".bin";
         this->outputFileInfoName = josekiFolderName + "\\" + filename + infoadd + "_info.txt";
     }
@@ -219,14 +219,14 @@ private:
 public:
     void josekiInput(SearchTree* tree);
     void setInputFileName(std::string filename) {
-        int add = -1;
+        int add = -5;
         if (joseki_loop) {
             int num = nextAddForJosekiLoop();
             add = num;
         }
 
-        std::string fileadd = add == -1 ? "" : std::to_string(add / joseki_loop_interval);
-        std::string infoadd = add == -1 ? "" : std::to_string(add);
+        std::string fileadd = add == -5 ? "" : std::to_string(add / joseki_loop_interval);
+        std::string infoadd = add == -5 ? "" : std::to_string(add);
 
         this->inputFileName = josekiFolderName + "\\" + filename + fileadd + ".bin";
         this->inputFileInfoName = josekiFolderName + "\\" + filename + infoadd + "_info.txt";
