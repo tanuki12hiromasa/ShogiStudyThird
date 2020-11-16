@@ -354,10 +354,13 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		const auto starttime = std::chrono::system_clock::now();
 		const SearchNode* root = tree.getRoot();
 
-		if (joseki.notEndGo(root)) {
-			std::this_thread::sleep_for(10000ms);
-		};
-		if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
+		//if (joseki.notEndGo(root)) {
+		//	std::this_thread::sleep_for(10000ms);
+		//};
+		if (joseki.deepEnough(root)) {
+			chakushu();
+		}
+		else if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
 			do {
 				auto t = std::max((tp.added / 5), 50ms);
 				std::this_thread::sleep_for(t);
