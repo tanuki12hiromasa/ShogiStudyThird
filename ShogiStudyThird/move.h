@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "koma.h"
-#include <iostream>
 #include <vector>
 
 class Move {
@@ -18,7 +17,6 @@ public:
 	Move(const std::string& usi, bool teban)
 		:Move(usiToFrom(usi,teban),usiToTo(usi),usiToPromote(usi))
 	{}
-	Move(std::uint16_t _u) :u(_u) {}
 
 	void setOute(bool isOute) { u = (u & 0x7FFFu) | (isOute << 15); }
 
@@ -32,8 +30,6 @@ public:
 		return (u & 0x7FFFu) == (rhs.u & 0x7FFFu);
 	}
 	bool operator!=(const Move& rhs) const { return !operator==(rhs); }
-
-	std::uint16_t getU() const { return u; }
 private:
 	static unsigned usiToFrom(const std::string& usi, bool teban);
 	static unsigned usiToTo(const std::string& usi);

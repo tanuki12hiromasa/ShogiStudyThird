@@ -50,8 +50,6 @@ public:
 	static void setEsFuncParam(const double c) { Es_c = c; }
 	static void setPVFuncCode(const int code) { PV_FuncCode = code; }
 	static void setPVConst(const double b) { PV_c = b; }
-
-	static size_t sortChildren(SearchNode* node);	//返り値はノードの数
 public:
 	SearchNode(const Move& move);
 	SearchNode(const SearchNode&) = delete;
@@ -71,7 +69,6 @@ public:
 	void setRepetition(const bool teban);
 	void setRepetitiveCheck();
 	void setOriginEval(const double evaluation) { origin_eval = evaluation; }
-	void setState(const State state) { status.store(state); }
 
 	double getEvaluation()const { return eval.load(); }
 	bool isLeaf()const { const auto s = status.load(); return s == State::N || s == State::iE; }

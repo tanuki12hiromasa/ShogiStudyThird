@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "agent.h"
 #include "time_property.h"
+#include "joseki.h"
 
 class Commander {
 public:
@@ -49,4 +50,6 @@ private:
 	std::mutex treemtx;
 
 	friend class ShogiTest;
+
+	Joseki joseki;
 };

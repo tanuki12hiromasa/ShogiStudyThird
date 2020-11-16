@@ -7,8 +7,6 @@ bool SearchAgent::leave_QsearchNode = false;
 bool SearchAgent::use_original_kyokumen_eval = false;
 bool SearchAgent::QS_relativeDepth = false;
 
-std::atomic<size_t> SearchAgent::simCount(0);
-
 SearchAgent::SearchAgent(SearchTree& tree, const double Ts,int seed)
 	:tree(tree),engine(seed),root(tree.getRoot()),Ts(Ts)
 {
@@ -32,11 +30,8 @@ SearchAgent::SearchAgent(SearchAgent&& agent) noexcept
 void SearchAgent::loop() {
 	size_t newnodecount = 0;
 	while (alive) {
-		//if (simCount.load() < 10000) {
-		//	++simCount;
-			newnodecount = simulate(root);
-			tree.addNodeCount(newnodecount);
-		//}
+		newnodecount = simulate(root);
+		tree.addNodeCount(newnodecount);
 	}
 }
 

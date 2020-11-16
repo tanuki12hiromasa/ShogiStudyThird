@@ -22,6 +22,7 @@ void Commander::execute() {
 #endif
 			std::cout << "id author Iwamoto" << std::endl;
 			coutOption();
+			commander.joseki.printOption();
 			std::cout << "usiok" << std::endl;
 		}
 		else if (tokens[0] == "setoption") {
@@ -29,6 +30,7 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "isready") {
 			commander.gameInit();
+			commander.joseki.readBook();
 			std::cout << "readyok" << std::endl;
 		}
 		else if (tokens[0] == "usinewgame") {
@@ -201,6 +203,10 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "PV_const") {
 			SearchNode::setPVConst(std::stod(token[4]));
 		}
+		else {
+			//定跡にオプションを送る
+			joseki.setOption(token);
+		}
 	}
 }
 
@@ -298,6 +304,22 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
+
+	if (joseki.getJosekiOn()) {
+		//Softmax以外の定跡を読み込んであったら、それを利用する
+		auto bm = joseki.getBestMove(Joseki::getSfenTrimed(kyokumen.toSfen()));
+		//appearが-1でなければ定跡があるので利用する
+		if (bm.appear != -1) {
+			auto bestChild = bm.bestMove;
+			std::cout << "bestmove " << bestChild.toUSI() << std::endl;
+			return;
+		}
+		else {
+			//定跡が終わったので読み込みをオフに
+			setOption(usi::split("setoption name joseki_on check false", ' '));
+		}
+	}
+
 	tree.evaluationcount = 0ull;
 	info_prev_evcount = 0ull;
 	info_prevtime = std::chrono::system_clock::now();
