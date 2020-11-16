@@ -159,6 +159,7 @@
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="commander.cpp" />
     <ClCompile Include="evaluated_nodes.cpp" />
+    <ClCompile Include="joseki.cpp" />
     <ClCompile Include="koma.cpp" />
     <ClCompile Include="kyokumen.cpp" />
     <ClCompile Include="leaf_guard.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="evaluated_nodes.h" />
     <ClInclude Include="evaluator.h" />
     <ClInclude Include="feature.h" />
+    <ClInclude Include="joseki.h" />
     <ClInclude Include="koma.h" />
     <ClInclude Include="koma_motion.h" />
     <ClInclude Include="kyokumen.h" />
@@ -197,6 +199,7 @@
     <ClInclude Include="player.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="stest.h" />
+    <ClInclude Include="Timer.h" />
     <ClInclude Include="time_property.h" />
     <ClInclude Include="tree.h" />
     <ClInclude Include="usi.h" />

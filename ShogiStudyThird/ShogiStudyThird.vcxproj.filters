@@ -90,6 +90,9 @@
     <ClCompile Include="leaf_guard.cpp">
       <Filter>ソース ファイル\search</Filter>
     </ClCompile>
+    <ClCompile Include="joseki.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -163,6 +166,12 @@
     </ClInclude>
     <ClInclude Include="leaf_guard.h">
       <Filter>ヘッダー ファイル\search</Filter>
+    </ClInclude>
+    <ClInclude Include="joseki.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

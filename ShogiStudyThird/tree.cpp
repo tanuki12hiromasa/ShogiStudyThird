@@ -3,13 +3,16 @@
 #include "move_gen.h"
 #include <queue>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <iostream>
 
 SearchTree::SearchTree()
 	:rootPlayer(),startKyokumen()
 {
 	leave_branchNode = false;
-	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
 	nodecount = 1;
+	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
 }
 
 std::pair<bool, std::vector<SearchNode*>> SearchTree::set(const std::vector<std::string>& usitokens) {
@@ -149,9 +152,9 @@ void SearchTree::foutTree()const {
 	size_t c_index = 1;
 	while (!nq.empty()) {
 		const SearchNode* const node = nq.front();
-		nq.pop();
+		nq.pop(); 
 		int st = static_cast<int>(node->status.load());
-		fs << index << ", " << st << ", " << node->move.toUSI() << ", " << node->eval << ", " << node->mass << ", [";
+		fs << index << ", " << st << ", " << node->move.toUSI() << ", " << node->eval << ", " << node->mass << ", [,";
 		for (const auto c : node->children) {
 			nq.push(c);
 			fs << c_index << ",";
@@ -161,4 +164,188 @@ void SearchTree::foutTree()const {
 		index++;
 	}
 	fs.close();
+}
+
+
+
+void SearchTree::foutJoseki(int joseki_make_type,int fileCount)const {
+	time_t now = time(NULL);
+	struct tm pnow;
+	localtime_s(&pnow, &now);
+	std::cout << "開始時刻　" << pnow.tm_hour << "時" << pnow.tm_min << "分" << pnow.tm_sec << "秒" << std::endl;
+
+	time_t startTime = clock();
+	const unsigned int maxLength = 70;
+	unsigned int maxLengthTemp = maxLength;
+	bool loop = true;
+
+	while (loop) {
+		loop = false;
+		FILE* fp;
+		std::string fileName = "treejoseki_FILE.txt";
+		if (joseki_make_type == 1) {
+			fileName = "josekiFolder/treejoseki" + std::to_string(fileCount + 1) + ".txt";
+		}
+		fopen_s(&fp, fileName.c_str(), "w");
+		std::queue<SearchNode*> nq;
+		nq.push(history.front());
+		size_t index = 0;
+		size_t c_index = 1;
+		int childCount;
+		int lineLen = maxLengthTemp;
+
+		
+
+		//1加算は改行の分
+		fprintf_s(fp, "lineLen,%lu,nodeCount,%lu\n", lineLen + 1, SearchNode::sortChildren(nq.front()));
+
+		fprintf_s(fp, "%s\n", startKyokumen.toSfen().c_str());
+
+
+		char sp[1024];
+		while (!nq.empty()) {
+			const SearchNode* const node = nq.front();
+			nq.pop();
+			const int st = static_cast<int>(node->status.load());
+
+			childCount = 0;
+
+			for (const auto c : node->children) {
+				nq.push(c);
+				childCount++;
+			}
+			unsigned int stringLength = sprintf_s(sp, "%lu,%d,%d,%lf,%lf,%d,%lu\n", index, st, node->move.getU(), node->eval.load(), node->mass.load(), childCount, c_index);
+			fprintf_s(fp, "%*s", lineLen, sp);
+
+			if (maxLengthTemp < stringLength) {
+				maxLengthTemp = stringLength;
+				loop = true;
+			}
+
+			c_index += childCount;
+
+			index++;
+			if (index % (getNodeCount() / 10) == 0) {
+				std::cout << (index / (getNodeCount() / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+			}
+		}
+		if (loop) {
+			std::cout << "想定よりも長い行があったため再度出力します。" << std::endl;
+		}
+		fclose(fp);
+	}
+}
+void SearchTree::foutJosekiBin(int joseki_make_type, int fileCount)const {
+	time_t now = time(NULL);
+	struct tm pnow;
+	localtime_s(&pnow, &now);
+	std::cout << "開始時刻　" << pnow.tm_hour << "時" << pnow.tm_min << "分" << pnow.tm_sec << "秒" << std::endl;
+
+	time_t startTime = clock();
+	size_t index = 0;
+	int st;
+	uint16_t move;
+	double mass;
+	double eval;
+	int childCount;
+	size_t c_index = 1;
+	const unsigned int maxLength = sizeof(index) + sizeof(st) + sizeof(move) + sizeof(eval) + sizeof(mass) + sizeof(childCount) + sizeof(c_index);
+	unsigned int maxLengthTemp = maxLength;
+
+	FILE* fp;
+	std::string fileName = "treejoseki_FILE";
+	if (joseki_make_type == 1) {
+		fileName = "josekiFolder/treejoseki" + std::to_string(fileCount + 1);
+	}
+	fopen_s(&fp, (fileName + ".bin").c_str(), "wb");
+	std::queue<SearchNode*> nq;
+	nq.push(history.front());
+	int lineLen = maxLengthTemp;
+
+
+	fprintf_s(fp, "lineLen,%lu,nodeCount,%lu\n", lineLen, SearchNode::sortChildren(nq.front()));
+	fprintf_s(fp, "%s\n", startKyokumen.toSfen().c_str());
+
+	char* sp = (char*)malloc(maxLength + 1);	//ゼロ文字の分1増やしている
+	while (!nq.empty()) {
+		const SearchNode* const node = nq.front();
+		nq.pop();
+		index;
+		st = static_cast<int>(node->status.load());
+		move = node->move.getU();
+		eval = node->eval.load();
+		mass = node->mass.load();
+		childCount;
+		c_index;
+
+		childCount = 0;
+
+		for (const auto c : node->children) {
+			nq.push(c);
+			childCount++;
+		}
+		//sprintf_s(sp, "%lu,%d,%d,%lf,%lf,%d,%lu\n", index, st, node->move.getU(), node->eval.load(), node->mass.load(), childCount, c_index);
+		fwrite(&index, sizeof(index), 1, fp);
+		fwrite(&st, sizeof(st), 1, fp);
+		fwrite(&move, sizeof(move), 1, fp);
+		fwrite(&eval, sizeof(eval), 1, fp);
+		fwrite(&mass, sizeof(mass), 1, fp);
+		fwrite(&childCount, sizeof(childCount), 1, fp);
+		fwrite(&c_index, sizeof(c_index), 1, fp);
+
+		//fprintf_s(fp, "%*s", lineLen, sp);
+		//fprintf_s(fp, "%s", sp);
+
+
+		c_index += childCount;
+
+		index++;
+		if (index % (getNodeCount() / 10) == 0) {
+			std::cout << (index / (getNodeCount() / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
+		}
+	}
+	fclose(fp);
+
+}
+void SearchTree::foutJoseki()const {
+	foutJoseki(0, 0);
+}
+
+void SearchTree::setRoot(SearchNode* const root, std::vector<std::string> tokens ,size_t nodes) {
+	//makeNewTree(tokens);
+	//history.push_back(root);
+
+	history.clear();
+	startKyokumen = Kyokumen(tokens);
+	history.push_back(root);
+	rootPlayer = SearchPlayer(startKyokumen);
+	const auto usihis = Move::usiToMoves(tokens);
+	for (auto& usimove : usihis) {
+		SearchNode* rootNode = getRoot();
+		//MoveGenerator::genAllMove(rootNode, rootPlayer.kyokumen);
+		SearchNode* next = nullptr;
+		for (const auto& child : rootNode->children) {
+			assert(child != nullptr);
+			if (child->move == usimove) {
+				next = child;
+				break;
+			}
+		}
+		if (next == nullptr) {
+			next = rootNode->addChild(usimove);
+		}
+		proceed(next);
+	}
+	nodecount = nodes;
+}
+
+void SearchTree::setRoot(SearchNode* const root, const Kyokumen& kyokumen, size_t nodes) {
+	SearchNode* motoroot = history.front();
+	motoroot->deleteTree();
+	delete motoroot;
+	history.clear();
+	history.push_back(root);				//std::cout << root->eval << std::endl;
+	startKyokumen = kyokumen;				//std::cout << "sfen " << kyokumen.toSfen() << std::endl;
+	rootPlayer = SearchPlayer(kyokumen);    //ここ 解決したはず
+	nodecount = nodes;						//std::cout << "nodes "<< nodes << std::endl;
 }

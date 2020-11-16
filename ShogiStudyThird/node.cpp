@@ -129,6 +129,30 @@ double SearchNode::getTs(const double baseT) const {
 	}
 }
 
+SearchNode* SearchNode::restoreNode(const Move& move, State st, double eval, double mass)
+{
+	SearchNode* child = new SearchNode(move);
+	child->eval = eval;
+	child->mass = mass;
+	child->status = (SearchNode::State)st;
+
+	return child;
+}
+
+//子供を評価値順に並べ替えていく。読み込み前後で木が同一であることを確認するために使用
+size_t SearchNode::sortChildren(SearchNode* node) {
+	if (node->children.empty()) {
+		return 1;
+	}
+	size_t childCount = 1;
+	//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
+	std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
+	for (auto c : node->children) {
+		childCount += sortChildren(c);
+	}
+	return childCount;
+}
+
 double SearchNode::getTcMcVariance()const {
 	std::vector<double> cmasses;
 	double mean = 0;
@@ -167,6 +191,7 @@ double SearchNode::getTcMcVarianceExpection()const {
 	}
 	return std::sqrt(variance / Z);
 }
+
 
 double SearchNode::getEs()const {
 	switch (Es_FunctionCode)
