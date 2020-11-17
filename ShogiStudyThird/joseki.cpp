@@ -38,28 +38,33 @@ void Joseki::readBook() {
 	std::string path = joseki_folder_name + "\\" + joseki_input_file_name;
 	std::cout << path << "から定跡を読み込みます。" << std::endl;
 	std::ifstream ifs(path);
-	while (!ifs.eof()) {
-		std::string line;
-		std::getline(ifs, line);
-		//sfenを見つけたら格納
-		if (line.length() >= 4 && line.substr(0, 4) == "sfen") {
-			bookNode bn;
-
-			//末尾の数字を取り除く
-			std::string sfen = getSfenTrimed(line);
-			//次の行に最善手があるので読む
+	if (ifs.is_open()) {
+		while (!ifs.eof()) {
+			std::string line;
 			std::getline(ifs, line);
-			auto column = usi::split(line, ' ');
-			
-			//最善手
-			bn.bestMove = Move(column[0],true);
-			//出現回数を0にしておく
-			bn.appear = 0;
+			//sfenを見つけたら格納
+			if (line.length() >= 4 && line.substr(0, 4) == "sfen") {
+				bookNode bn;
 
-			bookJoseki.emplace(sfen, bn);
+				//末尾の数字を取り除く
+				std::string sfen = getSfenTrimed(line);
+				//次の行に最善手があるので読む
+				std::getline(ifs, line);
+				auto column = usi::split(line, ' ');
+
+				//最善手
+				bn.bestMove = Move(column[0], true);
+				//出現回数を0にしておく
+				bn.appear = 0;
+
+				bookJoseki.emplace(sfen, bn);
+			}
 		}
+		std::cout << "読み込み完了。" << std::endl;
 	}
-	std::cout << "読み込み完了。" << std::endl;
+	else {
+		std::cout << "読み込みに失敗しました。定跡なしで開始します。" << std::endl;
+	}
 }
 
 Joseki::bookNode Joseki::getBestMove(std::string sfen)
