@@ -642,6 +642,7 @@ std::string Joseki::getSfenTrimed(std::string sfen) {
 //ひとまずstdを使用して実装
 void Joseki::readBook(std::string fileName) {
 	std::ifstream ifs(fileName);
+	std::ofstream ofs("joseki/db.csv");
 	while (!ifs.eof()) {
 		std::string line;
 		std::getline(ifs, line);
@@ -671,8 +672,12 @@ void Joseki::readBook(std::string fileName) {
 			bn.num = 0;
 
 			bookJoseki.emplace(sfen, bn);
+
+			ofs << sfen + "," + column[0] << std::endl;
 		}
 	}
+	ofs.close();
+	ifs.close();
 }
 
 Joseki::bookNode Joseki::getBestMove(std::string sfen)

@@ -171,11 +171,13 @@ public:
         if (node->children.size() == 0) {
             return;
         }
-        kyokumen.proceed(node->move);
+        if (node->move.toUSI() != "nullmove") {
+            kyokumen.proceed(node->move);
+        }
         std::string sfen = kyokumen.toSfen();
         std::vector<std::string> ts = usi::split(sfen, ' ');
         ts[ts.size() - 1] = std::to_string(depth);
-        ts[ts.size() - 3] = ts[ts.size() - 3] == "w" ? "b" : "w";
+        //ts[ts.size() - 3] = depth % 2 == 0 ? "b" : "w";
         sfen = "";
         for (int i = 0; i < ts.size(); ++i) {
             if (i != 0) {
@@ -185,8 +187,9 @@ public:
         }
         *st += sfen + "\n";
         int size = node->children.size();
+        int maxSize = 5;
         //int count = (node->children.size()/* > 0*/);
-        int count = (size > 5 ? 5 : size);
+        int count = (size > maxSize ? maxSize : size);
         for (int i = 0; i < count; ++i) {
             SearchNode* child = node->children[i];
             std::string move = child->move.toUSI();
