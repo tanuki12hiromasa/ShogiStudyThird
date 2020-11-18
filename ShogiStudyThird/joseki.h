@@ -29,6 +29,20 @@ public:
             return false;
         }
     }
+    bool deepEnough(const SearchNode* root) {
+        if (pruning_on) {
+            //std::cout << root->getMass() << std::endl;
+            if (root->getMass() < pruning_depth) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+        else {
+            return false;
+        }
+    }
     //評価値の絶対値が600を超えたら対局終了
     bool endBattle(const SearchNode* root) {
         if (pruning_on) {
