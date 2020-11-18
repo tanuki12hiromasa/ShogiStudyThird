@@ -2,7 +2,6 @@
 #include "node.h"
 #include "kyokumen.h"
 #include "evaluator.h"
-#include "player.h"
 #include <unordered_map>
 
 class SearchTree {
@@ -29,6 +28,7 @@ public:
 	const SearchPlayer& getRootPlayer()const { return rootPlayer; }
 	std::pair<unsigned,SearchNode*> findRepetition(const Kyokumen& kyokumen)const;//過去に同一局面が無かったか検索する なければ-1を返す
 	SearchNode* getRoot() const { return history.back(); }
+	int getMoveNum() const { return history.size() - 1; }
 
 	void foutTree()const;
 private:

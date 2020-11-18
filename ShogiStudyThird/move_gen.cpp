@@ -214,7 +214,7 @@ void genSenteBanMove_noMate(GeneratedMoves& en, const Kyokumen& kyokumen, Bitboa
 	toMaskBB &= ~((kyokumen.getEachBB(Koma::g_Kyou) | kyokumen.getEachBB(Koma::g_Kei) | kyokumen.getEachBB(Koma::g_nKei) | kyokumen.getEachBB(Koma::g_nKyou)) & goteKikiBB);//ヒモつきの桂香成桂成香をターゲットから除外
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, false, toMaskBB & ~BBkiki::getStepKiki(Koma::g_Gin, oupos));
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, true, toMaskBB & bbmask::Dan1to3 & nomateArea);
-	genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, true, kyokumen.getEachBB(Koma::s_Gin) & bbmask::Dan3, toMaskBB & nomateArea);
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Gin, true, kyokumen.getEachBB(Koma::s_Gin) & bbmask::Dan3, toMaskBB & bbmask::Dan4to9 & nomateArea);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Kin, false, toMaskBB & nomateArea);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_nGin, false, toMaskBB & nomateArea);
 
@@ -228,7 +228,7 @@ void genSenteBanMove_noMate(GeneratedMoves& en, const Kyokumen& kyokumen, Bitboa
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, true, kyokumen.getEachBB(Koma::s_Kaku) & bbmask::Dan4to9, toMaskBB & bbmask::Dan1to3 & nomateArea);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, true, kyokumen.getEachBB(Koma::s_Kaku) & bbmask::Dan1to3, toMaskBB & nomateArea);
 
-	toMaskBB &= ~((kyokumen.getEachBB(Koma::g_Hi) | kyokumen.getEachBB(Koma::g_Kaku)) & goteKikiBB);//ヒモつきの飛車角をターゲットから除外
+	//toMaskBB &= ~((kyokumen.getEachBB(Koma::g_Hi) | kyokumen.getEachBB(Koma::g_Kaku)) & goteKikiBB);//ヒモつきの飛車角をターゲットから除外
 	genSenteBanMove_koma(en, kyokumen, Koma::s_nKaku, false, toMaskBB & nomateArea);
 	genSenteBanMove_koma(en, kyokumen, Koma::s_nHi, false, toMaskBB & ~BBkiki::getDashKiki(allBB, Koma::g_nHi, oupos));
 }
@@ -271,7 +271,7 @@ void genGoteBanMove_noMate(GeneratedMoves& en, const Kyokumen& kyokumen, Bitboar
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, true, kyokumen.getEachBB(Koma::g_Kaku) & bbmask::Dan1to6, toMaskBB & bbmask::Dan7to9 & nomateArea);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, true, kyokumen.getEachBB(Koma::g_Kaku) & bbmask::Dan7to9, toMaskBB & nomateArea);
 
-	toMaskBB &= ~((kyokumen.getEachBB(Koma::s_Kaku) | kyokumen.getEachBB(Koma::s_Hi)) & senteKikiBB);
+	//toMaskBB &= ~((kyokumen.getEachBB(Koma::s_Kaku) | kyokumen.getEachBB(Koma::s_Hi)) & senteKikiBB);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_nKaku, false, toMaskBB & nomateArea);
 	genGoteBanMove_koma(en, kyokumen, Koma::g_nHi, false, toMaskBB & ~BBkiki::getDashKiki(allBB, Koma::s_nHi, oupos));
 }

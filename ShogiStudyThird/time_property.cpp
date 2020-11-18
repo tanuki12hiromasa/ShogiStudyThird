@@ -20,13 +20,13 @@ TimeProperty::TimeProperty(bool teban, const std::vector<std::string>& tokens):
 		}
 		if (tokens.size() > 5) {
 			if (tokens[5] == "byoyomi") {
-				//ストップウォッチルールの切り捨て時間
+				//秒読みルールの持ち時間消費後の時間
 				rule = TimeRule::byoyomi;
 				added = std::chrono::milliseconds(std::stoi(tokens[6]));
 				rival_added = std::chrono::milliseconds(std::stoi(tokens[6]));
 			}
 			else {
-				//フィッシャークロックルールの追加時間
+				//フィッシャールールの追加時間
 				rule = TimeRule::fischer;
 				if (teban) {
 					added = std::chrono::milliseconds(std::stoi(tokens[6]));

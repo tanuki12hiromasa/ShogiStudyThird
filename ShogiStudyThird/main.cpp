@@ -6,9 +6,13 @@
 #include "stest.h"
 #include <iostream>
 
-int main()
+int main(int argc, char* argv[])
 {
-	Commander::execute();
+	std::string enginename = (argc < 2) ? "ShibauraSoftmaxThird" : argv[1];
+#ifdef _DEBUG
+	enginename += "_debug";
+#endif
+	Commander::execute(enginename);
 	//ShogiTest::test();
 }
 
