@@ -18,7 +18,7 @@ void Joseki::setOption(std::vector<std::string> tokens){
 		joseki_input_file_name = tokens[4];
 	}
 }
-void Joseki::printOption() {
+void Joseki::coutOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
 	std::cout << "option name joseki_folder_name type string default joseki" << std::endl;
 	std::cout << "option name joseki_input_file_name type string default user_book1.db" << std::endl;
@@ -35,6 +35,9 @@ std::string Joseki::getSfenTrimed(std::string sfen) {
 
 //ひとまずstdを使用して実装
 void Joseki::readBook() {
+	if (!joseki_on) {
+		return;
+	}
 	std::string path = joseki_folder_name + "\\" + joseki_input_file_name;
 	std::cout << path << "から定跡を読み込みます。" << std::endl;
 	std::ifstream ifs(path);
@@ -55,7 +58,7 @@ void Joseki::readBook() {
 				//最善手
 				bn.bestMove = Move(column[0], true);
 				//出現回数を0にしておく
-				bn.appear = 0;
+				bn.on = true;
 
 				bookJoseki.emplace(sfen, bn);
 			}
@@ -67,12 +70,29 @@ void Joseki::readBook() {
 	}
 }
 
+bool Joseki::getBestMoveFromJoseki(std::string sfen)
+{
+	//Softmax以外の定跡を読み込んであったら、それを利用する
+	auto bestMove = getBestMove(Joseki::getSfenTrimed(sfen));
+	//appearが-1でなければ定跡があるので利用する
+	if (bestMove.on) {
+		auto bestChild = bestMove.bestMove;
+		std::cout << "bestmove " << bestChild.toUSI() << std::endl;
+		return true;
+	}
+	else {
+		//定跡が終わったので読み込みをオフに
+		joseki_on = false;
+		return false;
+	}
+}
+
 Joseki::bookNode Joseki::getBestMove(std::string sfen)
 {
 	bookNode bn;	//出現回数には-1が入っている
 	if (bookJoseki.find(sfen) != bookJoseki.end()) {
 		return bookJoseki[sfen];
 	}
-	bn.appear = -1;
+	bn.on = false;
 	return bn;
 }

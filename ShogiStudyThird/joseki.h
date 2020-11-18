@@ -8,29 +8,29 @@
 #include "tree.h"
 
 class Joseki {
-    //共通
 public:
     //オプション設定
     void setOption(std::vector<std::string>tokens);
     //オプション描画
-    void printOption();
+    static void coutOption();
 
     //定跡がオンになってるか取得。なってなかったら以降は定跡を使わない
-    bool getJosekiOn() {
+    inline bool getJosekiOn() {
         return joseki_on;
     }
 
     //やねうら王形式の定跡を読み込んで利用する
     struct bookNode {
         Move bestMove;  //盤面におけるベストな指し手
-        int appear = -1;   //出現回数
+        bool on = false;
     };
     //定跡読み込み
     void readBook();
-    //
+    //定跡利用
+    bool getBestMoveFromJoseki(std::string sfen);
+private:
     bookNode getBestMove(std::string sfen);
     static std::string getSfenTrimed(std::string sfen);    //末尾の数字を取り除いたsfen列を返す
-private:
     //定跡を利用するか等の変数
     bool joseki_on;
     //定跡フォルダ名
