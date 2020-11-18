@@ -270,3 +270,5 @@ ShogiStudySecond/depthlog/
 *.bin
 
 ShogiStudyThird/treelog.txt
+/ShogiStudyThird/joseki
+/ShogiStudyThird/testjoseki.txt

@@ -18,6 +18,7 @@ void Commander::execute(const std::string& enginename) {
 			std::cout << "id name " << enginename << std::endl;
 			std::cout << "id author Hiromasa_Iwamoto" << std::endl;
 			coutOption();
+			Joseki::coutOption();
 			std::cout << "usiok" << std::endl;
 		}
 		else if (tokens[0] == "setoption") {
@@ -221,6 +222,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "estimate_movesnum") {
 			estimate_movesnum = std::stoi(token[4]);
 		}
+		else {
+			joseki.setOption(token);
+		}
 	}
 }
 
@@ -246,6 +250,8 @@ void Commander::gameInit() {
 	}
 	setTsDistribution();
 	info();
+
+	joseki.readBook();
 }
 
 void Commander::setTsDistribution() {
@@ -316,6 +322,9 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	else if (tree.getRoot()->eval < -SearchNode::getMateScoreBound()) {
 		std::lock_guard<std::mutex> lock(coutmtx);
 		std::cout << "bestmove resign" << std::endl;
+		return;
+	}
+	else if (joseki.getJosekiOn() && joseki.getBestMoveFromJoseki(kyokumen.toSfen())) {
 		return;
 	}
 	tree.evaluationcount = 0ull;

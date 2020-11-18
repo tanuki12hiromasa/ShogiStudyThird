@@ -168,6 +168,7 @@ double SearchNode::getTcMcVarianceExpection()const {
 	return std::sqrt(variance / Z);
 }
 
+
 double SearchNode::getEs()const {
 	switch (Es_FunctionCode)
 	{
