@@ -99,13 +99,13 @@
     <ClCompile Include="apery_learn.cpp">
       <Filter>apery</Filter>
     </ClCompile>
-    <ClCompile Include="leaner.cpp">
-      <Filter>ソース ファイル\learn</Filter>
-    </ClCompile>
     <ClCompile Include="learn_util.cpp">
       <Filter>ソース ファイル\learn</Filter>
     </ClCompile>
     <ClCompile Include="learn_method.cpp">
+      <Filter>ソース ファイル\learn</Filter>
+    </ClCompile>
+    <ClCompile Include="learner.cpp">
       <Filter>ソース ファイル\learn</Filter>
     </ClCompile>
   </ItemGroup>
@@ -182,13 +182,13 @@
     <ClInclude Include="apery_learn.h">
       <Filter>apery</Filter>
     </ClInclude>
-    <ClInclude Include="leaner.h">
-      <Filter>ヘッダー ファイル\learn</Filter>
-    </ClInclude>
     <ClInclude Include="learn_util.h">
       <Filter>ヘッダー ファイル\learn</Filter>
     </ClInclude>
     <ClInclude Include="learn_method.h">
+      <Filter>ヘッダー ファイル\learn</Filter>
+    </ClInclude>
+    <ClInclude Include="learner.h">
       <Filter>ヘッダー ファイル\learn</Filter>
     </ClInclude>
   </ItemGroup>

@@ -71,6 +71,7 @@ public:
 	void setOriginEval(const double evaluation) { origin_eval = evaluation; }
 
 	double getEvaluation()const { return eval.load(); }
+	std::int32_t getOriginEval()const { return origin_eval; }
 	bool isLeaf()const { const auto s = status.load(); return s == State::N || s == State::iE; }
 	bool isTerminal()const { return status == State::T; }
 	bool isSearchable()const { const auto s = status.load(); return s == State::N || s == State::E; }

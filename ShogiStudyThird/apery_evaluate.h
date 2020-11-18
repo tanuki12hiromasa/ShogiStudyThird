@@ -20,7 +20,7 @@ namespace apery {
 		static void setpath_input(const std::string& path) { ifolderpath = path; }
 		static void setpath_output(const std::string& path) { ofolderpath = path; }
 
-		static void genInitalPram(const std::string& folderpath);
+		static void genInitialParam(const std::string& folderpath);
 	private:
 		static std::string ifolderpath;
 		static std::string ofolderpath;

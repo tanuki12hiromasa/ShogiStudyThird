@@ -164,7 +164,7 @@
     <ClCompile Include="koma.cpp" />
     <ClCompile Include="kyokumen.cpp" />
     <ClCompile Include="leaf_guard.cpp" />
-    <ClCompile Include="leaner.cpp" />
+    <ClCompile Include="learner.cpp" />
     <ClCompile Include="learn_method.cpp" />
     <ClCompile Include="learn_util.cpp" />
     <ClCompile Include="main.cpp">
@@ -196,7 +196,7 @@
     <ClInclude Include="koma_motion.h" />
     <ClInclude Include="kyokumen.h" />
     <ClInclude Include="leaf_guard.h" />
-    <ClInclude Include="leaner.h" />
+    <ClInclude Include="learner.h" />
     <ClInclude Include="learn_method.h" />
     <ClInclude Include="learn_util.h" />
     <ClInclude Include="move.h" />

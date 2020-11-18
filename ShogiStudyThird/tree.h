@@ -21,6 +21,7 @@ public:
 	void proceed(SearchNode* node);
 	void deleteBranch(SearchNode* base, const std::vector<SearchNode*>& savedNodes);//baseのsaved以下以外の探索木を子ノードを残して消去する
 	void deleteTree(SearchNode* const root);//rootを含め子孫を全消去する
+	void clear();
 
 	const uint64_t getNodeCount() const { return nodecount; }
 	const uint64_t getEvaluationCount()const { return evaluationcount; }

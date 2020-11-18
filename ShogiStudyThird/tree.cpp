@@ -121,6 +121,15 @@ void SearchTree::deleteTree(SearchNode* const root) {
 	delete(root);
 	nodecount--;
 }
+
+void SearchTree::clear() {
+	SearchNode* const root = history.front();
+	root->deleteTree();
+	history.clear();
+	historymap.clear();
+	evaluationcount = 0;
+	nodecount = 0;
+}
 #pragma optimize("",on)
 
 std::pair<unsigned, SearchNode*> SearchTree::findRepetition(const Kyokumen& kyokumen)const {
