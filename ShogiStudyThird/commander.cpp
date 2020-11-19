@@ -94,6 +94,7 @@ void Commander::execute() {
 			commander.joseki.josekiInput(&(commander.tree));
 		}
 		else if (tokens[0] == "foutjoseki") {
+			commander.joseki.setNodeCount(commander.tree.nodecount);
 			commander.joseki.josekiOutput(commander.tree.getHistory());
 			std::cout << "定跡出力完了" << std::endl;
 		}

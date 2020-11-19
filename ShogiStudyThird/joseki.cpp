@@ -215,6 +215,10 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	ofs << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒で出力完了" << std::endl;
 	ofs.close();
 	fclose(fp);
+
+	if (joseki_loop) {
+		nextForJosekiLoop(1);
+	}
 }
 
 void Joseki::backUp(std::vector<SearchNode*> history)
@@ -340,6 +344,9 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 void Joseki::josekiInput(SearchTree* tree) {
 	if (yomikomi_on == false) {
 		return;
+	}
+	if (joseki_loop) {
+		nextForJosekiLoop(-1);
 	}
 
 	//定跡の情報が入ったファイルを開く
