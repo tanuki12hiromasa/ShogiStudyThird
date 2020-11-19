@@ -84,7 +84,7 @@ void Commander::execute() {
 			commander.stopAgent();
 			commander.joseki.setIsSente(commander.tree.getRootPlayer().kyokumen.teban());
 			commander.joseki.setNodeCount(commander.tree.nodecount);
-			commander.joseki.josekiOutputIGameOver(commander.tree.getHistory(),tokens);
+			commander.joseki.josekiOutputIGameOver(commander.tree.getHistory(), tokens);
 			std::cout << "gameoverok" << std::endl;
 		}
 		else if (tokens[0] == "quit") {
@@ -105,7 +105,8 @@ void Commander::execute() {
 			std::cout << commander.joseki.pruning(commander.tree.getHistory().front()) << "ノードが削除されました" << std::endl;
 		}
 		else if (tokens[0] == "yomikomibook") {
-			commander.joseki.readBook("joseki/user_book1.db");
+			//commander.joseki.readBook("joseki/user_book1.db");
+			commander.joseki.readBook("joseki/yaneurajoseki40e80d.db");
 			std::cout << "read book" << std::endl;
 		}
 		else if (tokens[0] == "makejobanjoseki") {
@@ -113,6 +114,32 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "foutjosekiasyaneura") {
 			commander.joseki.outputJosekiAsYaneura(commander.tree.getHistory().front());
+		}
+		else if (tokens[0] == "printsfen") {
+			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
+		}
+		else if (tokens[0] == "sfen") {
+			std::cout << commander.joseki.getBestMove(usiin).bestMove.toUSI() << std::endl;;
+		}
+		else if (tokens[0] == "sfenloop") {
+		//std::ifstream ydb("joseki/db40e80d.csv");
+		std::ifstream ydb("joseki/yaneuradb.csv");
+		std::ofstream outdb("joseki/out.csv");
+			std::string dl;
+			while (!ydb.eof()) {
+				std::getline(ydb, dl);
+				if (usi::split(dl, ',').size() < 2) {
+					break;
+				}
+				std::string sfen = usi::split(dl, ',')[0] + "";
+				if (sfen == "sfen lnsgkgsnl/7b1/p1ppppppp/1r7/7P1/9/PPPPPPP1P/1BG2S1R1/LNS1KG1NL w ") {
+					std::cout << "sfen" << std::endl;
+				}
+				std::string bm = commander.joseki.getBestMove(sfen).bestMove.toUSI();
+				outdb << sfen << "," << usi::split(dl, ',')[1] << "," << bm << std::endl;
+			}
+			ydb.close();
+			outdb.close();
 		}
 	}
 }
