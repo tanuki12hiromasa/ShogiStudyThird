@@ -31,6 +31,9 @@
     <Filter Include="debug">
       <UniqueIdentifier>{abaaf2e8-17c3-4249-8ff3-8d19cc2af1ba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="nnue">
+      <UniqueIdentifier>{26124461-f241-4b9e-b9ce-1ee27dc41672}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -166,6 +169,15 @@
     </ClInclude>
     <ClInclude Include="joseki.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\nnue_evaluate.h">
+      <Filter>nnue</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\nnue_feature.h">
+      <Filter>nnue</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\nnue_param.h">
+      <Filter>nnue</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

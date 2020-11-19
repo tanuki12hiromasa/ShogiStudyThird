@@ -194,6 +194,9 @@
     <ClInclude Include="leaf_guard.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_gen.h" />
+    <ClInclude Include="nnue\nnue_evaluate.h" />
+    <ClInclude Include="nnue\nnue_feature.h" />
+    <ClInclude Include="nnue\nnue_param.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="stdafx.h" />
