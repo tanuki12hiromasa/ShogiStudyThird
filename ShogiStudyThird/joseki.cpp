@@ -5,6 +5,7 @@
 #include <queue>
 #include <Windows.h>
 #include <climits>
+#include <random>
 
 //定跡フォルダーの中のファイル数を数える
 static int getFileCount() {
@@ -223,6 +224,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 
 void Joseki::backUp(std::vector<SearchNode*> history)
 {
+	std::cout << "バックアップを行います。" << std::endl;
 	const double MateScoreBound = 30000.0;
 	typedef std::pair<double, double> dd;
 	double T_e = backup_T_e;
@@ -260,10 +262,15 @@ void Joseki::backUp(std::vector<SearchNode*> history)
 				E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
 				M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
 			}
-			node->setEvaluation(E);
+		
+			std::cout << "[" << i << "](" << node->eval << "→";
+			node->setEvaluation(E * (i == history.size() - 2?(double)i * i:1));
 			node->setMass(M);
+			std::cout << node->eval << ") ";
 		}
 	}
+	std::cout << std::endl;
+	std::cout << "バックアップ完了" << std::endl;
 }
 
 //定跡書き出し
@@ -650,17 +657,28 @@ std::string Joseki::getSfenTrimed(std::string sfen) {
 void Joseki::readBook(std::string fileName) {
 	std::ifstream ifs(fileName);
 	std::ofstream ofs("joseki/db.csv");
+
+	std::string sfen;
+	std::vector<bookNode>candidate;
 	while (!ifs.eof()) {
 		std::string line;
 		std::getline(ifs, line);
 		//sfenを見つけたら格納
 		if (line.length() >= 4 && line.substr(0, 4) == "sfen") {
 			bookNode bn;
+			if (candidate.size() > 0) {
+				std::random_device rnd;
+				std::mt19937 mt(rnd());
+				std::uniform_int_distribution<> randdis(0, candidate.size());
 
-			//末尾の数字を取り除く
-			std::string sfen = getSfenTrimed(line);
-			//次の行に最善手があるので読む
-			std::getline(ifs, line);
+				bookJoseki.emplace(sfen, candidate[randdis(mt)]);
+				//bookJoseki.emplace(sfen, candidate[0]);
+				candidate.clear();
+			}
+			sfen = getSfenTrimed(line);
+		}
+		else if(line.length() > 0) {
+			bookNode bn;
 			auto column = usi::split(line, ' ');
 			
 			//最善手
@@ -678,7 +696,7 @@ void Joseki::readBook(std::string fileName) {
 			//仮に出現回数を0にしておく
 			bn.num = 0;
 
-			bookJoseki.emplace(sfen, bn);
+			candidate.push_back(bn);
 
 			ofs << sfen + "," + column[0] << std::endl;
 		}
