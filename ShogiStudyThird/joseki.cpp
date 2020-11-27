@@ -264,7 +264,8 @@ void Joseki::backUp(std::vector<SearchNode*> history)
 			}
 		
 			std::cout << "[" << i << "](" << node->eval << "→";
-			node->setEvaluation(E * (i == history.size() - 2?(double)i * i:1));
+			//node->setEvaluation(E * (i == history.size() - 2 ? (double)i * i : 1));
+			node->setEvaluation(E);
 			node->setMass(M);
 			std::cout << node->eval << ") ";
 		}
