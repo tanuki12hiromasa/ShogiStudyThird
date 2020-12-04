@@ -115,7 +115,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	for (SearchNode* his : history) {
 		moveHis += std::to_string(his->move.getU());
 		moveHis += ",";
-		if (his->move.toUSI() == "nullmove") {
+		if (his->move.toUSI() == "nullmove" || his->move.toUSI() == "1a1a") {
 			usiHis += "position startpos moves";
 		}
 		else {
@@ -204,7 +204,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	FILE* fp;
 	fopen_s(&fp, (outputFileName).c_str(), "wb");
 	fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
-
+	fflush(fp);
 	free(jn);
 	/*for (int i = 0; i < nodeCount; ++i) {
 		free(nodes[i]);
@@ -403,6 +403,11 @@ void Joseki::josekiInput(SearchTree* tree) {
 	//すぐ下の子ノード達だけ展開する
 	int depth = 0;
 	std::vector<size_t>childrenToThread = yomikomiDepth(0, depth);
+	if (childrenToThread.size() <= 0) {
+		std::cout << "子ノードがありません。" << std::endl;
+		std::cout << "プログラムを強制終了します。" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
 	//子ノードの数だけ再帰的に読みこむ
 	std::vector<std::thread> thr;
