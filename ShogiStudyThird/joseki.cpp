@@ -49,7 +49,12 @@ void Joseki::setOption(std::vector<std::string> tokens){
 		joseki_loop_interval = std::stoi(tokens[4]);
 	}
 	else if (t == "pruningborder") {
-		pruningBorder = std::stod(tokens[4]);
+		if (tokens[4][0] == 'e') {
+			pruningBorder = pow(10.0, std::stod(tokens[4].substr(2,tokens[4].size() - 1)));
+		}
+		else {
+			pruningBorder = std::stod(tokens[4]);
+		}
 	}
 	else if (t == "pruningborderEval") {
 		pruningBorderEval = std::stod(tokens[4]);
@@ -72,6 +77,9 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "pruning_T_c") {
 		pruning_T_c = std::stoi(tokens[4]);
 	}
+	else if (t == "leaveNodeCount") {
+		leaveNodeCount = std::stoi(tokens[4]);
+	}
 }
 void Joseki::printOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
@@ -89,6 +97,7 @@ void Joseki::printOption() {
 	std::cout << "option name joseki_backup_T_d type string default 1" << std::endl;
 	std::cout << "option name pruning_depth type string default 5" << std::endl;
 	std::cout << "option name pruning_T_c type string default 40" << std::endl;
+	std::cout << "option name leaveNodeCount string default 0" << std::endl;
 }
 
 void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens) {
@@ -559,9 +568,16 @@ size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history
 				for (const SearchNode* child : node->children) {
 					Z += std::exp(-(child->getEvaluation() - CE) / T_c);
 				}
-				for (SearchNode* child : node->children) {
+				for (int i = 0; i < node->children.size();++i) {
 					//再帰的に枝刈りを行う
-					double s = std::exp(-(child->getEvaluation() - CE) / T_c) / Z;
+					SearchNode* child = node->children[i];
+					double s;
+					if (leaveNodeCount == 0 || i < leaveNodeCount) {
+						s = std::exp(-(child->getEvaluation() - CE) / T_c) / Z;
+					}
+					else {
+						s = 0;
+					}
 					r += partialPruning(child, history, s * select, depth + 1);
 				}
 			}
