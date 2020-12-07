@@ -1,7 +1,6 @@
 ﻿#include "stdafx.h"
 #include "commander.h"
 #include "usi.h" 
-#include "joseki.h"
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -26,6 +25,7 @@ void Commander::execute() {
 			std::cout << "id author Iwamoto" << std::endl;
 			coutOption();
 			commander.joseki.printOption();
+			commander.yaneuraJoseki.coutOption();
 			std::cout << "usiok" << std::endl;
 		}
 		else if (tokens[0] == "setoption") {
@@ -105,27 +105,23 @@ void Commander::execute() {
 			std::cout << commander.joseki.pruning(commander.tree.getHistory().front()) << "ノードが削除されました" << std::endl;
 		}
 		else if (tokens[0] == "yomikomibook") {
-			//commander.joseki.readBook("joseki/user_book1.db");
-			commander.joseki.readBook(tokens[1]);
+			commander.yaneuraJoseki.readBook();
 			std::cout << "read book" << std::endl;
 		}
 		else if (tokens[0] == "makejobanjoseki") {
 			commander.makeJobanJoseki(tokens[1], std::stoi(tokens[2]), std::stoi(tokens[3]), std::stoi(tokens[4]));
 		}
 		else if (tokens[0] == "foutjosekiasyaneura") {
-			commander.joseki.outputJosekiAsYaneura(commander.tree.getHistory().front(), tokens[1], std::stoi(tokens[2]));
+			commander.yaneuraJoseki.outputJosekiAsYaneura(commander.tree.getHistory().front(), tokens[1], std::stoi(tokens[2]));
 		}
 		else if (tokens[0] == "printsfen") {
 			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
 		}
 		else if (tokens[0] == "sfen") {
-			std::cout << commander.joseki.getBestMove(usiin).bestMove.toUSI() << std::endl;;
+			std::cout << commander.yaneuraJoseki.getBestMove(usiin).bestMove.toUSI() << std::endl;;
 		}
 		else if (tokens[0] == "sfenloop") {
-			//std::ifstream ydb("joseki/db40e80d.csv");
-			//std::ifstream ydb("joseki/yaneuradb.csv");
 			std::ifstream ydb(tokens[1]);
-			//std::ofstream outdb("joseki/outYaneuraOu40e80dr40e749_max5.csv");
 			std::ofstream outdb(tokens[2]);
 			std::string dl;
 			int kyokumenCount = 0;
@@ -141,7 +137,7 @@ void Commander::execute() {
 					std::cout << "sfen" << std::endl;
 				}
 				std::string terasyokkubest = usi::split(dl, ',')[1];
-				std::string bm = commander.joseki.getBestMove(sfen).bestMove.toUSI();
+				std::string bm = commander.yaneuraJoseki.getBestMove(sfen).bestMove.toUSI();
 				bool sashiteitti = terasyokkubest == bm;
 				outdb << sfen << "," << terasyokkubest << "," << bm << "," << (sashiteitti ? "TRUE" : "FALSE") << std::endl;
 				if (sashiteitti) {
@@ -158,7 +154,7 @@ void Commander::execute() {
 			outdb << ",," << kyokumenCount << "," << noNullmove << std::endl;
 			outdb << ",," << (double)nullmove / (double)kyokumenCount << "," << (double)sashiteIttiCount / (double)noNullmove << std::endl;
 			outdb << ",," << 1.0 - (double)nullmove / (double)kyokumenCount << std::endl;
-			outdb << ",," << commander.joseki.getYaneuraJosekiCount() << std::endl;
+			outdb << ",," << commander.yaneuraJoseki.getYaneuraJosekiCount() << std::endl;
 
 
 			ydb.close();
@@ -167,8 +163,8 @@ void Commander::execute() {
 			std::ofstream csvsum(tokens[3]);
 			std::ofstream summary(tokens[4], std::ios::app);
 			csvsum << "局面存在率	最善手一致率	総局面数" << std::endl;
-			csvsum << 1.0 - (double)nullmove / (double)kyokumenCount << "	" << (double)sashiteIttiCount / (double)noNullmove << "	" << commander.joseki.getYaneuraJosekiCount() << std::endl;
-			summary << 1.0 - (double)nullmove / (double)kyokumenCount << "	" << (double)sashiteIttiCount / (double)noNullmove << "	" << commander.joseki.getYaneuraJosekiCount() << std::endl;
+			csvsum << 1.0 - (double)nullmove / (double)kyokumenCount << "	" << (double)sashiteIttiCount / (double)noNullmove << "	" << commander.yaneuraJoseki.getYaneuraJosekiCount() << std::endl;
+			summary << 1.0 - (double)nullmove / (double)kyokumenCount << "	" << (double)sashiteIttiCount / (double)noNullmove << "	" << commander.yaneuraJoseki.getYaneuraJosekiCount() << std::endl;
 			csvsum.close();
 			summary.close();
 		}
@@ -317,6 +313,7 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else {
 			joseki.setOption(token);
+			yaneuraJoseki.setOption(token);
 		}
 	}
 }
@@ -417,16 +414,20 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
+	else if (yaneuraJoseki.getJosekiOn()) {
+		std::string bestMove = yaneuraJoseki.getBestMoveFromJoseki(kyokumen.toSfen());
+		if (bestMove != "nullmove") {
+			std::cout << "bestmove " << bestMove << std::endl;
+			for (auto node : tree.getRoot()->children) {
+				if (node->move.toUSI() == bestMove) {
+					tree.proceed(node);
+					break;
+				}
+			}
+			return;
+		}
+	}
 
-	//if (yomikomi_on) {
-	//	//Softmax以外の定跡を読み込んであったら、それを利用する
-	//	auto bm = joseki.getBestMove(Joseki::getSfenTrimed(kyokumen.toSfen()));
-	//	if (bm.num != -1) {
-	//		auto bestChild = bm.bestMove;
-	//		std::cout << "bestmove " << bestChild.toUSI() << std::endl;
-	//		return;
-	//	}
-	//}
 
 	startAgent();
 	TimeProperty tp(kyokumen.teban(), tokens);

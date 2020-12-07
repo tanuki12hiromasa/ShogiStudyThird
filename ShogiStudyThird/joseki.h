@@ -170,61 +170,6 @@ public:
         this->outputFileInfoName = josekiFolderName + "\\" + filename + infoadd + "_info.txt";
     }
 
-    void outputJosekiAsYaneura(SearchNode* root,std::string outputFileName,int maxCount) {
-        std::string s = "#YANEURAOU-DB2016 1.00\n";
-        std::vector<std::string> startpos = { "position","startpos" };
-        Kyokumen kyo = Kyokumen(startpos);
-        outputJosekiAsYaneura(root, kyo, &s,1,maxCount);
-        std::ofstream ofs(outputFileName);
-        ofs << s;
-        std::cout << "end" << std::endl;
-        ofs.close();
-    }
-
-    void outputJosekiAsYaneura(SearchNode* node, Kyokumen kyokumen, std::string *st,int depth,int maxCount) {
-        if (node->children.size() == 0) {
-            return;
-        }
-        if (node->move.toUSI() != "nullmove" && node->move.toUSI() != "1a1a") {
-            kyokumen.proceed(node->move);
-        }
-        std::string sfen = kyokumen.toSfen();
-        std::vector<std::string> ts = usi::split(sfen, ' ');
-        ts[ts.size() - 1] = std::to_string(depth);
-        //ts[ts.size() - 3] = depth % 2 == 0 ? "b" : "w";
-        sfen = "";
-        for (int i = 0; i < ts.size(); ++i) {
-            if (i != 0) {
-                sfen += " ";
-            }
-            sfen += ts[i];
-        }
-        *st += sfen + "\n";
-        int size = node->children.size();
-        int maxSize = maxCount;
-        //int count = (node->children.size()/* > 0*/);
-        int count = (size > maxSize ? maxSize : size);
-        for (int i = 0; i < count; ++i) {
-            SearchNode* child = node->children[i];
-            std::string move = child->move.toUSI();
-            std::string next = "none";
-            if (child->children.size() > 0) {
-                next = child->children[0]->move.toUSI();
-            }
-            std::string eval = std::to_string(int(child->eval + 0.5));
-            std::string depth = std::to_string(int(child->mass + 0.5));
-            std::string selected = "0";
-            *st += move + " " + next + " " + eval + " " + depth + " " + selected + " " + "\n";
-        }
-
-        for (int i = 0; i < count/*node->children.size()*/; ++i) {
-            SearchNode* child = node->children[i];
-            outputJosekiAsYaneura(child, kyokumen, st,depth + 1,maxCount);
-        }
-        //std::cout << *st << std::endl;
-    }
-    size_t getYaneuraJosekiCount() { return bookJoseki.size(); }
-
 private:
     std::string outputFileName = "joseki\\defaultjoseki_output.bin";
     std::string outputFileInfoName = "joseki\\defaultjoseki_output_info.txt";
