@@ -170,22 +170,22 @@ public:
         this->outputFileInfoName = josekiFolderName + "\\" + filename + infoadd + "_info.txt";
     }
 
-    void outputJosekiAsYaneura(SearchNode* root) {
+    void outputJosekiAsYaneura(SearchNode* root,std::string outputFileName,int maxCount) {
         std::string s = "#YANEURAOU-DB2016 1.00\n";
         std::vector<std::string> startpos = { "position","startpos" };
         Kyokumen kyo = Kyokumen(startpos);
-        outputJosekiAsYaneura(root, kyo, &s,1);
-        std::ofstream ofs(josekiFolderName + "\\" + "yaneurajoseki.db");
+        outputJosekiAsYaneura(root, kyo, &s,1,maxCount);
+        std::ofstream ofs(outputFileName);
         ofs << s;
         std::cout << "end" << std::endl;
         ofs.close();
     }
 
-    void outputJosekiAsYaneura(SearchNode* node, Kyokumen kyokumen, std::string *st,int depth) {
+    void outputJosekiAsYaneura(SearchNode* node, Kyokumen kyokumen, std::string *st,int depth,int maxCount) {
         if (node->children.size() == 0) {
             return;
         }
-        if (node->move.toUSI() != "nullmove") {
+        if (node->move.toUSI() != "nullmove" && node->move.toUSI() != "1a1a") {
             kyokumen.proceed(node->move);
         }
         std::string sfen = kyokumen.toSfen();
@@ -201,7 +201,7 @@ public:
         }
         *st += sfen + "\n";
         int size = node->children.size();
-        int maxSize = 5;
+        int maxSize = maxCount;
         //int count = (node->children.size()/* > 0*/);
         int count = (size > maxSize ? maxSize : size);
         for (int i = 0; i < count; ++i) {
@@ -219,10 +219,11 @@ public:
 
         for (int i = 0; i < count/*node->children.size()*/; ++i) {
             SearchNode* child = node->children[i];
-            outputJosekiAsYaneura(child, kyokumen, st,depth + 1);
+            outputJosekiAsYaneura(child, kyokumen, st,depth + 1,maxCount);
         }
         //std::cout << *st << std::endl;
     }
+    size_t getYaneuraJosekiCount() { return bookJoseki.size(); }
 
 private:
     std::string outputFileName = "joseki\\defaultjoseki_output.bin";

@@ -36,6 +36,12 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "josekiinputname") {
 		setInputFileName(tokens[4]);
 	}
+	else if (t == "josekiinputfilename") {
+		inputFileName = josekiFolderName + "\\" + tokens[4];
+	}
+	else if (t == "josekiinputinfofilename") {
+		inputFileInfoName = josekiFolderName + "\\" + tokens[4];
+	}
 	else if (t == "josekioutputname") {
 		setOutputFileName(tokens[4]);
 	}
@@ -84,7 +90,7 @@ void Joseki::setOption(std::vector<std::string> tokens){
 void Joseki::printOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
 	std::cout << "option name joseki_loop type check default false" << std::endl;
-	std::cout << "option name joseki_loop_interval type string default 50" << std::endl;
+	std::cout << "option name joseki_loop_interval type string default 0" << std::endl;
 	std::cout << "option name josekifoldername type string default joseki" << std::endl;
 	std::cout << "option name josekiinputname type string default foutjoseki" << std::endl;
 	std::cout << "option name josekioutputname type string default foutjoseki" << std::endl;
@@ -109,8 +115,8 @@ void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,
 
 		backUp(history);
 		josekiOutput(history);
-		std::cout << "josekiinfoname " << outputFileInfoName << std::endl;
-		std::cout << "josekiname " << outputFileName << std::endl;
+		//std::cout << "josekiinfoname " << outputFileInfoName << std::endl;
+		//std::cout << "josekiname " << outputFileName << std::endl;
 		
 	}
 }
@@ -343,6 +349,10 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 		}
 		fprintf(fp,"%d,%d,%d,%s,%f,%f,%d,%d\n", index, state, node->move.getU(),node->move.toUSI().c_str(), node->getMass(), node->getEvaluation(), childCount, childIndex);
 		childIndex += childCount;	//子ノードの数だけchildIndexを進める
+
+		if (index > 1000) {
+			//break;
+		}
 	}
 
 	//fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
@@ -664,4 +674,78 @@ bool Joseki::isPruning(SearchNode* node,double select,int depth,double backupRat
 		break;
 	}
 	return false;
+}
+
+//末尾の数字を取り除く
+std::string Joseki::getSfenTrimed(std::string sfen) {
+	int i = sfen.length() - 1;
+	while (sfen[i] == ' ') { --i; }
+	while (isdigit(sfen[i])) { --i; }
+	while (sfen[i] == ' ') { --i; }
+	return sfen.substr(0, i);
+}
+
+//ひとまずstdを使用して実装
+void Joseki::readBook(std::string fileName) {
+	std::ifstream ifs(fileName);
+	if (!ifs.is_open()) {
+		std::cout << "オープン失敗" << std::endl;
+		return;
+	}
+	std::ofstream ofs("joseki/db.csv");
+
+	std::string sfen;
+	std::vector<bookNode>candidate;
+	while (!ifs.eof()) {
+		std::string line;
+		std::getline(ifs, line);
+		//sfenを見つけたら格納
+		if (line.length() >= 4 && line.substr(0, 4) == "sfen") {
+			bookNode bn;
+			if (candidate.size() > 0) {
+				std::random_device rnd;
+				std::mt19937 mt(rnd());
+				std::uniform_int_distribution<> randdis(0, candidate.size());
+
+				bookJoseki.emplace(sfen, candidate[randdis(mt)]);
+				//bookJoseki.emplace(sfen, candidate[0]);
+				candidate.clear();
+			}
+			sfen = getSfenTrimed(line);
+		}
+		else if(line.length() > 0) {
+			bookNode bn;
+			auto column = usi::split(line, ' ');
+			
+			//最善手
+			bn.bestMove = Move(column[0],true);
+			/* 最善手以外要らない？
+			//次の相手の指し手の最善手
+			bn.nextMove = Move(column[1], false);
+			//その指し手の価値
+			bn.value = std::stod(column[2]);
+			//深さ
+			bn.depth = std::stod(column[3]);
+			//出現回数
+			bn.num = std::stod(column[4]);
+			*/
+			//仮に出現回数を0にしておく
+			bn.num = 0;
+
+			candidate.push_back(bn);
+
+			ofs << sfen + "," + column[0] << std::endl;
+		}
+	}
+	ofs.close();
+	ifs.close();
+}
+
+Joseki::bookNode Joseki::getBestMove(std::string sfen)
+{
+	bookNode bn;	//出現回数には-1が入っている
+	if (bookJoseki.find(sfen) != bookJoseki.end()) {
+		return bookJoseki[sfen];
+	}
+	return bn;
 }
