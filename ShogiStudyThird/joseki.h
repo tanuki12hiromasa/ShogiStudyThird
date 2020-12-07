@@ -292,6 +292,8 @@ private:
     //枝刈りをしない深さ
     int pruning_depth = 5;
     double pruning_T_c = 40;
+    //枝刈り時に残す残すノードの数(上位ノード)
+    int leaveNodeCount = 0;
 
     //従来の定跡を読み込んで利用する
 public:

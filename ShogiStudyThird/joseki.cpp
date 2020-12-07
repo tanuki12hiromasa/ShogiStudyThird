@@ -5,6 +5,7 @@
 #include <queue>
 #include <Windows.h>
 #include <climits>
+#include <random>
 
 //定跡フォルダーの中のファイル数を数える
 static int getFileCount() {
@@ -54,7 +55,12 @@ void Joseki::setOption(std::vector<std::string> tokens){
 		joseki_loop_interval = std::stoi(tokens[4]);
 	}
 	else if (t == "pruningborder") {
-		pruningBorder = std::stod(tokens[4]);
+		if (tokens[4][0] == 'e') {
+			pruningBorder = pow(10.0, std::stod(tokens[4].substr(2,tokens[4].size() - 1)));
+		}
+		else {
+			pruningBorder = std::stod(tokens[4]);
+		}
 	}
 	else if (t == "pruningborderEval") {
 		pruningBorderEval = std::stod(tokens[4]);
@@ -77,6 +83,9 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "pruning_T_c") {
 		pruning_T_c = std::stoi(tokens[4]);
 	}
+	else if (t == "leaveNodeCount") {
+		leaveNodeCount = std::stoi(tokens[4]);
+	}
 }
 void Joseki::printOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
@@ -94,6 +103,7 @@ void Joseki::printOption() {
 	std::cout << "option name joseki_backup_T_d type string default 1" << std::endl;
 	std::cout << "option name pruning_depth type string default 5" << std::endl;
 	std::cout << "option name pruning_T_c type string default 40" << std::endl;
+	std::cout << "option name leaveNodeCount string default 0" << std::endl;
 }
 
 void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens) {
@@ -120,7 +130,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	for (SearchNode* his : history) {
 		moveHis += std::to_string(his->move.getU());
 		moveHis += ",";
-		if (his->move.toUSI() == "nullmove") {
+		if (his->move.toUSI() == "nullmove" || his->move.toUSI() == "1a1a") {
 			usiHis += "position startpos moves";
 		}
 		else {
@@ -209,7 +219,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	FILE* fp;
 	fopen_s(&fp, (outputFileName).c_str(), "wb");
 	fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
-
+	fflush(fp);
 	free(jn);
 	/*for (int i = 0; i < nodeCount; ++i) {
 		free(nodes[i]);
@@ -221,10 +231,15 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	ofs << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒で出力完了" << std::endl;
 	ofs.close();
 	fclose(fp);
+
+	if (joseki_loop) {
+		nextForJosekiLoop(1);
+	}
 }
 
 void Joseki::backUp(std::vector<SearchNode*> history)
 {
+	std::cout << "バックアップを行います。" << std::endl;
 	const double MateScoreBound = 30000.0;
 	typedef std::pair<double, double> dd;
 	double T_e = backup_T_e;
@@ -262,10 +277,16 @@ void Joseki::backUp(std::vector<SearchNode*> history)
 				E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
 				M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
 			}
+		
+			//std::cout << "[" << i << "](" << node->eval << "→";
+			//node->setEvaluation(E * (i == history.size() - 2 ? (double)i * i : 1));
 			node->setEvaluation(E);
 			node->setMass(M);
+			//std::cout << node->eval << ") ";
 		}
 	}
+	std::cout << std::endl;
+	std::cout << "バックアップ完了" << std::endl;
 }
 
 //定跡書き出し
@@ -351,6 +372,9 @@ void Joseki::josekiInput(SearchTree* tree) {
 	if (yomikomi_on == false) {
 		return;
 	}
+	if (joseki_loop) {
+		nextForJosekiLoop(-1);
+	}
 
 	//定跡の情報が入ったファイルを開く
 	std::ifstream ifs(inputFileInfoName);
@@ -398,6 +422,11 @@ void Joseki::josekiInput(SearchTree* tree) {
 	//すぐ下の子ノード達だけ展開する
 	int depth = 0;
 	std::vector<size_t>childrenToThread = yomikomiDepth(0, depth);
+	if (childrenToThread.size() <= 0) {
+		std::cout << "子ノードがありません。" << std::endl;
+		std::cout << "プログラムを強制終了します。" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
 	//子ノードの数だけ再帰的に読みこむ
 	std::vector<std::thread> thr;
@@ -549,9 +578,16 @@ size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history
 				for (const SearchNode* child : node->children) {
 					Z += std::exp(-(child->getEvaluation() - CE) / T_c);
 				}
-				for (SearchNode* child : node->children) {
+				for (int i = 0; i < node->children.size();++i) {
 					//再帰的に枝刈りを行う
-					double s = std::exp(-(child->getEvaluation() - CE) / T_c) / Z;
+					SearchNode* child = node->children[i];
+					double s;
+					if (leaveNodeCount == 0 || i < leaveNodeCount) {
+						s = std::exp(-(child->getEvaluation() - CE) / T_c) / Z;
+					}
+					else {
+						s = 0;
+					}
 					r += partialPruning(child, history, s * select, depth + 1);
 				}
 			}
@@ -657,17 +693,28 @@ void Joseki::readBook(std::string fileName) {
 		return;
 	}
 	std::ofstream ofs("joseki/db.csv");
+
+	std::string sfen;
+	std::vector<bookNode>candidate;
 	while (!ifs.eof()) {
 		std::string line;
 		std::getline(ifs, line);
 		//sfenを見つけたら格納
 		if (line.length() >= 4 && line.substr(0, 4) == "sfen") {
 			bookNode bn;
+			if (candidate.size() > 0) {
+				std::random_device rnd;
+				std::mt19937 mt(rnd());
+				std::uniform_int_distribution<> randdis(0, candidate.size());
 
-			//末尾の数字を取り除く
-			std::string sfen = getSfenTrimed(line);
-			//次の行に最善手があるので読む
-			std::getline(ifs, line);
+				bookJoseki.emplace(sfen, candidate[randdis(mt)]);
+				//bookJoseki.emplace(sfen, candidate[0]);
+				candidate.clear();
+			}
+			sfen = getSfenTrimed(line);
+		}
+		else if(line.length() > 0) {
+			bookNode bn;
 			auto column = usi::split(line, ' ');
 			
 			//最善手
@@ -685,7 +732,7 @@ void Joseki::readBook(std::string fileName) {
 			//仮に出現回数を0にしておく
 			bn.num = 0;
 
-			bookJoseki.emplace(sfen, bn);
+			candidate.push_back(bn);
 
 			ofs << sfen + "," + column[0] << std::endl;
 		}
