@@ -293,19 +293,4 @@ private:
     double pruning_T_c = 40;
     //枝刈り時に残す残すノードの数(上位ノード)
     int leaveNodeCount = 0;
-
-    //従来の定跡を読み込んで利用する
-public:
-    struct bookNode {
-        Move bestMove;  //盤面におけるベストな指し手
-        Move nextMove;  //相手の最適な指し手
-        double value = 0;   //評価値
-        double depth = -1;   //深さ
-        int num = -1;   //出現回数
-    }; 
-    void readBook(std::string fileName);
-    bookNode getBestMove(std::string sfen);
-    static std::string getSfenTrimed(std::string sfen);    //末尾の数字を取り除いたsfen列を返す
-private:
-    std::unordered_map<std::string,bookNode> bookJoseki;
 };

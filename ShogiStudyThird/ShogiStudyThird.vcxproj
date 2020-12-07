@@ -176,6 +176,7 @@
     <ClCompile Include="time_property.cpp" />
     <ClCompile Include="tree.cpp" />
     <ClCompile Include="usi.cpp" />
+    <ClCompile Include="yaneurajoseki.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="agent.h" />
@@ -204,6 +205,7 @@
     <ClInclude Include="tree.h" />
     <ClInclude Include="usi.h" />
     <ClInclude Include="vec2.h" />
+    <ClInclude Include="yaneurajoseki.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
