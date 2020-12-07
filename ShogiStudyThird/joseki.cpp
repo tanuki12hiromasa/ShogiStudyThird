@@ -35,6 +35,12 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "josekiinputname") {
 		setInputFileName(tokens[4]);
 	}
+	else if (t == "josekiinputfilename") {
+		inputFileName = josekiFolderName + "\\" + tokens[4];
+	}
+	else if (t == "josekiinputinfofilename") {
+		inputFileInfoName = josekiFolderName + "\\" + tokens[4];
+	}
 	else if (t == "josekioutputname") {
 		setOutputFileName(tokens[4]);
 	}
@@ -75,7 +81,7 @@ void Joseki::setOption(std::vector<std::string> tokens){
 void Joseki::printOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
 	std::cout << "option name joseki_loop type check default false" << std::endl;
-	std::cout << "option name joseki_loop_interval type string default 50" << std::endl;
+	std::cout << "option name joseki_loop_interval type string default 0" << std::endl;
 	std::cout << "option name josekifoldername type string default joseki" << std::endl;
 	std::cout << "option name josekiinputname type string default foutjoseki" << std::endl;
 	std::cout << "option name josekioutputname type string default foutjoseki" << std::endl;
@@ -99,8 +105,8 @@ void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,
 
 		backUp(history);
 		josekiOutput(history);
-		std::cout << "josekiinfoname " << outputFileInfoName << std::endl;
-		std::cout << "josekiname " << outputFileName << std::endl;
+		//std::cout << "josekiinfoname " << outputFileInfoName << std::endl;
+		//std::cout << "josekiname " << outputFileName << std::endl;
 		
 	}
 }
@@ -322,6 +328,10 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 		}
 		fprintf(fp,"%d,%d,%d,%s,%f,%f,%d,%d\n", index, state, node->move.getU(),node->move.toUSI().c_str(), node->getMass(), node->getEvaluation(), childCount, childIndex);
 		childIndex += childCount;	//子ノードの数だけchildIndexを進める
+
+		if (index > 1000) {
+			//break;
+		}
 	}
 
 	//fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
@@ -642,6 +652,10 @@ std::string Joseki::getSfenTrimed(std::string sfen) {
 //ひとまずstdを使用して実装
 void Joseki::readBook(std::string fileName) {
 	std::ifstream ifs(fileName);
+	if (!ifs.is_open()) {
+		std::cout << "オープン失敗" << std::endl;
+		return;
+	}
 	std::ofstream ofs("joseki/db.csv");
 	while (!ifs.eof()) {
 		std::string line;

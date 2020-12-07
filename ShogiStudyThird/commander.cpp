@@ -105,14 +105,14 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "yomikomibook") {
 			//commander.joseki.readBook("joseki/user_book1.db");
-			commander.joseki.readBook("joseki/yaneurajoseki40e80d.db");
+			commander.joseki.readBook(tokens[1]);
 			std::cout << "read book" << std::endl;
 		}
 		else if (tokens[0] == "makejobanjoseki") {
 			commander.makeJobanJoseki(tokens[1], std::stoi(tokens[2]), std::stoi(tokens[3]), std::stoi(tokens[4]));
 		}
 		else if (tokens[0] == "foutjosekiasyaneura") {
-			commander.joseki.outputJosekiAsYaneura(commander.tree.getHistory().front());
+			commander.joseki.outputJosekiAsYaneura(commander.tree.getHistory().front(), tokens[1], std::stoi(tokens[2]));
 		}
 		else if (tokens[0] == "printsfen") {
 			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
@@ -121,10 +121,15 @@ void Commander::execute() {
 			std::cout << commander.joseki.getBestMove(usiin).bestMove.toUSI() << std::endl;;
 		}
 		else if (tokens[0] == "sfenloop") {
-		//std::ifstream ydb("joseki/db40e80d.csv");
-		std::ifstream ydb("joseki/yaneuradb.csv");
-		std::ofstream outdb("joseki/out.csv");
+			//std::ifstream ydb("joseki/db40e80d.csv");
+			//std::ifstream ydb("joseki/yaneuradb.csv");
+			std::ifstream ydb(tokens[1]);
+			//std::ofstream outdb("joseki/outYaneuraOu40e80dr40e749_max5.csv");
+			std::ofstream outdb(tokens[2]);
 			std::string dl;
+			int kyokumenCount = 0;
+			int nullmove = 0;
+			int sashiteIttiCount = 0;
 			while (!ydb.eof()) {
 				std::getline(ydb, dl);
 				if (usi::split(dl, ',').size() < 2) {
@@ -134,11 +139,62 @@ void Commander::execute() {
 				if (sfen == "sfen lnsgkgsnl/7b1/p1ppppppp/1r7/7P1/9/PPPPPPP1P/1BG2S1R1/LNS1KG1NL w ") {
 					std::cout << "sfen" << std::endl;
 				}
+				std::string terasyokkubest = usi::split(dl, ',')[1];
 				std::string bm = commander.joseki.getBestMove(sfen).bestMove.toUSI();
-				outdb << sfen << "," << usi::split(dl, ',')[1] << "," << bm << std::endl;
+				bool sashiteitti = terasyokkubest == bm;
+				outdb << sfen << "," << terasyokkubest << "," << bm << "," << (sashiteitti ? "TRUE" : "FALSE") << std::endl;
+				if (sashiteitti) {
+					sashiteIttiCount++;
+				}
+				if (bm == "nullmove") {
+					nullmove++;
+				}
+				kyokumenCount++;
+
 			}
+			int noNullmove = kyokumenCount - nullmove;
+			outdb << ",," << nullmove << "," << sashiteIttiCount << std::endl;
+			outdb << ",," << kyokumenCount << "," << noNullmove << std::endl;
+			outdb << ",," << (double)nullmove / (double)kyokumenCount << "," << (double)sashiteIttiCount / (double)noNullmove << std::endl;
+			outdb << ",," << 1.0 - (double)nullmove / (double)kyokumenCount << std::endl;
+			outdb << ",," << commander.joseki.getYaneuraJosekiCount() << std::endl;
+
+
 			ydb.close();
 			outdb.close();
+
+			std::ofstream csvsum(tokens[3]);
+			std::ofstream summary(tokens[4], std::ios::app);
+			csvsum << "局面存在率	最善手一致率	総局面数" << std::endl;
+			csvsum << 1.0 - (double)nullmove / (double)kyokumenCount << "	" << (double)sashiteIttiCount / (double)noNullmove << "	" << commander.joseki.getYaneuraJosekiCount() << std::endl;
+			summary << 1.0 - (double)nullmove / (double)kyokumenCount << "	" << (double)sashiteIttiCount / (double)noNullmove << "	" << commander.joseki.getYaneuraJosekiCount() << std::endl;
+			csvsum.close();
+			summary.close();
+		}
+		else if (tokens[0] == "outputforcsv") {
+			std::string foldername = tokens[1];
+			std::string filename = tokens[2];
+			int start = std::stoi(tokens[3]);
+			int count = std::stoi(tokens[4]);
+			std::string output;
+			for (int i = 0; i < count; ++i) {
+				int filenum = i + start;
+				int infonum = filenum * 50 + 49;
+				output += "ShogiStudyThird.exe\n";
+				output += "setoption name joseki_on is true\n";
+				output += "setoption name josekifoldername is " + foldername + "\n";
+				output += "setoption name josekiinputfilename is joseki" + std::to_string(filenum) + ".bin\n";
+				output += "setoption name josekiinputinfofilename is joseki" + std::to_string(infonum) + "_info.txt\n";
+				output += "isready\n";
+				output += "foutjosekiasyaneura " + foldername + "/yaneurajoseki" + filename + std::to_string(infonum) + ".db 1000000\n";
+				output += "yomikomibook " + foldername + "/yaneurajoseki" + filename + std::to_string(infonum) + ".db\n";
+				output += "sfenloop yaneuradb.csv " + foldername + "/out" + filename + std::to_string(infonum) + ".csv " + foldername + "/summaryjoseki" + std::to_string(infonum) + ".txt " + foldername + "/summaryAllJoseki.txt\n";
+				output += "quit\n";
+			}
+			std::ofstream of("forcsv.txt");
+			std::cout << output << std::endl;
+			of << output << std::endl;
+			of.close();
 		}
 	}
 }
