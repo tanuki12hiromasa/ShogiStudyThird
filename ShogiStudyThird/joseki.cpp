@@ -272,11 +272,11 @@ void Joseki::backUp(std::vector<SearchNode*> history)
 				M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
 			}
 		
-			std::cout << "[" << i << "](" << node->eval << "→";
+			//std::cout << "[" << i << "](" << node->eval << "→";
 			//node->setEvaluation(E * (i == history.size() - 2 ? (double)i * i : 1));
 			node->setEvaluation(E);
 			node->setMass(M);
-			std::cout << node->eval << ") ";
+			//std::cout << node->eval << ") ";
 		}
 	}
 	std::cout << std::endl;
