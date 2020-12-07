@@ -34,6 +34,7 @@ void Commander::execute() {
 		else if (tokens[0] == "isready") {
 			commander.gameInit();
 			commander.joseki.josekiInput(&(commander.tree));
+			commander.yaneuraJoseki.readBook();
 			std::cout << "readyok" << std::endl;
 		}
 		else if (tokens[0] == "usinewgame") {

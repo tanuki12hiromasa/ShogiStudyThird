@@ -96,7 +96,7 @@ void Joseki::printOption() {
 	std::cout << "option name josekioutputname type string default foutjoseki" << std::endl;
 	std::cout << "option name josekikakidashi type check default false" << std::endl;
 	std::cout << "option name pruningborder type string default 100" << std::endl;
-	std::cout << "option name pruningborderEval type string default 100" << std::endl;
+	std::cout << "option name pruningborderEval type string default 50000" << std::endl;
 	std::cout << "option name pruning_on type check default false" << std::endl;
 	std::cout << "option name pruning_type type string default 0" << std::endl;
 	std::cout << "option name joseki_backup_T_e type string default 1" << std::endl;

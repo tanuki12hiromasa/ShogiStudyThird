@@ -230,7 +230,7 @@ private:
     ////深さバックアップ温度再計算用の温度
     //double T_d = 100;
     double pruningBorder = 0.1;
-    double pruningBorderEval = 0.1;
+    double pruningBorderEval = 50000;
     bool pruning_on = false;
     //枝刈りのタイプ。0は実現確率
     int pruning_type = 0;

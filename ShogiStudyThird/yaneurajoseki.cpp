@@ -13,7 +13,7 @@ void YaneuraJoseki::setOption(std::vector<std::string> tokens) {
 		joseki_on = (tokens[4] == "true");
 	}
 	else if (t == "yjoseki_random") {
-
+		joseki_random = (tokens[4] == "true");
 	}
 	else if (t == "yjoseki_folder_name") {
 		joseki_folder_name = tokens[4];
