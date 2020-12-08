@@ -75,11 +75,11 @@ void YaneuraJoseki::readBook() {
 				//最善手
 				bn.bestMove = Move(column[0], true);
 				//深さ
-				int depth = std::stoi(column[3]);
+				bn.depth = std::stoi(column[3]);
 				//仮に出現回数を0にしておく
 				bn.on = true;
 
-				for (int i = 0; i < depth + 1; ++i) {
+				for (int i = 0; i < bn.depth + 1; ++i) {
 					candidate.push_back(bn);
 				}
 			}
@@ -112,8 +112,14 @@ YaneuraJoseki::bookNode YaneuraJoseki::getBestMove(std::string sfen)
 {
 	bookNode bn;	//出現回数には-1が入っている
 	if (bookJoseki.find(sfen) != bookJoseki.end()) {
-		return bookJoseki[sfen];
+		bn = bookJoseki[sfen];
+		lastDepth = bn.depth;
 	}
-	bn.on = false;
+	else {
+		bn.on = false;
+		if (lastDepth >= 2) {
+			std::cout << "outofbook" << std::endl;
+		}
+	}
 	return bn;
 }

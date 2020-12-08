@@ -22,6 +22,7 @@ public:
     //やねうら王形式の定跡を読み込んで利用する
     struct bookNode {
         Move bestMove;  //盤面におけるベストな指し手
+        int depth;
         bool on = false;
     };
     //定跡読み込み
@@ -95,4 +96,6 @@ private:
     bool joseki_random = false;
 
     std::unordered_map<std::string, bookNode> bookJoseki;
+
+    int lastDepth = -1;
 };
