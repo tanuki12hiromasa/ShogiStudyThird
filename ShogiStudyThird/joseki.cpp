@@ -566,6 +566,9 @@ size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history
 				if (pruning_type == 1) {
 					T_c += 10000 * pow(0.1,depth);
 				}
+				else if (pruning_type == 2) {
+					T_c += 1 * pow(2, depth);
+				}
 				double Z = 0;
 				for (const SearchNode* child : node->children) {
 					Z += std::exp(-(child->getEvaluation() - CE) / T_c);
@@ -615,6 +618,6 @@ bool Joseki::isPruning(SearchNode* node,double select,int depth,double backupRat
 		}
 		break;
 
-		return false;
 	}
+	return false;
 }

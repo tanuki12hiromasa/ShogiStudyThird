@@ -396,7 +396,7 @@ void Commander::startAgent() {
 	}
 }
 void Commander::stopAgent() {
-	std::cout << "simcount " << SearchAgent::getSimCount() << std::endl;
+	//std::cout << "simcount " << SearchAgent::getSimCount() << std::endl;
 	for (auto& ag : agents) {
 		ag->stop();
 	}
@@ -433,20 +433,14 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	startAgent();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
-	if(go_thread.joinable()) go_thread.join();
+	if (go_thread.joinable()) go_thread.join();
 	go_alive = true;
 	go_thread = std::thread([this, tp]() {
 		using namespace std::chrono_literals;
 		const auto starttime = std::chrono::system_clock::now();
 		const SearchNode* root = tree.getRoot();
 
-		//if (joseki.notEndGo(root)) {
-		//	std::this_thread::sleep_for(10000ms);
-		//};
-		if (joseki.deepEnough(root)) {
-			chakushu();
-		}
-		else if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
+		if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
 			do {
 				auto t = std::max((tp.added / 5), 50ms);
 				std::this_thread::sleep_for(t);
@@ -459,7 +453,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 			chakushu();
 		}
 
-		}
+	}
 	);
 	info_enable = true;
 }
