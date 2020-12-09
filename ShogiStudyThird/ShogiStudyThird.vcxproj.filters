@@ -34,6 +34,9 @@
     <Filter Include="nnue">
       <UniqueIdentifier>{26124461-f241-4b9e-b9ce-1ee27dc41672}</UniqueIdentifier>
     </Filter>
+    <Filter Include="nnue\layers">
+      <UniqueIdentifier>{034ce061-fc1c-4db3-93c1-b3324e7fca4c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -178,6 +181,30 @@
     </ClInclude>
     <ClInclude Include="nnue\nnue_param.h">
       <Filter>nnue</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\features_common.h">
+      <Filter>nnue</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\half_kp.h">
+      <Filter>nnue</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\halfkp_256x2-32-32.h">
+      <Filter>nnue</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\nnue_common.h">
+      <Filter>nnue</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\layers\affine_transform.h">
+      <Filter>nnue\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\layers\clipped_relu.h">
+      <Filter>nnue\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\layers\sum.h">
+      <Filter>nnue\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="nnue\layers\input_slice.h">
+      <Filter>nnue\layers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

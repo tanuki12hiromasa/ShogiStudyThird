@@ -194,6 +194,14 @@
     <ClInclude Include="leaf_guard.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_gen.h" />
+    <ClInclude Include="nnue\features_common.h" />
+    <ClInclude Include="nnue\halfkp_256x2-32-32.h" />
+    <ClInclude Include="nnue\half_kp.h" />
+    <ClInclude Include="nnue\layers\affine_transform.h" />
+    <ClInclude Include="nnue\layers\clipped_relu.h" />
+    <ClInclude Include="nnue\layers\input_slice.h" />
+    <ClInclude Include="nnue\layers\sum.h" />
+    <ClInclude Include="nnue\nnue_common.h" />
     <ClInclude Include="nnue\nnue_evaluate.h" />
     <ClInclude Include="nnue\nnue_feature.h" />
     <ClInclude Include="nnue\nnue_param.h" />

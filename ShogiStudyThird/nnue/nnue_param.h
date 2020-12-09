@@ -1,1 +1,3 @@
-#pragma once
+﻿#pragma once
+#include "../koma.h"
+
