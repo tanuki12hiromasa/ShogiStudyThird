@@ -86,6 +86,9 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "leaveNodeCount") {
 		leaveNodeCount = std::stoi(tokens[4]);
 	}
+	else if (t == "endBorderCount") {
+		endBorderCount = std::stoi(tokens[4]);
+	}
 }
 void Joseki::printOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
@@ -104,6 +107,7 @@ void Joseki::printOption() {
 	std::cout << "option name pruning_depth type string default 5" << std::endl;
 	std::cout << "option name pruning_T_c type string default 40" << std::endl;
 	std::cout << "option name leaveNodeCount string default 0" << std::endl;
+	std::cout << "option name endBorderCount string default 999999" << std::endl;
 }
 
 void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens) {

@@ -44,7 +44,10 @@ public:
         }
     }
     //評価値の絶対値が600を超えたら対局終了
-    bool endBattle(const SearchNode* root) {
+    bool endBattle(const SearchNode* root,std::vector<SearchNode*>history) {
+        if (history.size() >= endBorderCount) {
+            return true;
+        }
         if (pruning_on) {
             //std::cout << root->getEvaluation() << std::endl;
             if (abs(root->eval) > pruningBorderEval) {
@@ -141,6 +144,7 @@ private:
 
     //評価値によって強制終了した際の評価値に応じた勝敗
     int endBattleResult = 0;
+    int endBorderCount = 999999;
 
     
     //出力
