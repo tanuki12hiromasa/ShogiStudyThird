@@ -99,6 +99,12 @@
     <ClCompile Include="joseki.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="nnue\nnue_evaluate.cpp">
+      <Filter>nnue</Filter>
+    </ClCompile>
+    <ClCompile Include="nnue\nnue_feature.cpp">
+      <Filter>nnue</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
