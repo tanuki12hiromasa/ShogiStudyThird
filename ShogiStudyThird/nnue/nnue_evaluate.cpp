@@ -6,10 +6,13 @@
 
 namespace Eval::NNUE {
 
+	std::string GetArchitectureString() {
+		return "Features=" + NNUE_feat::GetStructureString() + ",Network=" + Network::GetStructureString();
+	}
 
 	namespace Detail {
 		template <typename T>
-		bool ReadParameters(std::istream& stream, const T* pointer) {
+		bool ReadParameters(std::istream& stream, T* const pointer) {
 			std::uint32_t header;
 			stream.read(reinterpret_cast<char*>(&header), sizeof(header));
 			if (!stream || header != T::GetHashValue()) {
@@ -27,7 +30,7 @@ namespace Eval::NNUE {
 			return T::ReadParameters(stream);
 		}
 		template <typename T>
-		bool WriteParameters(std::ostream& stream, const T* pointer) {
+		bool WriteParameters(std::ostream& stream, const T* const pointer) {
 			constexpr std::uint32_t header = T::GetHashValue();
 			stream.write(reinterpret_cast<const char*>(&header), sizeof(header));
 			return pointer->WriteParameters(stream);
@@ -41,8 +44,8 @@ namespace Eval::NNUE {
 	}
 
 	std::unique_ptr<Network> NNUE_evaluator::network;
-	std::string NNUE_evaluator::ifolderpath = "./nnue";
-	std::string NNUE_evaluator::ofolderpath = "./learn/nnue";
+	std::string NNUE_evaluator::ifolderpath = "./data/nnue";
+	std::string NNUE_evaluator::ofolderpath = "./data/learn/nnue";
 
 	bool NNUE_evaluator::ReadHeader(std::istream& stream, std::uint32_t* hash_value, std::string* architecture) {
 		std::uint32_t version, size;
@@ -56,7 +59,7 @@ namespace Eval::NNUE {
 		return !stream.fail();
 	}
 
-	bool NNUE_evaluator::WriteHeader(std::ostream& stream, std::uint32_t* hash_value, std::string& architecture) {
+	bool NNUE_evaluator::WriteHeader(std::ostream& stream, std::uint32_t hash_value, const std::string& architecture) {
 		stream.write(reinterpret_cast<const char*>(&kVersion), sizeof(kVersion));
 		stream.write(reinterpret_cast<const char*>(&hash_value), sizeof(hash_value));
 		const std::uint32_t size = static_cast<std::uint32_t>(architecture.size());
@@ -78,7 +81,12 @@ namespace Eval::NNUE {
 	}
 
 	bool NNUE_evaluator::WriteParameters(std::ostream& stream) {
-
+		if (!WriteHeader(stream, kHashValue, GetArchitectureString())
+			|| !Detail::WriteParameters<NNUE_feat>(stream)
+			|| !Detail::WriteParameters(stream, network.get())) {
+			return false;
+		}
+		return !stream.fail();
 	}
 
 	void NNUE_evaluator::init() {

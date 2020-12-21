@@ -22,7 +22,8 @@ namespace Eval {
 		using Network = Layers::OutputLayer;
 
 		struct alignas(32) Accumulator {
-			std::int16_t accumulation[2][kTransformedFeatureDimensions];//ここの[64]は元コードではkRefreshTriggers.size()
+			std::int16_t accumulation[2][kTransformedFeatureDimensions];//元コードでは[2][1][256]
+			Accumulator():accumulation(){}
 		};
 
 		using ChangedIndices = std::array<std::array<EvalIndex, 2>, 2>;
@@ -51,20 +52,18 @@ namespace Eval {
 			static constexpr IndexType kHalfDimensions = kTransformedFeatureDimensions;
 			static constexpr std::size_t kBufferSize = kOutputDimentions * sizeof(OutputType);
 		private:
-			struct parameters {
-				static alignas(kCacheLineSize) BiasType biases_[kTransformedFeatureDimensions];
-				static alignas(kCacheLineSize) WeightType weights_[kTransformedFeatureDimensions * kInputDimensions];
-			};
-			static std::unique_ptr<parameters> params_;
-			static BiasType* biases_;
-			static WeightType* weights_;
+			static BiasType* biases_; //BiasType biases_[kTransformedFeatureDimensions];
+			static WeightType* weights_; //WeightType weights_[kTransformedFeatureDimensions * kInputDimensions];
 		public:
 			static constexpr std::uint32_t GetHashValue() { return 0x5D69D5B9u ^ 1 ^ kOutputDimentions; }
-			static void init();
+			static std::string GetStructureString();
 			static bool ReadParameters(std::istream& stream);
 			static bool WriteParameters(std::ostream& stream);
+			static void init();
 
 		public:
+			NNUE_feat(){}
+			NNUE_feat(const Kyokumen& kyokumen) :indexlist(kyokumen) { set(kyokumen); }
 			void set(const Kyokumen& kyokumen);
 			void refreshAccumulator(const Kyokumen& kyokumen);
 			void updateAccumulator(const std::array<int,2>& kpos, const ChangedIndices& removed, const ChangedIndices& added, const std::array<bool, 2>& reset);
@@ -73,6 +72,9 @@ namespace Eval {
 			void recede(const Kyokumen& before, const koma::Koma moved, const koma::Koma captured, const Move move, const Cache& cache);
 			Cache getCache() { return Cache(); }
 			std::string toString()const;
+
+			bool operator==(const NNUE_feat& rhs)const;
+			bool operator!=(const NNUE_feat& rhs)const { return !operator==(rhs); }
 
 		private:
 			Accumulator accumulator;

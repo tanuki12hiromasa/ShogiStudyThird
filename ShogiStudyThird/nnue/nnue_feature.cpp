@@ -231,12 +231,16 @@ static constexpr IndexType kNumRegs = 16;
 #undef Replace
 	}
 
+	NNUE_feat::BiasType* NNUE_feat::biases_;
+	NNUE_feat::WeightType* NNUE_feat::weights_;
+
 	void NNUE_feat::init() {
-		if (params_ == nullptr) {
-			params_ = std::unique_ptr<parameters>(new parameters);
-			biases_ = params_->biases_;
-			weights_ = params_->weights_;
-		}
+		if(biases_ == nullptr) biases_ = new BiasType[kTransformedFeatureDimensions];
+		if(weights_ == nullptr) weights_ = new WeightType[kTransformedFeatureDimensions * kInputDimensions];
+	}
+
+	std::string NNUE_feat::GetStructureString() {
+		return "HalfKP(friend)[" + std::to_string(kInputDimensions) + "->" + std::to_string(kHalfDimensions) + "x2]";
 	}
 
 	bool NNUE_feat::ReadParameters(std::istream& stream) {
@@ -445,5 +449,18 @@ static constexpr IndexType kNumRegs = 16;
 		for (const auto val : indexlist.list[1])str += std::to_string(val) + " ";
 		str += "\n";
 		return str;
+	}
+
+	bool NNUE_feat::operator==(const NNUE_feat& rhs)const {
+#ifdef _DEBUG
+		for (int i = 0; i < 2; i++) {
+			for (int j = 0; j < kTransformedFeatureDimensions; j++) {
+				if (accumulator.accumulation[i][j] != rhs.accumulator.accumulation[i][j]) {
+					return false;
+				}
+			}
+		}
+#endif
+		return indexlist.list == rhs.indexlist.list;
 	}
 }

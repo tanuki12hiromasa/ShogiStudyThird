@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <intrin.h>
 #include <iostream>
+#include <string>
 #define USE_AVX2
 
 namespace Eval {

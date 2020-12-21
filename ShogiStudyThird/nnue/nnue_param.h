@@ -59,5 +59,5 @@ namespace Eval::NNUE {
 		e_hand_pawn,e_hand_lance,e_hand_knight,e_hand_silver,e_hand_bishop,e_hand_rook,e_hand_gold
 	};
 	inline EvalIndex mochiToIndex(koma::Mochigoma k, bool teban) { return teban ? sMochiToIndexArr[static_cast<size_t>(k)] : gMochiToIndexArr[static_cast<size_t>(k)]; }
-	inline int tebanToInt(bool teban) { teban ? 0 : 1; }
+	inline int tebanToInt(bool teban) { return teban ? 0 : 1; }
 }

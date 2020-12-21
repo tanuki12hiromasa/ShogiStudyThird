@@ -241,7 +241,8 @@ bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int d
 			return false;
 		}
 		f.recede(k, moved, cap, c->move, cache);
-		if (f != cf) {
+#if 0
+		if (f != cf) { //apery_kppt
 			std::cout << "error: feature recede" << std::endl;
 			std::cout << "kyokumen:\nposition " << k.toSfen() << "\n" << k.toBanFigure() << std::endl;
 			std::cout << "move: " << c->move.toUSI() << std::endl;
@@ -260,6 +261,7 @@ bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int d
 			assert(f == cf);
 			return false;
 		}
+#endif
 	}
 	return true;
 }
