@@ -41,7 +41,7 @@ namespace Eval {
 		class Cache{};
 
 		class NNUE_feat {
-		private:
+		public:
 			using BiasType = std::int16_t;
 			using WeightType = std::int16_t;
 			using OutputType = TransformedFeatureType;
@@ -49,10 +49,18 @@ namespace Eval {
 			static constexpr IndexType kInputDimensions = 125388U;
 			static constexpr IndexType kOutputDimentions = kTransformedFeatureDimensions * 2;
 			static constexpr IndexType kHalfDimensions = kTransformedFeatureDimensions;
-
-			static alignas(kCacheLineSize) BiasType biases_[kTransformedFeatureDimensions];
-			static alignas(kCacheLineSize) WeightType weights_[kTransformedFeatureDimensions * kInputDimensions];
+			static constexpr std::size_t kBufferSize = kOutputDimentions * sizeof(OutputType);
+		private:
+			struct parameters {
+				static alignas(kCacheLineSize) BiasType biases_[kTransformedFeatureDimensions];
+				static alignas(kCacheLineSize) WeightType weights_[kTransformedFeatureDimensions * kInputDimensions];
+			};
+			static std::unique_ptr<parameters> params_;
+			static BiasType* biases_;
+			static WeightType* weights_;
 		public:
+			static constexpr std::uint32_t GetHashValue() { return 0x5D69D5B9u ^ 1 ^ kOutputDimentions; }
+			static void init();
 			static bool ReadParameters(std::istream& stream);
 			static bool WriteParameters(std::ostream& stream);
 
@@ -60,7 +68,7 @@ namespace Eval {
 			void set(const Kyokumen& kyokumen);
 			void refreshAccumulator(const Kyokumen& kyokumen);
 			void updateAccumulator(const std::array<int,2>& kpos, const ChangedIndices& removed, const ChangedIndices& added, const std::array<bool, 2>& reset);
-			void Transform(const Kyokumen& kyokumen, OutputType Output[], bool refresh = false);
+			void Transform(const Kyokumen& kyokumen, OutputType Output[])const;
 			void proceed(const Kyokumen& before, const Move& move);
 			void recede(const Kyokumen& before, const koma::Koma moved, const koma::Koma captured, const Move move, const Cache& cache);
 			Cache getCache() { return Cache(); }
@@ -70,7 +78,6 @@ namespace Eval {
 			Accumulator accumulator;
 			EvalList indexlist;
 		};
-
 
 	}
 }

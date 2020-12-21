@@ -231,6 +231,14 @@ static constexpr IndexType kNumRegs = 16;
 #undef Replace
 	}
 
+	void NNUE_feat::init() {
+		if (params_ == nullptr) {
+			params_ = std::unique_ptr<parameters>(new parameters);
+			biases_ = params_->biases_;
+			weights_ = params_->weights_;
+		}
+	}
+
 	bool NNUE_feat::ReadParameters(std::istream& stream) {
 		for (std::size_t i = 0; i < kHalfDimensions; ++i) biases_[i] = read_little_endian<BiasType>(stream);
 		for (std::size_t i = 0; i < kHalfDimensions * kInputDimensions; ++i)
@@ -335,10 +343,10 @@ static constexpr IndexType kNumRegs = 16;
 		}
 	}
 
-	void NNUE_feat::Transform(const Kyokumen& kyokumen, OutputType output[], bool refresh) {
-		if (refresh) {
+	void NNUE_feat::Transform(const Kyokumen& kyokumen, OutputType output[]) const {
+		/*if (refresh) {
 			refreshAccumulator(kyokumen);
-		}
+		}*/
 		const auto& accumulation = accumulator.accumulation;
 #if defined(USE_AVX512)
 		constexpr IndexType kNumChunks = kHalfDimensions / (kSimdWidth * 2);
