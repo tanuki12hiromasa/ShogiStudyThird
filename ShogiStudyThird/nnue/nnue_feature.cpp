@@ -264,7 +264,7 @@ static constexpr IndexType kNumRegs = 16;
 	void NNUE_feat::refreshAccumulator(const Kyokumen& kyokumen) {
 		for (int perspective : {0, 1}) {
 			std::memcpy(accumulator.accumulation[perspective], biases_, kHalfDimensions * sizeof(BiasType));
-			const int kpos = (perspective == 0) ? kyokumen.sOuPos() : kyokumen.gOuPos();
+			const int kpos = (perspective == 0) ? kyokumen.sOuPos() : inverse(kyokumen.gOuPos());
 			for (const auto& p_index : indexlist.list[perspective]) {
 				const IndexType index = kpos * fe_end + p_index;
 				const IndexType offset = kHalfDimensions * index;
