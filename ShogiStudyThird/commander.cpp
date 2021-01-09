@@ -507,7 +507,7 @@ void Commander::chakushu() {
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
-	if (joseki.endBattle(root)) {
+	if (joseki.endBattle(root,tree.getHistory())) {
 		std::cout << "info score cp " << static_cast<int>(root->eval) << std::endl;
 		std::string rr = static_cast<int>(root->eval) > 0?"win" : "resign";
 		std::cout << "bestmove " << rr << std::endl;
