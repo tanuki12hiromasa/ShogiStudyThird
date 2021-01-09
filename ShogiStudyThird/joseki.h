@@ -48,7 +48,7 @@ public:
         if (history.size() >= endBorderCount) {
             return true;
         }
-        if (pruning_on) {
+        if (true) {
             //std::cout << root->getEvaluation() << std::endl;
             if (abs(root->eval) > pruningBorderEval) {
                 //endBattleResult = root->eval > 0 ? 1 : -1;
