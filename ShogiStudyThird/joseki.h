@@ -146,6 +146,9 @@ private:
     int endBattleResult = 0;
     int endBorderCount = 999999;
 
+    //メモリ共有を用いて読み込み書き込みを短縮する
+    bool shareMemoryF = false;
+    HANDLE shareHandle;
     
     //出力
 public:
