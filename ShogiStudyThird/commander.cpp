@@ -73,6 +73,7 @@ void Commander::execute() {
 			commander.chakushu();
 		}
 		else if (tokens[0] == "fouttree") {
+			std::cout << "ノード数：" << commander.tree.getNodeCount() << std::endl;
 			commander.tree.foutTree();
 			std::cout << "fouttree: done" << std::endl;
 		}
@@ -90,6 +91,9 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "quit") {
 			return;
+		}
+		else if (tokens[0] == "yomikomiold") {
+			commander.yomikomi();
 		}
 		else if (tokens[0] == "yomikomi") {
 			commander.joseki.josekiInput(&(commander.tree));
@@ -592,7 +596,7 @@ void Commander::releaseAgentAndTree(SearchNode* const root) {
 
 void Commander::yomikomi()
 {
-
+	auto startTime = clock();
 
 	std::string ss;
 	int i = 0, j = 0;
@@ -678,6 +682,8 @@ void Commander::yomikomi()
 
 	node = test[0];
 	tree.setRoot(node, kyo, i_max);
+
+	std::cout << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒で読みこみ完了" << std::endl;
 
 }
 

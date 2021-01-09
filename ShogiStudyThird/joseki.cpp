@@ -235,6 +235,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history)  {
 	if (joseki_loop) {
 		nextForJosekiLoop(1);
 	}
+	std::cout << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒で出力完了" << std::endl;
 }
 
 void Joseki::backUp(std::vector<SearchNode*> history)
