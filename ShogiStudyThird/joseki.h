@@ -6,6 +6,7 @@
 #include "usi.h"
 #include <unordered_map>
 #include "tree.h"
+//#include <Windows.h>
 
 class Joseki {
     //共通
@@ -148,7 +149,6 @@ private:
 
     //メモリ共有を用いて読み込み書き込みを短縮する
     bool shareMemoryF = false;
-    HANDLE shareHandle;
     
     //出力
 public:

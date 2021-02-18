@@ -7,6 +7,9 @@
 #include <climits>
 #include <random>
 
+HANDLE shareHandle;
+
+
 //定跡フォルダーの中のファイル数を数える
 static int getFileCount() {
 	WIN32_FIND_DATA findFileData;
