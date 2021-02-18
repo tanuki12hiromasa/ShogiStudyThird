@@ -1,5 +1,6 @@
 ﻿#include "../stdafx.h"
 #include "nnue_feature.h"
+#include <set>
 
 namespace Eval::NNUE {
 
@@ -461,6 +462,20 @@ static constexpr IndexType kNumRegs = 16;
 			}
 		}
 #endif
-		return indexlist.list == rhs.indexlist.list;
+		std::set<EvalIndex> indexset(indexlist.list[0].begin(), indexlist.list[0].end());
+		for (const auto& idx : rhs.indexlist.list[0]) {
+			const auto itr = indexset.find(idx);
+			if (itr == indexset.end()) return false;
+			indexset.erase(itr);
+		}
+		if (!indexset.empty()) return false;
+		indexset.insert(indexlist.list[1].begin(), indexlist.list[1].end());
+		for (const auto& idx : rhs.indexlist.list[1]) {
+			const auto itr = indexset.find(idx);
+			if (itr == indexset.end()) return false;
+			indexset.erase(itr);
+		}
+		if (!indexset.empty()) return false;
+		return true;
 	}
 }

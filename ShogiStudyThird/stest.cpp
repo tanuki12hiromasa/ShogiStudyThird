@@ -241,11 +241,11 @@ bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int d
 			return false;
 		}
 		f.recede(k, moved, cap, c->move, cache);
-#if 0
 		if (f != cf) { //apery_kppt
 			std::cout << "error: feature recede" << std::endl;
 			std::cout << "kyokumen:\nposition " << k.toSfen() << "\n" << k.toBanFigure() << std::endl;
 			std::cout << "move: " << c->move.toUSI() << std::endl;
+#if 0
 			std::cout << "feature diff:" << std::endl;
 			for (int i = 0; i < 38; i++) {
 				if (f.idlist.list0[i] != cf.idlist.list0[i]) {
@@ -258,10 +258,10 @@ bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int d
 			if (f.idlist.material != cf.idlist.material) {
 				std::cout << "material " << f.idlist.material << " " << cf.idlist.material << std::endl;
 			}
+#endif
 			assert(f == cf);
 			return false;
 		}
-#endif
 	}
 	return true;
 }
@@ -272,7 +272,7 @@ void ShogiTest::test() {
 	BBkiki::init();
 	Evaluator::init();
 	std::cout << "initialized." << std::endl;
-#if 1
+#if 0
 	{
 		std::string sfen = "position sfen 4k4/5+p3/5P3/9/9/9/9/9/4K4 b 2r2b4g4s4n4l16p 1";
 		Kyokumen k(usi::split(sfen, ' '));
@@ -288,7 +288,8 @@ void ShogiTest::test() {
 		Move m3(18, 28, false);
 		checkKyokumenProceed(sfen3, m3, sfen2);
 	}
-#endif;
+#endif
+#if 0
 	{
 		string str17 = "position sfen k8/6g1p/2gppspnP/1lbr+P1Gp1/2G3n2/2l6/9/9/K8 b rb3s2n2l11p 1";
 		ShogiTest::genCapMoveCheck(str17);
@@ -364,6 +365,7 @@ void ShogiTest::test() {
 		ShogiTest::genMoveCheck(str2, moves2);
 		ShogiTest::genCapMoveCheck(str2);
 	}
+#endif
 	{
 		string str4 = "position startpos moves 2g2f 8c8d 7g7f 8d8e 8h7g 3c3d 7i8h 2b7g+ 8h7g 3a2b 2f2e 2b3c 3i3h 5a4b 5i6h 7a7b 4g4f 7b8c 3g3f 8c8d 2i3g 4a3b 3f3e 3d3e 3g4e 3c2b 2e2d 6a5b B*6f B*4d 6i7h 3e3f 9g9f 4d6f 7g6f 4c4d";
 		ShogiTest::checkFeature(str4);
@@ -378,7 +380,7 @@ void ShogiTest::test() {
 		string str5 = "position sfen ln5nl/1r2gkgs1/p1ppp2pp/1s3p1P1/1p3N3/P1PS1Pp2/1P1PP3P/2GK2SR1/LN3G2L b Bbp 1";
 		checkRecede(str5, 1);
 		string str4 = "position sfen 1r3g3/l2gk3l/3p4p/2p1+B1p2/p4s3/2P1P1Pb1/1+p1PSP2P/L2S3GL/1NGKNsr2 b N3Pn3p 1";
-		checkRecede(str4, 1);
+		checkRecede(str4, 2);
 		string str3 = "position sfen ln1gk1gnl/2s6/p1p1ppppp/3p3R1/4B4/2P5P/P2PPPP2/L3K4/1+rSG1GSNL w BSPn2p 1";
 		checkRecede(str3, 0);
 		string str2 = "position sfen ln1gk1gnl/2s6/p1p1ppppp/3p3R1/4B4/2P6/P2PPPP1P/L3K4/1+rSG1GSNL b BSPn2p 1";
