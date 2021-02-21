@@ -159,6 +159,7 @@ void SearchTree::proceed(SearchNode* node) {
 	rootPlayer.kyokumen.proceed(node->move);
 	rootPlayer.feature.set(rootPlayer.kyokumen);
 	history.push_back(node);
+	cv_deleteTrees.notify_all();
 }
 
 #pragma optimize("",on)

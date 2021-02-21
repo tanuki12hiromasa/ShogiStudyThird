@@ -6,8 +6,8 @@
 #include "nnue/nnue_evaluate.h"
 
 //使用する評価関数を指定する
-//#define USE_KPPT
-#define USE_NNUE
+#define USE_KPPT
+//#define USE_NNUE
 
 //bonanza6.0
 //using Evaluator = bonanza::bona_eval;

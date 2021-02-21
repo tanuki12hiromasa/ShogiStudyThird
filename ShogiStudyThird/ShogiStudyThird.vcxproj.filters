@@ -75,9 +75,6 @@
     <ClCompile Include="move_gen.cpp">
       <Filter>ソース ファイル\search</Filter>
     </ClCompile>
-    <ClCompile Include="evaluated_nodes.cpp">
-      <Filter>ソース ファイル\search</Filter>
-    </ClCompile>
     <ClCompile Include="agent.cpp">
       <Filter>ソース ファイル\search</Filter>
     </ClCompile>
@@ -126,9 +123,6 @@
       <Filter>ヘッダー ファイル\search</Filter>
     </ClInclude>
     <ClInclude Include="tree.h">
-      <Filter>ヘッダー ファイル\search</Filter>
-    </ClInclude>
-    <ClInclude Include="evaluated_nodes.h">
       <Filter>ヘッダー ファイル\search</Filter>
     </ClInclude>
     <ClInclude Include="bb_kiki.h">

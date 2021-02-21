@@ -17,6 +17,7 @@ private:
 
 	void startAgent();
 	void stopAgent();
+	void releaseAgent();
 	void go(const std::vector<std::string>& tokens);
 	std::pair<std::chrono::milliseconds, std::chrono::milliseconds> decide_timelimit(const TimeProperty time)const;
 	void info();
@@ -25,7 +26,7 @@ private:
 
 	SearchTree tree;
 	std::vector<std::unique_ptr<SearchAgent>> agents;
-	std::unique_ptr<std::thread> deleteThread;
+	std::thread deleteThread;
 	int agentNum = 6;
 	bool permitPonder;
 	bool continuousTree = true;

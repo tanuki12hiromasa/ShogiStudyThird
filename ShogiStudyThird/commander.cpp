@@ -96,7 +96,7 @@ Commander::~Commander() {
 	for (auto& ag : agents) {
 		ag->terminate();
 	}
-	if (deleteThread != nullptr && deleteThread->joinable())deleteThread->detach();
+	if (deleteThread.joinable())deleteThread.detach();
 	if(go_thread.joinable()) go_thread.join();
 	if(info_thread.joinable())info_thread.join();
 }
@@ -475,6 +475,7 @@ void Commander::chakushu(SearchNode* const bestchild) {
 		<< " score cp " << static_cast<int>(root->eval) << " nodes " << SearchNode::getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
+	releaseAgent();
 	if (permitPonder) {
 		startAgent();
 	}
@@ -484,5 +485,19 @@ void Commander::chakushu(SearchNode* const bestchild) {
 void Commander::position(const std::vector<std::string>& tokens) {
 	std::lock_guard<std::mutex> lock(treemtx);
 	stopAgent();
+	releaseAgent();
 	tree.set(tokens);
+}
+
+void Commander::releaseAgent() {
+	if (agents.empty())return;
+	if (deleteThread.joinable()) deleteThread.join();
+	auto tmpthread =  std::thread(
+		[prevAgents = std::move(agents)]{
+			for (auto& ag : prevAgents) {
+				ag->terminate();
+			}
+		});
+	deleteThread.swap(tmpthread);
+	agents.clear();
 }

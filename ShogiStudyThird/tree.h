@@ -10,6 +10,7 @@
 class SearchTree {
 public:
 	SearchTree();
+	~SearchTree();
 	void set(const Kyokumen& startpos, const std::vector<Move>& moves);
 	void set(const std::vector<std::string>& usitokens);
 	void makeNewTree(const Kyokumen& startpos,const std::vector<Move>& moves);
