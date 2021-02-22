@@ -17,20 +17,16 @@ private:
 
 	void startAgent();
 	void stopAgent();
+	void releaseAgent();
 	void go(const std::vector<std::string>& tokens);
 	std::pair<std::chrono::milliseconds, std::chrono::milliseconds> decide_timelimit(const TimeProperty time)const;
 	void info();
 	void chakushu(SearchNode* const bestmove);
 	void position(const std::vector<std::string>& tokens);
-	void releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes);
-	void releaseAgentAndTree(SearchNode* const root);
-
-	void searchStatistics(const std::vector<std::string>& token);
-	void evalranking(const int searchtime, const std::string& filename, const std::string& filepos);
 
 	SearchTree tree;
 	std::vector<std::unique_ptr<SearchAgent>> agents;
-	std::unique_ptr<std::thread> deleteThread;
+	std::thread deleteThread;
 	int agentNum = 6;
 	bool permitPonder;
 	bool continuousTree = true;

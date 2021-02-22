@@ -161,7 +161,6 @@
     <ClCompile Include="bb_kiki.cpp" />
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="commander.cpp" />
-    <ClCompile Include="evaluated_nodes.cpp" />
     <ClCompile Include="joseki.cpp" />
     <ClCompile Include="koma.cpp" />
     <ClCompile Include="kyokumen.cpp" />
@@ -190,7 +189,6 @@
     <ClInclude Include="bb_kiki.h" />
     <ClInclude Include="bitboard.h" />
     <ClInclude Include="commander.h" />
-    <ClInclude Include="evaluated_nodes.h" />
     <ClInclude Include="evaluator.h" />
     <ClInclude Include="joseki.h" />
     <ClInclude Include="koma.h" />

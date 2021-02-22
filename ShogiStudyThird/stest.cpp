@@ -202,13 +202,11 @@ bool ShogiTest::checkRecede(std::string sfen,const int depth) {
 	bool result = checkRecedeR(k, f, root, depth);
 	if (result) {
 		std::cout << "recede test ok" << std::endl;
-		root->deleteTree();
 		delete root;
 		return true;
 	}
 	else {
 		std::cout << "recede test ng" << std::endl;
-		root->deleteTree();
 		delete root;
 		return false;
 	}
@@ -216,23 +214,20 @@ bool ShogiTest::checkRecede(std::string sfen,const int depth) {
 
 bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int depth) {
 	const auto moves = MoveGenerator::genMove(p->move, k);
-	p->children.reserve(moves.size());
-	for (const auto move : moves) {
-		p->addChild(move);
-	}
+	p->addChildren(moves);
 	const Kyokumen ck = k;
 	const Feature cf = f;
-	for (const auto& c : p->children) {
+	for (auto& c : p->children) {
 		const auto cache = f.getCache();
-		f.proceed(k, c->move);
-		const auto cap = k.proceed(c->move);
+		f.proceed(k, c.move);
+		const auto cap = k.proceed(c.move);
 		if (depth > 0) {
-			bool result = checkRecedeR(k, f, c, depth - 1);
+			bool result = checkRecedeR(k, f, &c, depth - 1);
 			if (!result) {
 				return false;
 			}
 		}
-		const auto moved = k.recede(c->move, cap);
+		const auto moved = k.recede(c.move, cap);
 		if (k != ck && k.eachKomaBB == ck.eachKomaBB) {
 			std::cout << "error: kyokumen recede" << std::endl;
 			std::cout << "correct:\n" << ck.toBanFigure() << std::endl;
@@ -240,11 +235,11 @@ bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int d
 			assert(k == ck);
 			return false;
 		}
-		f.recede(k, moved, cap, c->move, cache);
+		f.recede(k, moved, cap, c.move, cache);
 		if (f != cf) { //apery_kppt
 			std::cout << "error: feature recede" << std::endl;
 			std::cout << "kyokumen:\nposition " << k.toSfen() << "\n" << k.toBanFigure() << std::endl;
-			std::cout << "move: " << c->move.toUSI() << std::endl;
+			std::cout << "move: " << c.move.toUSI() << std::endl;
 #if 0
 			std::cout << "feature diff:" << std::endl;
 			for (int i = 0; i < 38; i++) {

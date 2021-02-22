@@ -65,9 +65,6 @@ void Commander::execute(const std::string& enginename) {
 			commander.gameInit();
 			std::cout << "readyok" << std::endl;
 		}
-		else if (tokens[0] == "searchstatistics") {
-			commander.searchStatistics(tokens);
-		}
 		else if (tokens[0] == "staticevaluate") {
 			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
 		}
@@ -99,7 +96,7 @@ Commander::~Commander() {
 	for (auto& ag : agents) {
 		ag->terminate();
 	}
-	if (deleteThread != nullptr && deleteThread->joinable())deleteThread->detach();
+	if (deleteThread.joinable())deleteThread.detach();
 	if(go_thread.joinable()) go_thread.join();
 	if(info_thread.joinable())info_thread.join();
 }
@@ -437,7 +434,7 @@ void Commander::info() {
 						const auto& root = PV[0];
 						std::cout << std::fixed;
 						std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << (PV.size()-1)
-							<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << " nps " << nps << std::endl;
+							<< " score cp " << static_cast<int>(root->eval) << " nodes " << SearchNode::getNodeCount() << " nps " << nps << std::endl;
 					}
 					else {
 						std::cout << "info string failed to get pv" << std::endl;
@@ -475,10 +472,10 @@ void Commander::chakushu(SearchNode* const bestchild) {
 	for (SearchNode* node = bestchild; depth < 15 && node != nullptr; depth++,node = node->getBestChild()) pvstr += node->move.toUSI() + ' ';
 	std::cout << std::fixed;
 	std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << depth
-		<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
+		<< " score cp " << static_cast<int>(root->eval) << " nodes " << SearchNode::getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
-	releaseAgentAndBranch(root, {bestchild});
+	releaseAgent();
 	if (permitPonder) {
 		startAgent();
 	}
@@ -488,118 +485,19 @@ void Commander::chakushu(SearchNode* const bestchild) {
 void Commander::position(const std::vector<std::string>& tokens) {
 	std::lock_guard<std::mutex> lock(treemtx);
 	stopAgent();
-	const auto prevRoot = tree.getRoot();
-	if (continuousTree) {
-		auto result = tree.set(tokens);
-		if (result.first) {
-			releaseAgentAndBranch(prevRoot, std::move(result.second));
-		}
-		else {
-			tree.makeNewTree(tokens);
-			releaseAgentAndTree(prevRoot);
-		}
-	}
-	else {
-		tree.makeNewTree(tokens);
-		releaseAgentAndTree(prevRoot);
-	}
+	releaseAgent();
+	tree.set(tokens);
 }
 
-void Commander::releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes) {
-	auto tmpthread = std::move(deleteThread);
-	deleteThread = std::unique_ptr<std::thread>( new std::thread(
-		[&tree=tree,prevThread = std::move(tmpthread), prevAgents = std::move(agents), prevRoot, savedNodes = std::move(newNodes)]
-		{
-			if(prevThread != nullptr && prevThread->joinable()) prevThread->join();
+void Commander::releaseAgent() {
+	if (agents.empty())return;
+	if (deleteThread.joinable()) deleteThread.join();
+	auto tmpthread =  std::thread(
+		[prevAgents = std::move(agents)]{
 			for (auto& ag : prevAgents) {
 				ag->terminate();
 			}
-			tree.deleteBranch(prevRoot, savedNodes);
-		}));
+		});
+	deleteThread.swap(tmpthread);
 	agents.clear();
-}
-
-void Commander::releaseAgentAndTree(SearchNode* const root) {
-	auto tmpthread = std::move(deleteThread);
-	deleteThread = std::unique_ptr<std::thread>(new std::thread(
-		[&tree = tree, prevThread = std::move(tmpthread), prevAgents = std::move(agents), root]
-		{
-			if (prevThread != nullptr && prevThread->joinable()) prevThread->join();
-			for (auto& ag : prevAgents) {
-				ag->terminate();
-			}
-			tree.deleteTree(root);
-		}));
-	agents.clear();
-}
-
-void Commander::searchStatistics(const std::vector<std::string>& token) {
-	if (token.size() > 4) {
-		if (token[1] == "evalranking") {
-			//searchstatistics evalranking <探索時間(s)> <出力ファイル名(拡張子は不要)> <出力先ディレクトリ>
-			//という形式になっている　その時のノード数と評価値上位30位までの手の指し手,評価値,探索深さ期待値をファイルに出力する
-			std::string filepos = token[4];
-			for (int i = 5; i < token.size(); i++) {
-				filepos += " " + token[i];
-			}
-			evalranking(std::stoi(token[2]), token[3], filepos);
-		}
-	}
-}
-
-void Commander::evalranking(const int searchtime,const std::string& filename,const std::string& filepos) {
-	using namespace std::chrono_literals;
-	std::cout << "start make evalrank statistics" << std::endl;
-	std::cout << std::fixed << std::setprecision(2);
-	using med = std::tuple<Move, double, double>;
-	std::ofstream fs(filepos + "/" + filename + ".evalranking");
-	if (!fs) {
-		std::cerr << "file access error" << std::endl;
-		return;
-	}
-	fs << std::fixed << std::setprecision(2);
-	fs << tree.getRootPlayer().kyokumen.toSfen() << "\n";
-	tree.evaluationcount = 0ull;
-	info_alive = false;
-	startAgent();
-	const auto starttime = std::chrono::system_clock::now();
-	const auto spantime = 200ms;
-	int t = 1;
-	do {
-		std::this_thread::sleep_until(starttime + spantime * t);
-		std::vector<med> meds;
-		const auto evalcount = tree.getEvaluationCount();
-		const auto& root = tree.getRoot();
-		for (const auto child : root->children) {
-			meds.push_back(std::make_tuple(child->move, child->eval.load(), child->mass.load()));
-		}
-		std::list<med> ranking;
-		for (const auto& child : meds) {
-			const double eval = std::get<1>(child);
-			auto it = ranking.begin();
-			for (int i = 0; i < 30; i++) {
-				if (it == ranking.end()) {
-					ranking.push_back(child);
-					break;
-				}
-				if (eval < std::get<1>(*it)) {
-					ranking.insert(it, child);
-					break;
-				}
-				it++;
-			}
-		}
-		//std::cout << evalcount << " besstmove:" << std::get<0>(ranking.front()).toUSI() << "(" << std::get<1>(ranking.front()) << "," << std::get<2>(ranking.front()) << ")\n";
-		fs << evalcount << ":";
-		int n = 0;
-		for (const auto child : ranking) {
-			fs << " [" << std::get<0>(child).toUSI() << "," << std::get<1>(child) << "," << std::get<2>(child) << "]";
-			if (++n >= 30) break;
-		}
-		fs << "\n";
-		t++;
-	} while (std::chrono::system_clock::now() <= (starttime + std::chrono::seconds(searchtime)));
-	stopAgent();
-	std::cout << "finished." << std::endl;
-	info();
 }

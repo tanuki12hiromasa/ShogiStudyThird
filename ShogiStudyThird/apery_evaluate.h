@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "apery_feature.h"
-#include "evaluated_nodes.h"
 #include "player.h"
 
 namespace apery {
@@ -8,10 +7,7 @@ namespace apery {
 	class apery_evaluator {
 	public:
 		static void init();
-		static void evaluate(EvaluatedNodes_full& en);
-		static void evaluate(EvaluatedNodes_diff& en, const apery_feat& pfeat);
-		static void evaluate(std::vector<SearchNode*> nodes, const SearchPlayer& parent_player);
-		static void evaluate(SearchNode* node, const SearchPlayer& player);//playerはnode自身のを渡す
+
 		static double evaluate(const SearchPlayer& player);
 	};
 }
