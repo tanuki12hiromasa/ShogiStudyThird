@@ -9,24 +9,6 @@
 
 HANDLE shareHandle;
 
-
-//定跡フォルダーの中のファイル数を数える
-static int getFileCount() {
-	WIN32_FIND_DATA findFileData;
-	HANDLE hFind;
-	auto target = L"josekiFolder/*.bin";
-	int fileCount = 0;
-	hFind = FindFirstFile(target, &findFileData);
-	if (hFind != INVALID_HANDLE_VALUE) {
-		do {
-			++fileCount;
-			//_tprintf(TEXT("%d: %s\n"), ++fileCount, findFileData.cFileName);
-		} while (FindNextFile(hFind, &findFileData));
-		FindClose(hFind);
-	}
-	return fileCount;
-}
-
 void Joseki::setOption(std::vector<std::string> tokens){
 	auto t = tokens[2];
 	if (t == "joseki_on") {
@@ -80,17 +62,8 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "joseki_backup_T_d") {
 		backup_T_d = std::stoi(tokens[4]);
 	}
-	else if (t == "pruning_depth") {
-		pruning_depth = std::stoi(tokens[4]);
-	}
 	else if (t == "pruning_T_c") {
 		pruning_T_c = std::stoi(tokens[4]);
-	}
-	else if (t == "leaveNodeCount") {
-		leaveNodeCount = std::stoi(tokens[4]);
-	}
-	else if (t == "endBorderCount") {
-		endBorderCount = std::stoi(tokens[4]);
 	}
 	else if (t == "shareMemoryF") {
 		shareMemoryF = (tokens[4] == "true");
