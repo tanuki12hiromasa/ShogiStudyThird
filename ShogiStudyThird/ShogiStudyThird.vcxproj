@@ -105,6 +105,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,6 +145,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -158,7 +161,6 @@
     <ClCompile Include="bb_kiki.cpp" />
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="commander.cpp" />
-    <ClCompile Include="evaluated_nodes.cpp" />
     <ClCompile Include="joseki.cpp" />
     <ClCompile Include="koma.cpp" />
     <ClCompile Include="kyokumen.cpp" />
@@ -168,6 +170,8 @@
     </ClCompile>
     <ClCompile Include="move.cpp" />
     <ClCompile Include="move_gen.cpp" />
+    <ClCompile Include="nnue\nnue_evaluate.cpp" />
+    <ClCompile Include="nnue\nnue_feature.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -186,9 +190,7 @@
     <ClInclude Include="bb_kiki.h" />
     <ClInclude Include="bitboard.h" />
     <ClInclude Include="commander.h" />
-    <ClInclude Include="evaluated_nodes.h" />
     <ClInclude Include="evaluator.h" />
-    <ClInclude Include="feature.h" />
     <ClInclude Include="joseki.h" />
     <ClInclude Include="koma.h" />
     <ClInclude Include="koma_motion.h" />
@@ -196,11 +198,21 @@
     <ClInclude Include="leaf_guard.h" />
     <ClInclude Include="move.h" />
     <ClInclude Include="move_gen.h" />
+    <ClInclude Include="nnue\features_common.h" />
+    <ClInclude Include="nnue\halfkp_256x2-32-32.h" />
+    <ClInclude Include="nnue\half_kp.h" />
+    <ClInclude Include="nnue\layers\affine_transform.h" />
+    <ClInclude Include="nnue\layers\clipped_relu.h" />
+    <ClInclude Include="nnue\layers\input_slice.h" />
+    <ClInclude Include="nnue\layers\sum.h" />
+    <ClInclude Include="nnue\nnue_common.h" />
+    <ClInclude Include="nnue\nnue_evaluate.h" />
+    <ClInclude Include="nnue\nnue_feature.h" />
+    <ClInclude Include="nnue\nnue_param.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="stest.h" />
-    <ClInclude Include="Timer.h" />
     <ClInclude Include="time_property.h" />
     <ClInclude Include="tree.h" />
     <ClInclude Include="usi.h" />

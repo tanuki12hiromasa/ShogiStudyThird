@@ -6,11 +6,10 @@
 #include "usi.h"
 #include <unordered_map>
 #include "tree.h"
-//#include <Windows.h>
 
 class Joseki {
-    //共通
 public:
+    //オプション設定
     void setOption(std::vector<std::string>tokens);
     void printOption();
     bool getYomikomiOn() { return yomikomi_on; }
@@ -92,15 +91,10 @@ private:
             ifs.close();
         }
 
-        std::ofstream ofs(loopFileName);
-        ofs << r + add << std::endl;
-        ofs.close();
-        return r;
+    //定跡がオンになってるか取得。なってなかったら以降は定跡を使わない
+    inline bool getJosekiOn() {
+        return joseki_on;
     }
-    //ノード数を改めて計算しなくて済むように格納する
-    size_t treeNodeCount = 0;
-    //先手かどうか。とりあえず勝敗判定に使用
-    bool isSente = false;
 
     //保存するノード
     struct josekinode {

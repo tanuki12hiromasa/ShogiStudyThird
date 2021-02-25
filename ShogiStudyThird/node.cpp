@@ -13,11 +13,83 @@ double SearchNode::Ts_c = 1.0;
 int SearchNode::Ts_FunctionCode = 0;
 double SearchNode::T_eval = 40;
 double SearchNode::T_depth = 90;
-int SearchNode::QS_depth = 0;
+int SearchNode::QS_depth = 8;
 int SearchNode::Es_FunctionCode = 0;
 double SearchNode::Es_c = 1.0;
 int SearchNode::PV_FuncCode = 0;
 double SearchNode::PV_c = 0;
+std::atomic_int64_t SearchNode::nodecount{ 0 };
+
+SearchNode::Children::~Children() {
+	if (list) {
+		delete[] list;
+		nodecount -= count;
+	}
+}
+
+void SearchNode::Children::sporn(const std::vector<Move>& moves) {
+	count = moves.size();
+	list = new SearchNode[count];
+	for (int i = 0; i < count; i++) {
+		list[i].move = moves[i];
+	}
+	nodecount += count;
+}
+
+void SearchNode::Children::clear() {
+	if (list) {
+		delete[] list;
+		list = nullptr;
+		nodecount -= count;
+	}
+	count = 0;
+}
+
+
+void SearchNode::Children::sort(SearchNode* list, int l, int h) {
+	if (l >= h)return;
+	auto i = l, j = h;
+	auto x = list[(i + j) / 2].eval.load();
+	while (true) {
+		while (list[i].eval.load() < x)i++;
+		while (x < list[j].eval.load())j--;
+		if (i >= j)break;
+		list[i].swap(list[j]);
+		i++; j--;
+	}
+	sort(list, l, i - 1);
+	sort(list, j + 1, h);
+}
+
+void SearchNode::Children::sort() {
+	if (empty())return;
+	//評価値順にソートする(クイックソート)
+	sort(list, 0, count - 1);
+}
+
+void SearchNode::Children::swap(SearchNode::Children& children) {
+	if (list && children.list) {
+		const auto temp_count = count;
+		count = children.count; children.count = temp_count;
+		const auto temp_list = list;
+		list = children.list; children.list = temp_list;
+	}
+}
+
+SearchNode::Children* SearchNode::Children::purge() {
+	Children* c = new Children();
+	c->list = list;
+	c->count = count;
+	list = nullptr;
+	count = 0;
+	return c;
+}
+
+SearchNode::SearchNode():origin_eval(0) {
+	status = State::N;
+	eval = 0;
+	mass = 0;
+}
 
 SearchNode::SearchNode(const Move& move)
 	:move(move)
@@ -27,36 +99,30 @@ SearchNode::SearchNode(const Move& move)
 	mass = 0;
 }
 
-size_t SearchNode::deleteTree() {
-	if (children.empty()) {
-		return 0;
+void SearchNode::swap(SearchNode& node) {
+	children.swap(node.children);
+	const auto temp_move = move;
+	move = node.move; node.move = temp_move;
+	if (status.load() != node.status.load()) {
+		const auto temp_status = status.load();
+		status = node.status.load(); node.status = temp_status;
 	}
-	std::vector<SearchNode*> nodes = children;
-	children.clear();
-	status = State::Terminal;
-	size_t delnum = nodes.size();
-	while (!nodes.empty()) {
-		SearchNode* node = nodes.back();
-		nodes.pop_back();
-		delnum += node->children.size();
-		nodes.insert(nodes.end(), node->children.begin(), node->children.end());
-		delete node;
+	std::swap(origin_eval, node.origin_eval);
+	const auto temp_eval = eval.load();
+	eval = node.eval.load(); node.eval = temp_eval;
+	if (mass.load() != node.mass.load()) {
+		const auto temp_mass = mass.load();
+		mass = node.mass.load(); node.mass = temp_mass;
 	}
-	return delnum;
 }
 
-SearchNode* SearchNode::addChild(const Move& move) {
-	SearchNode* child = new SearchNode(move);
-	children.push_back(child);
-	return child;
+SearchNode::Children* SearchNode::purge() {
+	status = State::NotExpanded;
+	return children.purge();
 }
 
-SearchNode* SearchNode::addCopyChild(const SearchNode* const origin) {
-	SearchNode* child = new SearchNode(origin->move);
-	child->eval = origin->eval.load();
-	child->origin_eval = origin->origin_eval;
-	children.push_back(child);
-	return child;
+void SearchNode::addChildren(const std::vector<Move>& moves) {
+	children.sporn(moves);
 }
 
 void SearchNode::setMateVariation(const double childmin) {
@@ -150,7 +216,7 @@ double SearchNode::getTcMcVariance()const {
 	std::vector<double> cmasses;
 	double mean = 0;
 	for (const auto& child : children) {
-		const double m = child->mass;
+		const double m = child.mass;
 		cmasses.push_back(m);
 		mean += m;
 	}
@@ -165,8 +231,8 @@ double SearchNode::getTcMcVarianceExpection()const {
 	std::vector<std::pair<double, double>> ems;
 	double min = std::numeric_limits<double>::max();
 	for (const auto& child : children) {
-		const double e = child->eval;
-		ems.push_back(std::make_pair(e, child->mass.load()));
+		const double e = child.eval;
+		ems.push_back(std::make_pair(e, child.mass.load()));
 		if (e < min) {
 			min = e;
 		}
@@ -236,10 +302,10 @@ SearchNode* SearchNode::getBestChild()const {
 		default:
 		case 0: {
 			double min = std::numeric_limits<double>::max();
-			for (const auto child : children) {
-				const double e = child->eval - child->mass * PV_c;
+			for (auto& child : children) {
+				const double e = child.eval - child.mass * PV_c;
 				if (e < min) {
-					best = child;
+					best = &child;
 					min = e;
 				}
 			}
@@ -249,10 +315,10 @@ SearchNode* SearchNode::getBestChild()const {
 			using ddn = std::tuple<double, double, SearchNode*>;
 			double emin = std::numeric_limits<double>::max();
 			std::vector<ddn> emnvec;
-			for (const auto& child : children) {
-				const double e = child->eval;
-				const double m = child->mass;
-				emnvec.push_back(std::make_tuple(e, m, child));
+			for (auto& child : children) {
+				const double e = child.eval;
+				const double m = child.mass;
+				emnvec.push_back(std::make_tuple(e, m, &child));
 				if (e < emin) {
 					emin = e;
 				}
@@ -269,12 +335,12 @@ SearchNode* SearchNode::getBestChild()const {
 		}
 		case 2: {
 			double min = std::numeric_limits<double>::max();
-			for (const auto child : children) {
-				const double x = child->mass.load();
+			for (auto& child : children) {
+				const double x = child.mass.load();
 				double p = PV_c * ((x >= 1) ? (1 / x) : 1);
-				const double e = child->eval * (1.0 - p) + origin_eval * p;
+				const double e = child.eval * (1.0 - p) + origin_eval * p;
 				if (e < min) {
-					best = child;
+					best = &child;
 					min = e;
 				}
 			}
@@ -284,26 +350,62 @@ SearchNode* SearchNode::getBestChild()const {
 			const double dbound = (mass - 1) * PV_c;
 			SearchNode* best = nullptr;
 			double min = std::numeric_limits<double>::max();
-			for (const auto child : children) {
-				const double ce = child->eval;
-				if (child->mass >= dbound && ce < min) {
+			for (auto& child : children) {
+				const double ce = child.eval;
+				if ((ce <= -mateScoreBound || min >= mateScoreBound || child.mass >= dbound) && ce < min) {
 					min = ce;
-					best = child;
+					best = &child;
 				}
 			}
 			if (best != nullptr) {
 				return best;
 			}
 			else {
-				for (const auto child : children) {
-					const double ce = child->eval;
+				for (auto& child : children) {
+					const double ce = child.eval;
 					if (ce < min) {
 						min = ce;
-						best = child;
+						best = &child;
 					}
 				}
 				return best;
 			}
 		}
+	}
+}
+
+double SearchNode::getChildRate(SearchNode* const child, const double T)const {
+	using dn = std::pair<double, SearchNode*>;
+	double emin = std::numeric_limits<double>::max();
+	std::vector<dn> nodes; nodes.reserve(children.size());
+	for (auto& c : children) {
+		const double e = c.eval;
+		nodes.push_back(std::make_pair(e, &c));
+		if (e < emin) {
+			emin = e;
+		}
+	}
+	double Z = 0;
+	double childexp = 0;
+	for (const auto node : nodes) {
+		const double exp = std::exp(-(node.first - emin) / T);
+		Z += exp;
+		if (node.second == child) {
+			childexp = exp;
+		}
+	}
+	return childexp / Z;
+}
+
+int SearchNode::getMateNum()const {
+	const double e = eval.load();
+	if (e >= mateScoreBound) {
+		return (mateScore - e) / mateOneScore;
+	}
+	else if(e <= -mateScoreBound) {
+		return (-mateScore - e) / mateOneScore;
+	}
+	else {
+		return -std::numeric_limits<int>::min();
 	}
 }

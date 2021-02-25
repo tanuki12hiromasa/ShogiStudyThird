@@ -12,14 +12,13 @@ HANDLE shareHandle;
 void Joseki::setOption(std::vector<std::string> tokens){
 	auto t = tokens[2];
 	if (t == "joseki_on") {
-		yomikomi_on = (tokens[4] == "true");
+		joseki_on = (tokens[4] == "true");
 	}
-	else if (t == "josekifoldername") {
-		josekiFolderName = tokens[4];
-		loopFileName = josekiFolderName + "\\next.txt";
+	else if (t == "joseki_folder_name") {
+		joseki_folder_name = tokens[4];
 	}
-	else if (t == "josekiinputname") {
-		setInputFileName(tokens[4]);
+	else if (t == "joseki_input_name") {
+		joseki_input_file_name = tokens[4];
 	}
 	else if (t == "josekiinputfilename") {
 		inputFileName = josekiFolderName + "\\" + tokens[4];
