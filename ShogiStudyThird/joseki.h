@@ -13,12 +13,13 @@ public:
     void setOption(std::vector<std::string>tokens);
     void printOption();
     bool getYomikomiOn() { return yomikomi_on; }
-    void setNodeCount(size_t count) { treeNodeCount = count; };
+    void setNodeCount(size_t count) { treeNodeCount = count; }
+
     //探索深さ指標が5.5を超えたら探索を終了
     bool notEndGo(const SearchNode* root) {
         if (pruning_on) {
             //std::cout << root->getMass() << std::endl;
-            if (root->getMass() > pruning_depth) {
+            if (root->mass > pruning_depth) {
                 return false;
             }
             else {
@@ -32,7 +33,7 @@ public:
     bool deepEnough(const SearchNode* root) {
         if (pruning_on) {
             //std::cout << root->getMass() << std::endl;
-            if (root->getMass() < pruning_depth) {
+            if (root->mass < pruning_depth) {
                 return false;
             }
             else {
@@ -44,7 +45,7 @@ public:
         }
     }
     //評価値の絶対値が600を超えたら対局終了
-    bool endBattle(const SearchNode* root,std::vector<SearchNode*>history) {
+    bool endBattle(const SearchNode* root, std::vector<SearchNode*>history) {
         if (history.size() >= endBorderCount) {
             return true;
         }
@@ -90,6 +91,7 @@ private:
             ifs >> r;
             ifs.close();
         }
+    }
 
     //定跡がオンになってるか取得。なってなかったら以降は定跡を使わない
     inline bool getJosekiOn() {
@@ -123,7 +125,7 @@ private:
                 << std::endl;
         }
     };
-    
+
     //時間計測用
     time_t startTime;
     std::string timerStart() {
@@ -140,18 +142,23 @@ private:
     //評価値によって強制終了した際の評価値に応じた勝敗
     int endBattleResult = 0;
     int endBorderCount = 999999;
-    
+
     size_t treeNodeCount;
+    bool isSente;
+    bool joseki_on;
+
+    std::string joseki_folder_name;
+    std::string joseki_input_file_name;
 
     //出力
 public:
     //定跡書き出し
     void josekiOutput(const std::vector<SearchNode*> const history);
     //定跡書き出し判定付きの書き出し
-    void josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens);
+    void josekiOutputIGameOver(const std::vector<SearchNode*> const history, std::vector<std::string> tokens);
     //定跡をテキスト形式で書き出し。人の目で見てわかりやすいように。
     void josekiTextOutput(const std::vector<SearchNode*> const history);
-    SearchNode* getJosekiNodes()const { return nodesForProgram[0];}
+    SearchNode* getJosekiNodes()const { return nodesForProgram[0]; }
     Kyokumen getKyokumen()const { return kyokumen; }
     size_t getChildCount()const { return childCount; }
     //末端からのバックアップ
@@ -174,7 +181,7 @@ private:
     std::string outputFileName = "joseki\\defaultjoseki_output.bin";
     std::string outputFileInfoName = "joseki\\defaultjoseki_output_info.txt";
     std::string result = "none";
-    
+
     double backup_T_e = 1;
     double backup_T_d = 1;
 
@@ -222,11 +229,11 @@ public:
     size_t pruning(SearchNode* root);
 private:
     //指定されたノードに対して再帰的に枝刈りを行う
-    size_t partialPruning(SearchNode* node, std::vector<SearchNode*>history,double select = -1,int depth = 10,double backupRate = 1);
+    size_t partialPruning(SearchNode* node, std::vector<SearchNode*>history, double select = -1, int depth = 10, double backupRate = 1);
     //実際の枝刈り処理を行う
     size_t pruningExecuter(SearchNode* node, std::vector<SearchNode*>history);
     //枝刈りを行うものの設定を呼び出す関数
-    bool isPruning(SearchNode* node, double select = 1,int depth = 10,double backupRate = 1);
+    bool isPruning(SearchNode* node, double select = 1, int depth = 10, double backupRate = 1);
     ////深さバックアップ温度再計算用の温度
     //double T_d = 100;
     double pruningBorder = 0.1;
@@ -239,4 +246,5 @@ private:
     double pruning_T_c = 40;
     //枝刈り時に残す残すノードの数(上位ノード)
     int leaveNodeCount = 0;
+
 };

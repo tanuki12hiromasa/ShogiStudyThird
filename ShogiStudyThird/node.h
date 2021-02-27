@@ -100,6 +100,8 @@ public:
 	SearchNode* getBestChild()const;
 	double getChildRate(SearchNode* const child,const double T)const;
 	int getMateNum()const;
+
+	State getState() const { return status; }
 private:
 	void swap(SearchNode& node);
 	Children* purge();

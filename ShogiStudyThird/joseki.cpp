@@ -138,7 +138,7 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history) {
 	ofs << "nodeCount," << nodeCount << std::endl;
 	ofs << moveHis << std::endl;
 	ofs << usiHis << std::endl;
-	ofs << "depth," << nq.front()->getMass() << std::endl;
+	ofs << "depth," << nq.front()->mass << std::endl;
 
 	//ノードの数が多すぎるとメモリの限界を超えるため、出力を中止する
 	ofs << "nodesize" << "," << sizeof(josekinode) << std::endl;
@@ -180,16 +180,18 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history) {
 
 	nodes[0] = history.front();
 	for (index = 0; index < nodeCount; ++index) {
-		const SearchNode* node = nodes[index];	//nodesから注目ノードを取り出し
+		SearchNode* node = nodes[index];	//nodesから注目ノードを取り出し
 		const size_t childCount = node->children.size();
 		SearchNode::State state = node->getState();
 		if (childCount > 0) {
 			state = SearchNode::State::Expanded;
 		}
-		jn[index] = josekinode(index, state, node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
+		jn[index] = josekinode(index, state, node->move.getU(), node->mass, node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
+
 		for (int i = 0; i < childCount; ++i) {	//子ノードをnodesに格納
-			nodes[childIndex + i] = node->children[i];
+			nodes[childIndex + i] = &(node->children[i]);
 		}
+
 		childIndex += childCount;	//子ノードの数だけchildIndexを進める
 		if (index % (nodeCount / 10) == 0) {	//途中経過
 			std::cout << (index / (nodeCount / 10) * 10) << "%,Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
@@ -234,8 +236,8 @@ void Joseki::backUp(std::vector<SearchNode*> history)
 		double emin = 99999;
 		std::vector<dd> emvec;
 		for (const auto& child : node->children) {
-			const double eval = child->getEvaluation();
-			const double mass = child->mass;
+			const double eval = child.getEvaluation();
+			const double mass = child.mass;
 			emvec.push_back(std::make_pair(eval, mass));
 			if (eval < emin) {
 				emin = eval;
@@ -307,7 +309,7 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 	}
 	ofs << std::endl;
 
-	ofs << "depth," << nq.front()->getMass() << std::endl;
+	ofs << "depth," << nq.front()->mass << std::endl;
 
 	ofs.close();	//書き出し中にファイル情報を確認するため、いったん閉じる
 
@@ -320,17 +322,17 @@ void Joseki::josekiTextOutput(const std::vector<SearchNode*> const history) {
 	nodes[0] = history.front();
 	fprintf(fp, "インデックス,展開状態,指し手,USI指し手,探索深さ指標,価値,子ノードの数,子ノードの先頭インデックス\n");
 	for (index = 0; index < nodeCount; ++index) {
-		const auto node = nodes[index];	//nodesから注目ノードを取り出し
+		auto node = nodes[index];	//nodesから注目ノードを取り出し
 		const auto childCount = node->children.size();
 		SearchNode::State state = node->getState();
 		if (childCount > 0) {
 			state = SearchNode::State::Expanded;
 		}
-		jn[index] = josekinode(index, state, node->move.getU(), node->getMass(), node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
+		jn[index] = josekinode(index, state, node->move.getU(), node->mass, node->getEvaluation(), childCount, childIndex);	//注目ノードをjnに収める
 		for (int i = 0; i < childCount; ++i) {	//子ノードをnodesに格納
-			nodes[childIndex + i] = node->children[i];
+			nodes[childIndex + i] = &(node->children[i]);
 		}
-		fprintf(fp,"%d,%d,%d,%s,%f,%f,%d,%d\n", index, state, node->move.getU(),node->move.toUSI().c_str(), node->getMass(), node->getEvaluation(), childCount, childIndex);
+		fprintf(fp,"%d,%d,%d,%s,%f,%f,%d,%d\n", index, state, node->move.getU(),node->move.toUSI().c_str(), node->mass, node->getEvaluation(), childCount, childIndex);
 		childIndex += childCount;	//子ノードの数だけchildIndexを進める
 	}
 
@@ -530,7 +532,7 @@ size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history
 	if (node->children.size() == 0) {
 		return r;
 	}
-	double mass = node->getMass();
+	double mass = node->mass;
 	history.push_back(node);
 	//枝刈り判定を行う
 	if (isPruning(node,select,depth,backupRate)) {
@@ -540,11 +542,11 @@ size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history
 		if (pruning_type >= 0) {
 			//実現確率の計算
 			if (select != -1) {
-				double CE = node->children[0]->getEvaluation();
+				double CE = node->children[0].getEvaluation();
 				//評価値の最大値の取得
-				for (const SearchNode* child : node->children) {
-					if (CE < child->getEvaluation()) {
-						CE = child->getEvaluation();
+				for (SearchNode& child : node->children) {
+					if (CE < child.getEvaluation()) {
+						CE = child.getEvaluation();
 					}
 				}
 				//バックアップ温度
@@ -556,12 +558,12 @@ size_t Joseki::partialPruning(SearchNode* node, std::vector<SearchNode*> history
 					T_c += 1 * pow(2, depth);
 				}
 				double Z = 0;
-				for (const SearchNode* child : node->children) {
-					Z += std::exp(-(child->getEvaluation() - CE) / T_c);
+				for (SearchNode& child : node->children) {
+					Z += std::exp(-(child.getEvaluation() - CE) / T_c);
 				}
 				for (int i = 0; i < node->children.size();++i) {
 					//再帰的に枝刈りを行う
-					SearchNode* child = node->children[i];
+					SearchNode* child = &node->children[i];
 					double s;
 					if (leaveNodeCount == 0 || i < leaveNodeCount) {
 						s = std::exp(-(child->getEvaluation() - CE) / T_c) / Z;
