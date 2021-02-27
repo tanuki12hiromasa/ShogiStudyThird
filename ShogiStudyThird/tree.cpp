@@ -181,35 +181,6 @@ std::pair<unsigned, SearchNode*> SearchTree::findRepetition(const Kyokumen& kyok
 	return std::make_pair(num, latestNode);
 }
 
-void SearchTree::foutTree()const {
-	time_t startTime = clock();
-
-
-	std::ofstream fs("treelog.txt");
-	std::queue<SearchNode*> nq;
-	fs << rootPlayer.kyokumen.toSfen() << "\n";
-	nq.push(history.front());
-	size_t index = 0;
-	size_t c_index = 1;
-	while (!nq.empty()) {
-		const SearchNode* const node = nq.front();
-		nq.pop(); 
-		int st = static_cast<int>(node->status.load());
-		fs << index << "," << st << "," << node->move.toUSI() << "," << node->eval << "," << node->mass << ",[,";
-		for (const auto c : node->children.) {
-			nq.push(c);
-			fs << c_index << ",";
-			c_index++;
-		}
-		fs << "]\n";
-		index++;
-	}
-	fs.close();
-
-
-	std::cout << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒経過" << std::endl;
-}
-
 void SearchTree::deleteTrees(SearchNode::Children* root) {
 	if (!root) return;
 	std::lock_guard<std::mutex> lock(mtx_deleteTrees);
