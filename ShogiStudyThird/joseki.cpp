@@ -64,9 +64,6 @@ void Joseki::setOption(std::vector<std::string> tokens){
 	else if (t == "pruning_T_c") {
 		pruning_T_c = std::stoi(tokens[4]);
 	}
-	else if (t == "shareMemoryF") {
-		shareMemoryF = (tokens[4] == "true");
-	}
 }
 void Joseki::printOption() {
 	std::cout << "option name joseki_on type check default false" << std::endl;
@@ -86,7 +83,6 @@ void Joseki::printOption() {
 	std::cout << "option name pruning_T_c type string default 40" << std::endl;
 	std::cout << "option name leaveNodeCount string default 0" << std::endl;
 	std::cout << "option name endBorderCount string default 999999" << std::endl;
-	std::cout << "option name shareMemoryF check default false" << std::endl;
 }
 
 void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens) {
@@ -180,14 +176,8 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history) {
 
 	SearchNode** nodes = (SearchNode**)malloc(sizeof(SearchNode*) * nodeCount);
 	josekinode* jn;
-	if (shareMemoryF) {
-		size_t memsize = sizeof(josekinode) * nodeCount;
-		shareHandle = CreateFileMapping(NULL, NULL, PAGE_READWRITE, NULL, memsize, L"memoryShare");
-		jn = (josekinode*)MapViewOfFile(shareHandle, FILE_MAP_ALL_ACCESS, NULL, NULL, memsize);
-	}
-	else {
-		jn = (josekinode*)malloc(sizeof(josekinode) * nodeCount);
-	}
+	jn = (josekinode*)malloc(sizeof(josekinode) * nodeCount);
+
 	nodes[0] = history.front();
 	for (index = 0; index < nodeCount; ++index) {
 		const SearchNode* node = nodes[index];	//nodesから注目ノードを取り出し
@@ -206,18 +196,13 @@ void Joseki::josekiOutput(const std::vector<SearchNode*> const history) {
 		}
 	}
 
-	if (shareMemoryF) {
-		UnmapViewOfFile(jn);
-		CloseHandle(shareHandle);
-	}
-	else {
-		//書き出しファイルオープン
-		FILE* fp;
-		fopen_s(&fp, (outputFileName).c_str(), "wb");
-		fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
-		fflush(fp);
-		fclose(fp);
-	}
+	//書き出しファイルオープン
+	FILE* fp;
+	fopen_s(&fp, (outputFileName).c_str(), "wb");
+	fwrite(jn, sizeof(jn[0]), nodeCount, fp);	//一気に書き出し
+	fflush(fp);
+	fclose(fp);
+
 	free(jn);
 	/*for (int i = 0; i < nodeCount; ++i) {
 		free(nodes[i]);
@@ -402,31 +387,14 @@ void Joseki::josekiInput(SearchTree* tree) {
 
 	std::cout << "ノード数:" << nodeCount << std::endl;
 
-	bool loadFromFileF = true;
-	if (shareMemoryF) {
-		std::cout << "共有メモリを使用します" << std::endl;
-		size_t memsize = sizeof(josekinode) * nodeCount;
-		shareHandle = CreateFileMapping(NULL, NULL, PAGE_READWRITE, NULL, memsize, L"memoryShare");
-		bool bAlreadyExists = (GetLastError() == ERROR_ALREADY_EXISTS);
-		nodesFromFile = (josekinode*)MapViewOfFile(shareHandle, FILE_MAP_ALL_ACCESS, NULL, NULL, memsize);
-		if (!bAlreadyExists) {
-			std::cout << "共有メモリが無かったので読み込みます" << std::endl;
-		}
-		else {
-			std::cout << "共有メモリから読み込みました" << std::endl;
-			loadFromFileF = false;
-		}
+	//定跡本体を開く
+	errno_t err = fopen_s(&fp, (inputFileName).c_str(), "rb");
+	if (err) {
+		std::cout << inputFileName << "が開けませんでした。" << std::endl;
+		exit(EXIT_FAILURE);
 	}
-	if(loadFromFileF) {
-		//定跡本体を開く
-		errno_t err = fopen_s(&fp, (inputFileName).c_str(), "rb");
-		if (err) {
-			std::cout << inputFileName << "が開けませんでした。" << std::endl;
-			exit(EXIT_FAILURE);
-		}
-		nodesFromFile = (josekinode*)calloc(nodeCount, sizeof(josekinode));	//定跡の復元に一時的に利用するノード
-		fread(nodesFromFile, sizeof(josekinode), nodeCount, fp);	//定跡本体をバイナリファイルから読み込み
-	}
+	nodesFromFile = (josekinode*)calloc(nodeCount, sizeof(josekinode));	//定跡の復元に一時的に利用するノード
+	fread(nodesFromFile, sizeof(josekinode), nodeCount, fp);	//定跡本体をバイナリファイルから読み込み
 
 	nodesForProgram = (SearchNode**)calloc(nodeCount, sizeof(SearchNode*));	//プログラム内で使用するnode
 	parentsIndex = (size_t*)calloc(nodeCount, sizeof(size_t));

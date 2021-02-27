@@ -140,9 +140,6 @@ private:
     //評価値によって強制終了した際の評価値に応じた勝敗
     int endBattleResult = 0;
     int endBorderCount = 999999;
-
-    //メモリ共有を用いて読み込み書き込みを短縮する
-    bool shareMemoryF = false;
     
     size_t treeNodeCount;
 
