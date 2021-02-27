@@ -196,7 +196,7 @@ void SearchTree::foutTree()const {
 		nq.pop(); 
 		int st = static_cast<int>(node->status.load());
 		fs << index << "," << st << "," << node->move.toUSI() << "," << node->eval << "," << node->mass << ",[,";
-		for (const auto c : node->children) {
+		for (const auto c : node->children.) {
 			nq.push(c);
 			fs << c_index << ",";
 			c_index++;

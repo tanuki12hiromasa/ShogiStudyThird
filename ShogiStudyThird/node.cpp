@@ -187,31 +187,6 @@ double SearchNode::getTs(const double baseT) const {
 	}
 }
 
-SearchNode* SearchNode::restoreNode(const Move& move, State st, double eval, double mass)
-{
-	SearchNode* child = new SearchNode(move);
-	child->eval = eval;
-	child->mass = mass;
-	child->status = (SearchNode::State)st;
-
-	return child;
-}
-
-//子供を評価値順に並べ替えていく。読み込み前後で木が同一であることを確認するために使用
-size_t SearchNode::sortChildren(SearchNode* root) {
-	size_t childCount = 1;
-	std::vector<SearchNode*> nodes;
-	nodes.push_back(root);
-	while (!nodes.empty()) {
-		SearchNode* node = nodes.back();
-		nodes.pop_back();
-		childCount += node->children.size();
-		std::sort(node->children.begin(), node->children.end(), [](SearchNode* a, SearchNode* b)->int {return a->eval < b->eval; });
-		nodes.insert(nodes.end(), node->children.begin(), node->children.end());
-	}
-	return childCount;
-}
-
 double SearchNode::getTcMcVariance()const {
 	std::vector<double> cmasses;
 	double mean = 0;

@@ -480,7 +480,9 @@ std::vector<size_t> Joseki::yomikomiLine(const size_t index) {
 		parentsIndex[childIndexes.back()] = tIndex;	 //親のインデックスを要素として持つ
 	}
 	
-	nodesForProgram[tIndex] = (SearchNode::restoreNode(move, node.st, node.eval, node.mass));
+	//nodesForProgram[tIndex] = (SearchNode::restoreNode(move, node.st, node.eval, node.mass));
+	nodesForProgram[tIndex] = SearchNode(move);
+
 	nodesForProgram[tIndex]->children.reserve(node.childCount);
 
 	if (tIndex != 0) {//1つ目は親なし

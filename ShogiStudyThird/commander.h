@@ -3,7 +3,7 @@
 #include "time_property.h"
 #include "joseki.h"
 #include "yaneurajoseki.h"
-#include "Timer.h"
+
 
 class Commander {
 public:
@@ -54,8 +54,7 @@ private:
 	std::mutex treemtx;
 
 	Joseki joseki;	//定跡の読み込みや出力を管理
-	YaneuraJoseki yaneuraJoseki;
-	void makeJobanJoseki(std::string folderName,int count,int depth,int second);
+	//YaneuraJoseki yaneuraJoseki;
 	
 	friend class ShogiTest;
 };
