@@ -69,6 +69,7 @@ void Commander::execute(const std::string& enginename) {
 		}
 		else if (tokens[0] == "staticevaluate") {
 			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
+		}
 		else if (tokens[0] == "yomikomiold") {
 			commander.yomikomi();
 		}
@@ -88,6 +89,7 @@ void Commander::execute(const std::string& enginename) {
 		}
 		else if (tokens[0] == "getsfen") {
 			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
+		}
 		else if (tokens[0] == "yomikomibook") {
 			//commander.yaneuraJoseki.readBook();
 			std::cout << "read book" << std::endl;
