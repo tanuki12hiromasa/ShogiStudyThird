@@ -181,6 +181,15 @@ std::pair<unsigned, SearchNode*> SearchTree::findRepetition(const Kyokumen& kyok
 	return std::make_pair(num, latestNode);
 }
 
+void SearchTree::setRoot(SearchNode* newroot){
+	//if (!history.empty()) {
+	//	deleteTrees(&history.front()->children);
+	//}
+	//history.clear();
+	//history.push_back(newroot);
+
+}
+
 void SearchTree::deleteTrees(SearchNode::Children* root) {
 	if (!root) return;
 	std::lock_guard<std::mutex> lock(mtx_deleteTrees);

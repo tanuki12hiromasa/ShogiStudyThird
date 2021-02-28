@@ -31,7 +31,7 @@ public:
 	SearchNode* getGameRoot() const { return history.front(); }
 	int getMoveNum() const { return history.size() - 1; }
 
-	void foutTree()const;
+	void setRoot(SearchNode* newroot);
 private:
 
 	std::unordered_multimap<std::uint64_t, std::pair<std::array<uint8_t, 95>, uint16_t>> historymap;

@@ -162,6 +162,9 @@
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="commander.cpp" />
     <ClCompile Include="joseki.cpp" />
+    <ClCompile Include="josekiinput.cpp" />
+    <ClCompile Include="josekioption.cpp" />
+    <ClCompile Include="josekioutput.cpp" />
     <ClCompile Include="koma.cpp" />
     <ClCompile Include="kyokumen.cpp" />
     <ClCompile Include="leaf_guard.cpp" />
@@ -173,6 +176,7 @@
     <ClCompile Include="nnue\nnue_evaluate.cpp" />
     <ClCompile Include="nnue\nnue_feature.cpp" />
     <ClCompile Include="node.cpp" />
+    <ClCompile Include="pruning.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
@@ -192,6 +196,10 @@
     <ClInclude Include="commander.h" />
     <ClInclude Include="evaluator.h" />
     <ClInclude Include="joseki.h" />
+    <ClInclude Include="josekiinput.h" />
+    <ClInclude Include="josekinode.h" />
+    <ClInclude Include="josekioption.h" />
+    <ClInclude Include="josekioutput.h" />
     <ClInclude Include="koma.h" />
     <ClInclude Include="koma_motion.h" />
     <ClInclude Include="kyokumen.h" />
@@ -211,6 +219,7 @@
     <ClInclude Include="nnue\nnue_param.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="pruning.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="stest.h" />
     <ClInclude Include="time_property.h" />

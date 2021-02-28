@@ -37,6 +37,12 @@
     <Filter Include="nnue\layers">
       <UniqueIdentifier>{034ce061-fc1c-4db3-93c1-b3324e7fca4c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\joseki">
+      <UniqueIdentifier>{33d18921-548d-4f9a-b890-1dba6491852d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\joseki">
+      <UniqueIdentifier>{beb3af35-d144-414f-b990-6897a86d75f2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -93,17 +99,29 @@
     <ClCompile Include="leaf_guard.cpp">
       <Filter>ソース ファイル\search</Filter>
     </ClCompile>
-    <ClCompile Include="joseki.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="yaneurajoseki.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="nnue\nnue_evaluate.cpp">
       <Filter>nnue</Filter>
     </ClCompile>
     <ClCompile Include="nnue\nnue_feature.cpp">
       <Filter>nnue</Filter>
+    </ClCompile>
+    <ClCompile Include="joseki.cpp">
+      <Filter>ソース ファイル\joseki</Filter>
+    </ClCompile>
+    <ClCompile Include="josekiinput.cpp">
+      <Filter>ソース ファイル\joseki</Filter>
+    </ClCompile>
+    <ClCompile Include="josekioutput.cpp">
+      <Filter>ソース ファイル\joseki</Filter>
+    </ClCompile>
+    <ClCompile Include="pruning.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
+    <ClCompile Include="yaneurajoseki.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
+    <ClCompile Include="josekioption.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -173,9 +191,6 @@
     <ClInclude Include="leaf_guard.h">
       <Filter>ヘッダー ファイル\search</Filter>
     </ClInclude>
-    <ClInclude Include="joseki.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="nnue\nnue_evaluate.h">
       <Filter>nnue</Filter>
     </ClInclude>
@@ -209,8 +224,26 @@
     <ClInclude Include="nnue\layers\input_slice.h">
       <Filter>nnue\layers</Filter>
     </ClInclude>
+    <ClInclude Include="joseki.h">
+      <Filter>ヘッダー ファイル\joseki</Filter>
+    </ClInclude>
+    <ClInclude Include="josekiinput.h">
+      <Filter>ヘッダー ファイル\joseki</Filter>
+    </ClInclude>
+    <ClInclude Include="josekinode.h">
+      <Filter>ヘッダー ファイル\joseki</Filter>
+    </ClInclude>
+    <ClInclude Include="josekioutput.h">
+      <Filter>ヘッダー ファイル\joseki</Filter>
+    </ClInclude>
+    <ClInclude Include="pruning.h">
+      <Filter>ヘッダー ファイル\joseki</Filter>
+    </ClInclude>
     <ClInclude Include="yaneurajoseki.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\joseki</Filter>
+    </ClInclude>
+    <ClInclude Include="josekioption.h">
+      <Filter>ヘッダー ファイル\joseki</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -46,6 +46,14 @@ void SearchNode::Children::clear() {
 }
 
 
+void SearchNode::Children::setChildren(SearchNode* newList,std::uint16_t newcount){
+	clear();
+
+	count = newcount;
+	nodecount += count;
+	list = newList;
+}
+
 void SearchNode::Children::sort(SearchNode* list, int l, int h) {
 	if (l >= h)return;
 	auto i = l, j = h;
@@ -97,6 +105,13 @@ SearchNode::SearchNode(const Move& move)
 	status = State::N;
 	eval = 0;
 	mass = 0;
+}
+
+void SearchNode::restoreNode(Move move, State state, double eval, double mass){
+	this->move = move;
+	this->status = state;
+	this->eval = eval;
+	this->mass = mass;
 }
 
 void SearchNode::swap(SearchNode& node) {

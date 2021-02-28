@@ -27,6 +27,8 @@ public:
 		const SearchNode& operator[] (const std::uint16_t i) const { assert(i < count); return list[i]; }
 		bool empty() const { return count == 0; }
 		std::uint16_t size() const { return count; }
+
+		void setChildren(SearchNode* newList,std::uint16_t newcount);
 	private:
 		static void sort(SearchNode* list, int l, int h);
 		void swap(Children& children);
@@ -73,6 +75,7 @@ public:
 	static void setPVFuncCode(const int code) { PV_FuncCode = code; }
 	static void setPVConst(const double b) { PV_c = b; }
 	static std::int64_t getNodeCount() { return nodecount; }
+	static void setNodeCount(std::int64_t count) { nodecount = count; }
 public:
 	SearchNode();
 	SearchNode(const Move& move);
@@ -102,6 +105,7 @@ public:
 	int getMateNum()const;
 
 	State getState() const { return status; }
+	void restoreNode(Move move,State state,double eval,double mass);
 private:
 	void swap(SearchNode& node);
 	Children* purge();
