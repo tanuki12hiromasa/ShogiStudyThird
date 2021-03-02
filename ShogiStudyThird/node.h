@@ -1,12 +1,7 @@
 ﻿#pragma once
 #include "move.h"
-#include <shared_mutex>
 #include <atomic>
 #include <vector>
-
-using s_mutex = std::shared_mutex;
-using s_lock = std::shared_lock<std::shared_mutex>;
-using p_lock = std::lock_guard<std::shared_mutex>;
 
 class SearchNode {
 	friend class LeafGuard;
@@ -16,6 +11,33 @@ public:
 		NotExpanded, inExpanding, Expanded, Terminal,
 		N = NotExpanded, iE=inExpanding, E = Expanded, T = Terminal
 	};
+
+	class Children {
+		friend class SearchNode;
+	public:
+		~Children();
+		void sporn(const std::vector<Move>& moves);
+		void clear();
+		void sort();//評価値の良い順に子ノードを並び替える
+		SearchNode* begin() { return list; }
+		SearchNode* const begin()const { return list; }
+		SearchNode* end() { return list + count; }
+		SearchNode* const end() const { return list + count; }
+		SearchNode& operator[] (const std::uint16_t i) { assert(i < count); return list[i]; }
+		const SearchNode& operator[] (const std::uint16_t i) const { assert(i < count); return list[i]; }
+		bool empty() const { return count == 0; }
+		std::uint16_t size() const { return count; }
+
+		void setChildren(SearchNode* newList,std::uint16_t newcount);
+	private:
+		static void sort(SearchNode* list, int l, int h);
+		void swap(Children& children);
+		Children* purge();
+
+		std::uint16_t count = 0;
+		SearchNode* list = nullptr;
+	};
+
 private:
 	static double mateMass;
 	static double mateScore;
@@ -31,6 +53,8 @@ private:
 	static double Es_c;
 	static int PV_FuncCode;
 	static double PV_c;
+
+	static std::atomic_int64_t nodecount;
 public:
 	static void setMateScore(const double score) { mateScore = score; }
 	static void setMateScoreBound(const double bound) { mateScoreBound = bound; }
@@ -50,16 +74,15 @@ public:
 	static void setEsFuncParam(const double c) { Es_c = c; }
 	static void setPVFuncCode(const int code) { PV_FuncCode = code; }
 	static void setPVConst(const double b) { PV_c = b; }
-
-	static size_t sortChildren(SearchNode* node);	//返り値はノードの数
+	static std::int64_t getNodeCount() { return nodecount; }
+	static void setNodeCount(std::int64_t count) { nodecount = count; }
 public:
+	SearchNode();
 	SearchNode(const Move& move);
 	SearchNode(const SearchNode&) = delete;
 	SearchNode(SearchNode&&) = delete;
 
-	size_t deleteTree();//子孫ノードをすべて消す 自身は消さない
-	SearchNode* addChild(const Move& move);
-	SearchNode* addCopyChild(const SearchNode* const origin);
+	void addChildren(const std::vector<Move>& moves);
 
 	void setEvaluation(const double evaluation) { eval = evaluation; }
 	void setMass(const double m) { mass = m; }
@@ -70,7 +93,6 @@ public:
 	void setRepetition(const bool teban);
 	void setRepetitiveCheck();
 	void setOriginEval(const double evaluation) { origin_eval = evaluation; }
-	void setState(const State state) { status.store(state); }
 
 	double getEvaluation()const { return eval.load(); }
 	bool isLeaf()const { const auto s = status.load(); return s == State::N || s == State::iE; }
@@ -79,16 +101,18 @@ public:
 	double getTs(const double baseT)const;
 	double getEs()const;
 	SearchNode* getBestChild()const;
+	double getChildRate(SearchNode* const child,const double T)const;
+	int getMateNum()const;
 
-	static SearchNode* restoreNode(const Move& move, State st, double eval, double mass);
-	State getState() const{ return status.load(); }
-	double getMass() const{ return mass.load(); }
-
+	State getState() const { return status; }
+	void restoreNode(Move move,State state,double eval,double mass);
 private:
+	void swap(SearchNode& node);
+	Children* purge();
 	double getTcMcVariance()const;
 	double getTcMcVarianceExpection()const;
 public:
-	std::vector<SearchNode*> children;
+	Children children;
 	Move move;
 private:
 	std::atomic<State> status;
@@ -97,5 +121,4 @@ public:
 	std::atomic<double> eval;
 	std::atomic<double> mass;
 
-	
 };

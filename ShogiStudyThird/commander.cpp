@@ -2,11 +2,10 @@
 #include "commander.h"
 #include "usi.h" 
 #include <iostream>
-#include <fstream>
 #include <iomanip>
-#include <sstream>
+#include <fstream>
 
-void Commander::execute() {
+void Commander::execute(const std::string& enginename) {
 	Commander commander;
 	while (true) {
 		std::string usiin;
@@ -16,16 +15,11 @@ void Commander::execute() {
 			std::cout << "command ready" << std::endl;
 		}
 		else if (tokens[0] == "usi") {
-#ifdef _DEBUG
-			std::cout << "id name ShibauraSoftmaxThird_debug" << std::endl;
-#else
-			//std::cout << "id name ShibauraSoftmaxThird" << std::endl;
-			std::cout << "id name ShibauraSoftmaxThirdJoseki" << std::endl;
-#endif
-			std::cout << "id author Iwamoto" << std::endl;
+			std::cout << "id name " << enginename << std::endl;
+			std::cout << "id author Hiromasa_Iwamoto" << std::endl;
 			coutOption();
-			commander.joseki.printOption();
-			commander.yaneuraJoseki.coutOption();
+			commander.joseki.coutOption();
+			//commander.yaneuraJoseki.coutOption();
 			std::cout << "usiok" << std::endl;
 		}
 		else if (tokens[0] == "setoption") {
@@ -33,31 +27,15 @@ void Commander::execute() {
 		}
 		else if (tokens[0] == "isready") {
 			commander.gameInit();
-			commander.joseki.josekiInput(&(commander.tree));
-			commander.yaneuraJoseki.readBook();
 			std::cout << "readyok" << std::endl;
 		}
 		else if (tokens[0] == "usinewgame") {
 			commander.go_alive = false;
 		}
-		else if (tokens[0] == "debugsetup") {
-			auto setLeaveNodeCommand = usi::split("setoption name leave_branchNode value true", ' ');
-			commander.setOption(setLeaveNodeCommand);
-			commander.gameInit();
-			std::cout << "readyok" << std::endl;
-		}
 		else if (tokens[0] == "position") {
 			commander.go_alive = false;
+			commander.info_enable = false;
 			commander.position(tokens);
-		}
-		else if (tokens[0] == "staticevaluate") {
-			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
-		}
-		else if (tokens[0] == "getsfen") {
-			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
-		}
-		else if (tokens[0] == "getBanFigure") {
-			std::cout << commander.tree.getRootPlayer().kyokumen.toBanFigure() << std::endl;
 		}
 		else if (tokens[0] == "go") {
 			if (tokens[1] == "mate") {
@@ -65,18 +43,28 @@ void Commander::execute() {
 				std::cout << "checkmate notimplemented" << std::endl;
 				continue;
 			}
-			commander.go(tokens);
-			//エージェントの探索が終わるまで待つ。本来は不要
-			if (commander.go_thread.joinable()) commander.go_thread.join();
+			//std::cout << "print historyA" << std::endl;
+			//for (auto h : commander.tree.getHistory()) {
+			//	std::cout << "info joseki pv " << h->move.toUSI() << " cp " << h->eval << " depth " << h->mass << std::endl;
+			//}
+
+			if (!commander.joseki.input.getBestMove(&commander.tree,commander.tree.getHistory())) {
+				/*std::cout << "print historyB" << std::endl;
+
+				for (auto h : commander.tree.getHistory()) {
+					std::cout << "info pv " << h->move.toUSI() << " cp " << h->eval << " depth " << h->mass << std::endl;
+				}*/
+				commander.go(tokens);
+			}
 		}
 		else if (tokens[0] == "stop") {
-			commander.chakushu();
+			commander.chakushu(commander.tree.getBestMove());
 		}
-		else if (tokens[0] == "fouttree") {
-			std::cout << "ノード数：" << commander.tree.getNodeCount() << std::endl;
-			commander.tree.foutTree();
-			std::cout << "fouttree: done" << std::endl;
-		}
+		//else if (tokens[0] == "fouttree") {
+		//	std::cout << "ノード数：" << commander.tree.getNodeCount() << std::endl;
+		//	commander.tree.foutTree();
+		//	std::cout << "fouttree: done" << std::endl;
+		//}
 		else if (tokens[0] == "ponderhit") {
 			//先読みはするがponder機能は利用しない
 		}
@@ -84,119 +72,52 @@ void Commander::execute() {
 			commander.go_alive = false;
 			commander.info_alive = false;
 			commander.stopAgent();
-			commander.joseki.setIsSente(commander.tree.getRootPlayer().kyokumen.teban());
-			commander.joseki.setNodeCount(commander.tree.nodecount);
-			commander.joseki.josekiOutputIGameOver(commander.tree.getHistory(), tokens);
-			std::cout << "gameoverok" << std::endl;
+		}
+		else if (tokens[0] == "debugsetup") {
+			auto setLeaveNodeCommand = usi::split("setoption name leave_branchNode value true", ' ');
+			commander.setOption(setLeaveNodeCommand);
+			commander.gameInit();
+			std::cout << "readyok" << std::endl;
+		}
+		else if (tokens[0] == "staticevaluate") {
+			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
+		}
+		//else if (tokens[0] == "yomikomiold") {
+		//	commander.yomikomi();
+		//}
+		else if (tokens[0] == "josekiinput") {
+			commander.joseki.input.josekiInput(&(commander.tree));
+		}
+		//else if (tokens[0] == "foutjoseki") {
+		//	commander.joseki.setNodeCount(commander.tree.nodecount);
+		//	commander.joseki.josekiOutput(commander.tree.getHistory());
+		//	std::cout << "定跡出力完了" << std::endl;
+		//}
+		//else if (tokens[0] == "foutjosekitext") {
+		//	commander.joseki.josekiTextOutput(commander.tree.getHistory());
+		//}
+		//else if (tokens[0] == "pruning") {
+		//	std::cout << commander.joseki.pruning(commander.tree.getHistory().front()) << "ノードが削除されました" << std::endl;
+		//}
+		else if (tokens[0] == "getsfen") {
+			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
+		}
+		else if (tokens[0] == "yomikomibook") {
+			//commander.yaneuraJoseki.readBook();
+			std::cout << "read book" << std::endl;
+		}
+		else if (tokens[0] == "getBanFigure") {
+			std::cout << commander.tree.getRootPlayer().kyokumen.toBanFigure() << std::endl;
+		}
+		else if (tokens[0] == "getbestmovefromjoseki") {
+			/*SearchNode* node = commander.joseki.input.getBestMove(commander.tree.getHistory());
+			
+			std::cout << node->move.toUSI() << std::endl;
+			std::cout << node->eval << std::endl;
+			std::cout << node->mass << std::endl;*/
 		}
 		else if (tokens[0] == "quit") {
 			return;
-		}
-		else if (tokens[0] == "yomikomiold") {
-			commander.yomikomi();
-		}
-		else if (tokens[0] == "yomikomi") {
-			commander.joseki.josekiInput(&(commander.tree));
-		}
-		else if (tokens[0] == "foutjoseki") {
-			commander.joseki.setNodeCount(commander.tree.nodecount);
-			commander.joseki.josekiOutput(commander.tree.getHistory());
-			std::cout << "定跡出力完了" << std::endl;
-		}
-		else if (tokens[0] == "foutjosekitext") {
-			commander.joseki.josekiTextOutput(commander.tree.getHistory());
-		}
-		else if (tokens[0] == "pruning") {
-			std::cout << commander.joseki.pruning(commander.tree.getHistory().front()) << "ノードが削除されました" << std::endl;
-		}
-		else if (tokens[0] == "yomikomibook") {
-			commander.yaneuraJoseki.readBook();
-			std::cout << "read book" << std::endl;
-		}
-		else if (tokens[0] == "makejobanjoseki") {
-			commander.makeJobanJoseki(tokens[1], std::stoi(tokens[2]), std::stoi(tokens[3]), std::stoi(tokens[4]));
-		}
-		else if (tokens[0] == "foutjosekiasyaneura") {
-			commander.yaneuraJoseki.outputJosekiAsYaneura(commander.tree.getHistory().front(), tokens[1], std::stoi(tokens[2]));
-		}
-		else if (tokens[0] == "printsfen") {
-			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
-		}
-		else if (tokens[0] == "sfen") {
-			std::cout << commander.yaneuraJoseki.getBestMove(usiin).bestMove.toUSI() << std::endl;;
-		}
-		else if (tokens[0] == "sfenloop") {
-			std::ifstream ydb(tokens[1]);
-			std::ofstream outdb(tokens[2]);
-			std::string dl;
-			int kyokumenCount = 0;
-			int nullmove = 0;
-			int sashiteIttiCount = 0;
-			while (!ydb.eof()) {
-				std::getline(ydb, dl);
-				if (usi::split(dl, ',').size() < 2) {
-					break;
-				}
-				std::string sfen = usi::split(dl, ',')[0] + "";
-				if (sfen == "sfen lnsgkgsnl/7b1/p1ppppppp/1r7/7P1/9/PPPPPPP1P/1BG2S1R1/LNS1KG1NL w ") {
-					std::cout << "sfen" << std::endl;
-				}
-				std::string terasyokkubest = usi::split(dl, ',')[1];
-				std::string bm = commander.yaneuraJoseki.getBestMove(sfen).bestMove.toUSI();
-				bool sashiteitti = terasyokkubest == bm;
-				outdb << sfen << "," << terasyokkubest << "," << bm << "," << (sashiteitti ? "TRUE" : "FALSE") << std::endl;
-				if (sashiteitti) {
-					sashiteIttiCount++;
-				}
-				if (bm == "nullmove") {
-					nullmove++;
-				}
-				kyokumenCount++;
-
-			}
-			int noNullmove = kyokumenCount - nullmove;
-			outdb << ",," << nullmove << "," << sashiteIttiCount << std::endl;
-			outdb << ",," << kyokumenCount << "," << noNullmove << std::endl;
-			outdb << ",," << (double)nullmove / (double)kyokumenCount << "," << (double)sashiteIttiCount / (double)noNullmove << std::endl;
-			outdb << ",," << 1.0 - (double)nullmove / (double)kyokumenCount << std::endl;
-			outdb << ",," << commander.yaneuraJoseki.getYaneuraJosekiCount() << std::endl;
-
-
-			ydb.close();
-			outdb.close();
-
-			std::ofstream csvsum(tokens[3]);
-			std::ofstream summary(tokens[4], std::ios::app);
-			csvsum << "局面存在率	最善手一致率	総局面数" << std::endl;
-			csvsum << 1.0 - (double)nullmove / (double)kyokumenCount << "	" << (double)sashiteIttiCount / (double)noNullmove << "	" << commander.yaneuraJoseki.getYaneuraJosekiCount() << std::endl;
-			summary << 1.0 - (double)nullmove / (double)kyokumenCount << "	" << (double)sashiteIttiCount / (double)noNullmove << "	" << commander.yaneuraJoseki.getYaneuraJosekiCount() << std::endl;
-			csvsum.close();
-			summary.close();
-		}
-		else if (tokens[0] == "outputforcsv") {
-			std::string foldername = tokens[1];
-			std::string filename = tokens[2];
-			int start = std::stoi(tokens[3]);
-			int count = std::stoi(tokens[4]);
-			std::string output;
-			for (int i = 0; i < count; ++i) {
-				int filenum = i + start;
-				int infonum = filenum * 50 + 49;
-				output += "ShogiStudyThird.exe\n";
-				output += "setoption name joseki_on is true\n";
-				output += "setoption name josekifoldername is " + foldername + "\n";
-				output += "setoption name josekiinputfilename is joseki" + std::to_string(filenum) + ".bin\n";
-				output += "setoption name josekiinputinfofilename is joseki" + std::to_string(infonum) + "_info.txt\n";
-				output += "isready\n";
-				output += "foutjosekiasyaneura " + foldername + "/yaneurajoseki" + filename + std::to_string(infonum) + ".db 1000000\n";
-				output += "yomikomibook " + foldername + "/yaneurajoseki" + filename + std::to_string(infonum) + ".db\n";
-				output += "sfenloop yaneuradb.csv " + foldername + "/out" + filename + std::to_string(infonum) + ".csv " + foldername + "/summaryjoseki" + std::to_string(infonum) + ".txt " + foldername + "/summaryAllJoseki.txt\n";
-				output += "quit\n";
-			}
-			std::ofstream of("forcsv.txt");
-			std::cout << output << std::endl;
-			of << output << std::endl;
-			of.close();
 		}
 		else if (tokens[0] == "open") {
 			commander.joseki.openingShareHandle();
@@ -220,7 +141,7 @@ Commander::~Commander() {
 	for (auto& ag : agents) {
 		ag->terminate();
 	}
-	if (deleteThread != nullptr && deleteThread->joinable())deleteThread->detach();
+	if (deleteThread.joinable())deleteThread.detach();
 	if(go_thread.joinable()) go_thread.join();
 	if(info_thread.joinable())info_thread.join();
 }
@@ -234,7 +155,7 @@ void Commander::coutOption() {
 	cout << "option name Repetition_score type string default 0" << endl;
 	cout << "option name leave_qsearchNode type check default false" << endl;
 	cout << "option name QSearch_Use_RelativeDepth type check default false" << endl;
-	cout << "option name QSearch_depth type string default 0" << endl;
+	cout << "option name QSearch_depth type string default 8" << endl;
 	cout << "option name Use_Original_Kyokumen_Eval type check default false" << endl;
 	cout << "option name Ts_disperseFunc type spin default 0 min 0 max 4" << endl;
 	cout << "option name Ts_min type string default 40" << endl;
@@ -245,9 +166,15 @@ void Commander::coutOption() {
 	cout << "option name T_depth type string default 100" << endl;
 	cout << "option name Es_functionCode type spin default 18 min 0 max 20" << endl;
 	cout << "option name Es_funcParam type string default 0.5" << endl;
-	cout << "option name NodeMaxNum type string default 100000000" << endl;
+	//cout << "option name NodeMaxNum type string default 100000000" << endl;
+	cout << "option name DrawMoveNum type spin default 320 min 0 max 1000000" << endl;
 	cout << "option name PV_functionCode type spin default 0 min 0 max 3" << endl;
 	cout << "option name PV_const type string default 0" << endl;
+	cout << "option name resign_matemoves type spin default 3 min 0 max 40" << endl;//投了する詰み手数
+	cout << "option name quick_bm_time_lower type spin default 4000 min 1000 max 600000" << endl;//即指しの判定時間の下限
+	cout << "option name standard_time_upper type spin default 20000 min 1000 max 6000000" << endl;//即指しの判定時間の上限
+	cout << "option name overhead_time type spin default 200 min 0 max 10000" << endl;
+	cout << "option name estimate_movesnum type spin default 120 min 0 max 10000" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -313,15 +240,33 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "NodeMaxNum") {
 			tree.setNodeMaxsize(std::stoull(token[4]));
 		}
+		else if (token[2] == "DrawMoveNum") {
+			SearchAgent::setDrawMoveNum(std::stoi(token[4]));
+		}
 		else if (token[2] == "PV_functionCode") {
 			SearchNode::setPVFuncCode(std::stoi(token[4]));
 		}
 		else if (token[2] == "PV_const") {
 			SearchNode::setPVConst(std::stod(token[4]));
 		}
+		else if (token[2] == "resign_matemoves") {
+			resign_border = std::stoi(token[4]);
+		}
+		else if (token[2] == "quick_bm_time_lower") {
+			time_quickbm_lower = std::chrono::milliseconds(std::stoi(token[4]));
+		}
+		else if (token[2] == "standard_time_upper") {
+			time_standard_upper = std::chrono::milliseconds(std::stoi(token[4]));
+		}
+		else if (token[2] == "overhead_time") {
+			time_overhead = std::chrono::milliseconds(std::stoi(token[4]));
+		}
+		else if (token[2] == "estimate_movesnum") {
+			estimate_movesnum = std::stoi(token[4]);
+		}
 		else {
 			joseki.setOption(token);
-			yaneuraJoseki.setOption(token);
+			//yaneuraJoseki.setOption(token);
 		}
 	}
 }
@@ -348,6 +293,8 @@ void Commander::gameInit() {
 	}
 	setTsDistribution();
 	info();
+
+	joseki.input.init();
 }
 
 void Commander::setTsDistribution() {
@@ -394,7 +341,6 @@ void Commander::setTsDistribution() {
 }
 
 void Commander::startAgent() {
-	SearchAgent::resetSimCount();
 	assert(agents.empty());
 	assert(TsDistribution.size() == agentNum);
 	for (int i = 0; i < agentNum; i++) {
@@ -403,7 +349,6 @@ void Commander::startAgent() {
 	}
 }
 void Commander::stopAgent() {
-	//std::cout << "simcount " << SearchAgent::getSimCount() << std::endl;
 	for (auto& ag : agents) {
 		ag->stop();
 	}
@@ -422,47 +367,93 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
-	else if (yaneuraJoseki.getJosekiOn()) {
-		std::string bestMove = yaneuraJoseki.getBestMoveFromJoseki(kyokumen.toSfen());
-		if (bestMove != "nullmove") {
-			std::cout << "bestmove " << bestMove << std::endl;
-			for (auto node : tree.getRoot()->children) {
-				if (node->move.toUSI() == bestMove) {
-					tree.proceed(node);
-					break;
-				}
-			}
-			return;
-		}
-	}
 
-
+	tree.evaluationcount = 0ull;
+	info_prev_evcount = 0ull;
+	info_prevtime = std::chrono::system_clock::now();
 	startAgent();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
 	if (go_thread.joinable()) go_thread.join();
 	go_alive = true;
-	go_thread = std::thread([this, tp]() {
+	if (tp.rule == TimeProperty::TimeRule::infinite) return;
+	go_thread = std::thread([this,tp]() {
 		using namespace std::chrono_literals;
 		const auto starttime = std::chrono::system_clock::now();
 		const SearchNode* root = tree.getRoot();
-
-		if (tp.rule == TimeProperty::TimeRule::byoyomi && tp.left < 100ms) {
-			do {
-				auto t = std::max((tp.added / 5), 50ms);
-				std::this_thread::sleep_for(t);
-			} while (((std::chrono::system_clock::now() - starttime) < tp.added - 110ms)
-				&& std::abs(root->eval) < SearchNode::getMateScoreBound());
-			chakushu();
-		}
-		else {
-			std::this_thread::sleep_for(5s);
-			chakushu();
-		}
-
-	}
-	);
+		const auto timelimit = decide_timelimit(tp);
+		auto searchtime = timelimit.first;//探索時間
+		SearchNode* provisonalBestMove = nullptr;//暫定着手
+		double provisonal_pi = 0;//暫定着手の方策
+		SearchNode* recentBestNode = nullptr;//直前の最善ノード
+		double pi_average = 0;//最善手の方策の時間平均
+		int continuous_counter = 0;//最善手が同じまま連続している回数
+		int changecounter = 0;
+		int loopcounter = 0;
+		std::cout << "info string time:" << timelimit.first.count() << ", " << timelimit.second.count() << std::endl;
+		std::this_thread::sleep_for(searchtime / 32);
+		do {
+			loopcounter++;
+			constexpr auto sleeptime = 50ms;
+			std::this_thread::sleep_for(sleeptime);
+			const auto bestnode = root->getBestChild();
+			const double pi = root->getChildRate(bestnode, 40);
+			if (bestnode == recentBestNode) { //最善ノードが変わっていない
+				pi_average = (pi_average * continuous_counter + pi) / ((double)continuous_counter + 1);
+				continuous_counter++;
+				if (continuous_counter > 4) { //一定回数以上最善が不変であれば信頼できるとして暫定着手とする
+					provisonalBestMove = recentBestNode;
+					provisonal_pi = pi_average;
+				}
+			}
+			else {
+				changecounter++;
+				pi_average = pi;
+				continuous_counter = 1;
+			}
+			recentBestNode = bestnode;
+			//即指しの条件を満たしたら指す
+			if (continuous_counter * sleeptime > std::max(timelimit.first / 2, time_quickbm_lower)) {
+				break;
+			}
+			if ((loopcounter & 0xF) == 0) {
+				double changerate = (double)changecounter / loopcounter;
+				searchtime = (changerate > 0.05) ? std::chrono::duration_cast<std::chrono::milliseconds>(timelimit.first * changerate / 0.05) : timelimit.first;
+			}
+			//標準時間になったら指すか決める もし拮抗している局面なら時間を延長する
+			if (std::chrono::system_clock::now() - starttime >= searchtime && provisonalBestMove != nullptr) {
+				break;
+			}
+			//時間上限になったら指す
+			if (std::chrono::system_clock::now() - starttime + sleeptime >= timelimit.second) {
+				break;
+			}
+		} while (std::abs(root->eval) < SearchNode::getMateScoreBound());
+		if (provisonalBestMove == nullptr) provisonalBestMove = recentBestNode;
+		chakushu(provisonalBestMove);
+	});
 	info_enable = true;
+}
+
+//first:標準的な思考時間 second:思考時間の上限
+std::pair<std::chrono::milliseconds, std::chrono::milliseconds> Commander::decide_timelimit(const TimeProperty time)const {
+	using namespace std::chrono_literals;
+	switch (time.rule) {
+		case TimeProperty::TimeRule::byoyomi: {
+			const auto standerd_time = std::min(std::max(time.left / std::max(estimate_movesnum - tree.getMoveNum(), 5), time.added), time_standard_upper) - time_overhead;
+			const auto limit_time = time.left + time.added - time_overhead;
+			return std::make_pair(standerd_time, limit_time);
+		}
+		case TimeProperty::TimeRule::fischer: {
+			const int expected_movesleft = std::max(estimate_movesnum - tree.getMoveNum(), 2);
+			const auto standerd_time = std::min(time.left / expected_movesleft + time.added, time_standard_upper) - time_overhead;
+			const auto limit_time = time.left + time.added - time_overhead;
+			return std::make_pair(standerd_time, limit_time);
+		}
+		default:
+			assert(0);
+			return std::make_pair(5s, 5s);
+	}
 }
 
 void Commander::info() {
@@ -474,7 +465,11 @@ void Commander::info() {
 				using namespace std::chrono_literals;
 				std::this_thread::sleep_for(950ms);
 				std::lock_guard<std::mutex> lock(coutmtx);
+				const uint64_t evcount = tree.getEvaluationCount();
+				const auto now = std::chrono::system_clock::now();
 				if (info_enable) {
+					const int nps = (evcount - info_prev_evcount) / ((double)std::chrono::duration_cast<std::chrono::milliseconds>(now - info_prevtime).count() / 1000);
+					info_prevtime = now;
 					//std::cout << "info string info" << std::endl;
 					const auto PV = tree.getPV();
 					std::string pvstr;
@@ -483,18 +478,19 @@ void Commander::info() {
 						const auto& root = PV[0];
 						std::cout << std::fixed;
 						std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << (PV.size()-1)
-							<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
+							<< " score cp " << static_cast<int>(root->eval) << " nodes " << SearchNode::getNodeCount() << " nps " << nps << std::endl;
 					}
 					else {
 						std::cout << "info string failed to get pv" << std::endl;
 					}
 				}
+				info_prev_evcount = evcount;
 			}
 		});
 	}
 }
 
-void Commander::chakushu() {
+void Commander::chakushu(SearchNode* const bestchild) {
 	std::lock_guard<std::mutex> clock(coutmtx);
 	std::lock_guard<std::mutex> tlock(treemtx);
 	stopAgent();
@@ -505,35 +501,25 @@ void Commander::chakushu() {
 		return;
 	}
 	SearchNode* const root = tree.getRoot();
-	if (root->eval < -33000) {
+	if (root->eval < -SearchNode::getMateScoreBound() && root->getMateNum() >= -resign_border) {
 		std::cout << "info score cp " << static_cast<int>(root->eval) << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
-	if (joseki.endBattle(root,tree.getHistory())) {
-		std::cout << "info score cp " << static_cast<int>(root->eval) << std::endl;
-		std::string rr = static_cast<int>(root->eval) > 0?"win" : "resign";
-		std::cout << "bestmove " << rr << std::endl;
-		return;
-	}
-	const auto PV = tree.getPV();
-	std::string pvstr;
-	if (PV.size() >= 2) {
-		for (int i = 1; i < 15 && i < PV.size() && PV[i] != nullptr; i++) pvstr += PV[i]->move.toUSI() + ' ';
-		const auto& root = PV[0];
-		std::cout << std::fixed;
-		std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << (PV.size() - 1)
-			<< " score cp " << static_cast<int>(root->eval) << " nodes " << tree.getNodeCount() << std::endl;
-	}
-	const auto bestchild = tree.getBestMove();
 	if (bestchild == nullptr) {
 		//std::cout << "info string error no children" << std::endl;
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
+	std::string pvstr;
+	int depth = 1;
+	for (SearchNode* node = bestchild; depth < 15 && node != nullptr; depth++,node = node->getBestChild()) pvstr += node->move.toUSI() + ' ';
+	std::cout << std::fixed;
+	std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << depth
+		<< " score cp " << static_cast<int>(root->eval) << " nodes " << SearchNode::getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
 	tree.proceed(bestchild);
-	releaseAgentAndBranch(root, {bestchild});
+	releaseAgent();
 	if (permitPonder) {
 		startAgent();
 	}
@@ -543,172 +529,19 @@ void Commander::chakushu() {
 void Commander::position(const std::vector<std::string>& tokens) {
 	std::lock_guard<std::mutex> lock(treemtx);
 	stopAgent();
-	const auto prevRoot = tree.getRoot();
-	if (continuousTree) {
-		auto result = tree.set(tokens);
-		if (result.first || joseki.getYomikomiOn()) {
-			releaseAgentAndBranch(prevRoot, std::move(result.second));
-		}
-		else {
-			//if (!yomikomi_on) {
-				tree.makeNewTree(tokens);
-				releaseAgentAndTree(prevRoot);
-			//}
-			//else {
-			//	yomikomi_on = false;
-			//}
-		}
-	}
-	else {
-		tree.makeNewTree(tokens);
-		releaseAgentAndTree(prevRoot);
-	}
+	releaseAgent();
+	tree.set(tokens);
 }
 
-void Commander::releaseAgentAndBranch(SearchNode* const prevRoot, std::vector<SearchNode*>&& newNodes) {
-	auto tmpthread = std::move(deleteThread);
-	deleteThread = std::unique_ptr<std::thread>( new std::thread(
-		[&tree=tree,prevThread = std::move(tmpthread), prevAgents = std::move(agents), prevRoot, savedNodes = std::move(newNodes)]
-		{
-			if(prevThread != nullptr && prevThread->joinable()) prevThread->join();
+void Commander::releaseAgent() {
+	if (agents.empty())return;
+	if (deleteThread.joinable()) deleteThread.join();
+	auto tmpthread =  std::thread(
+		[prevAgents = std::move(agents)]{
 			for (auto& ag : prevAgents) {
 				ag->terminate();
 			}
-			tree.deleteBranch(prevRoot, savedNodes);
-		}));
+		});
+	deleteThread.swap(tmpthread);
 	agents.clear();
-}
-
-void Commander::releaseAgentAndTree(SearchNode* const root) {
-	auto tmpthread = std::move(deleteThread);
-	deleteThread = std::unique_ptr<std::thread>(new std::thread(
-		[&tree = tree, prevThread = std::move(tmpthread), prevAgents = std::move(agents), root]
-		{
-			if (prevThread != nullptr && prevThread->joinable()) prevThread->join();
-			for (auto& ag : prevAgents) {
-				ag->terminate();
-			}
-			tree.deleteTree(root);
-		}));
-	agents.clear();
-}
-
-#include <Windows.h>
-#include <tchar.h>
-#include <locale.h>
-
-void Commander::yomikomi()
-{
-	auto startTime = clock();
-
-	std::string ss;
-	int i = 0, j = 0;
-	size_t i_max = 0;
-	std::vector<SearchNode*> test;
-
-	SearchNode* node = NULL;
-	std::vector<int> parents = {};
-	parents.push_back(-1);
-	int index = -1;
-	int	st = 0;
-	uint16_t usiU;
-	double eval = 0.0;
-	double mass = 0.0;
-	Move move;
-	std::vector<int> childIndex;
-	std::cout << "start \"Yomikomi!\" " << std::endl;
-	static int num = 0;
-
-
-	if (true) {
-		std::ifstream ifs;
-		ifs.open("treelog.txt");
-		if (ifs.fail()) {
-			//std::cerr << yomikomi_file_name + ".txtが見つかりませんでした" << std::endl;
-		}
-		std::getline(ifs, ss); //sfen
-		//std::getline(ifs, ss); //sfen
-		//std::string sfen = "position " + ss;
-		//tree.makeNewTree(usi::split(sfen, ' '));
-
-		while (1) {
-
-			std::getline(ifs, ss);
-			if (ifs.eof()) {
-				break;//ファイルの終わりならブレイク
-			}
-
-
-			auto split = usi::split(ss, ',');
-			index = std::stoi(split[0]);
-			st = std::stoi(split[1]);
-			if (split[2] != " nullmove") {
-				//usiU = std::stoi(split[2]);
-				move = Move(split[2],true);
-			}
-			else {
-				usiU = koma::Position::NullMove;
-				move = Move(usiU);
-			}
-			eval = std::stod(split[3]);
-			mass = std::stod(split[4]);
-			int ind = 6;
-			childIndex.clear();
-			while (split[ind] != "]") {
-				childIndex.push_back(std::stoi(split[ind]));
-				parents.push_back(index);
-				++ind;
-			}
-
-			//move = Move(usiU);
-
-
-
-			if (index == 0) {//1つ目は親なし
-				test.push_back(node->restoreNode(move, (SearchNode::State)st, eval, mass));
-			}
-			else {
-				test.push_back(node->restoreNode(move, (SearchNode::State)st, eval, mass));
-				test[parents[index]]->children.push_back(test[index]);
-			}
-
-			i++;
-		}
-	}
-
-	std::cout << "end \"Yomikomi!\" " << std::endl;
-	i_max = i;
-	std::vector<std::string> startpos;
-	startpos.push_back("position");
-	startpos.push_back("startpos");
-	Kyokumen kyo = Kyokumen(startpos);
-
-	node = test[0];
-	tree.setRoot(node, kyo, i_max);
-
-	std::cout << "Time:" << (clock() - startTime) / (double)CLOCKS_PER_SEC << "秒で読みこみ完了" << std::endl;
-
-}
-
-//定跡を入れるファイル名と、定跡つくりのための実行回数、序盤定跡の深さを指定
-void Commander::makeJobanJoseki(std::string folderName,int count,int depth,int second){
-	for (int i = 0; i < count; ++i) {
-		std::cout << i + 1 << "回目" << std::endl;
-		joseki.setInputFileName(folderName + "\\joseki" + std::to_string(i));
-		joseki.setOutputFileName(folderName + "\\joseki" + std::to_string(i + 1));
-		gameInit();
-		joseki.josekiInput(&(tree));
-		
-		std::vector<std::string>tokens = {"go","btime","0","wtime","0","byoyomi",std::to_string(second)};
-		for (int j = 0; j < depth; ++j) {
-			go(tokens);
-			//エージェントの探索が終わるまで待つ。本来は不要
-			if (go_thread.joinable()) go_thread.join();
-		}
-		
-		joseki.josekiOutput(tree.getHistory());
-		tree.leave_branchNode = false;
-		releaseAgentAndTree(tree.getRoot());
-		tree.leave_branchNode = true;
-	}
 }
