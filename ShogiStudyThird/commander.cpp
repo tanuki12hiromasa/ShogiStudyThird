@@ -43,7 +43,19 @@ void Commander::execute(const std::string& enginename) {
 				std::cout << "checkmate notimplemented" << std::endl;
 				continue;
 			}
-			commander.go(tokens);
+			//std::cout << "print historyA" << std::endl;
+			//for (auto h : commander.tree.getHistory()) {
+			//	std::cout << "info joseki pv " << h->move.toUSI() << " cp " << h->eval << " depth " << h->mass << std::endl;
+			//}
+
+			if (!commander.joseki.input.getBestMove(&commander.tree,commander.tree.getHistory())) {
+				/*std::cout << "print historyB" << std::endl;
+
+				for (auto h : commander.tree.getHistory()) {
+					std::cout << "info pv " << h->move.toUSI() << " cp " << h->eval << " depth " << h->mass << std::endl;
+				}*/
+				commander.go(tokens);
+			}
 		}
 		else if (tokens[0] == "stop") {
 			commander.chakushu(commander.tree.getBestMove());
@@ -98,7 +110,11 @@ void Commander::execute(const std::string& enginename) {
 			std::cout << commander.tree.getRootPlayer().kyokumen.toBanFigure() << std::endl;
 		}
 		else if (tokens[0] == "getbestmovefromjoseki") {
-			std::cout << commander.joseki.input.getBestMove(commander.tree.getHistory())->move.toUSI() << std::endl;
+			/*SearchNode* node = commander.joseki.input.getBestMove(commander.tree.getHistory());
+			
+			std::cout << node->move.toUSI() << std::endl;
+			std::cout << node->eval << std::endl;
+			std::cout << node->mass << std::endl;*/
 		}
 		else if (tokens[0] == "quit") {
 			return;
@@ -275,7 +291,7 @@ void Commander::gameInit() {
 	setTsDistribution();
 	info();
 
-	joseki.input.josekiInput(&tree);
+	joseki.input.init();
 }
 
 void Commander::setTsDistribution() {
@@ -348,9 +364,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		std::cout << "bestmove resign" << std::endl;
 		return;
 	}
-	//else if (joseki.getJosekiOn() && joseki.getBestMoveFromJoseki(kyokumen.toSfen())) {
-	//	return;
-	//}
+
 	tree.evaluationcount = 0ull;
 	info_prev_evcount = 0ull;
 	info_prevtime = std::chrono::system_clock::now();

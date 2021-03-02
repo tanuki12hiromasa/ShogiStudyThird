@@ -7,12 +7,18 @@ JosekiInput::JosekiInput(){
 	option.addOption("joseki_input_folder_name", "string", "joseki");
 	option.addOption("joseki_input_file_name", "string", "defaultjoseki_input.bin");
 	option.addOption("joseki_input_file_info_name", "string", "defaultjoseki_input_info.txt");
+	option.addOption("joseki_sokusashi_on", "check", "false");
+	option.addOption("joseki_sokusashi_border", "string", "5.0");
+	bestMoveOn = true;
+	dummy->restoreNode(Move(0), SearchNode::State::T, 0, -1);
+
 }
 
-void JosekiInput::josekiInput(SearchTree* tree) {
+void JosekiInput::init() {
 	if (!option.getC("joseki_input_on")) {
 		return;
 	}
+
 
 	//定跡の情報が入ったファイルを開く
 	std::ifstream ifs(option.getS("joseki_input_folder_name") + "\\" + option.getS("joseki_input_file_info_name"));
@@ -43,7 +49,6 @@ void JosekiInput::josekiInput(SearchTree* tree) {
 	std::cout << "ノード数:" << nodeCount << std::endl;
 
 	//定跡本体を開く
-	FILE* fp;
 	errno_t err = fopen_s(&fp, (option.getS("joseki_input_folder_name") + "\\" + option.getS("joseki_input_file_name")).c_str(), "rb");
 	if (err) {
 		std::cout << option.getS("joseki_input_folder_name") + "\\" + option.getS("joseki_input_file_name") << "が開けませんでした。" << std::endl;
@@ -55,10 +60,17 @@ void JosekiInput::josekiInput(SearchTree* tree) {
 	//nodesForProgram = (SearchNode*)calloc(nodeCount, sizeof(SearchNode));	//プログラム内で使用するnode
 	nodesForProgram = new SearchNode[nodeCount];
 	parentsIndex = (size_t*)calloc(nodeCount, sizeof(size_t));
+}
+
+void JosekiInput::josekiInput(SearchTree* tree, size_t firstIndex) {
+	if (!option.getC("joseki_input_on")) {
+		//return;
+	}
+
 
 	//すぐ下の子ノード達だけ展開する
 	int depth = 0;
-	std::vector<size_t>childrenToThread = yomikomiDepth(0, depth);
+	std::vector<size_t>childrenToThread = yomikomiDepth(firstIndex, depth);
 	if (childrenToThread.size() <= 0) {
 		std::cout << "子ノードがありません。" << std::endl;
 		std::cout << "プログラムを強制終了します。" << std::endl;
@@ -75,17 +87,35 @@ void JosekiInput::josekiInput(SearchTree* tree) {
 		thr[i].join();
 	}
 
-	tree->setRoot(nodesForProgram);
+	SearchNode* list = new SearchNode[childrenToThread.size()];
+	for (int i = 0; i < childrenToThread.size(); ++i) {
+		SearchNode* cc = &nodesForProgram[childrenToThread[i]];
+		list[i].restoreNode(cc->move, cc->getState(), cc->eval, cc->mass);
+	}
+	nodesForProgram[firstIndex].children.setChildren(list, childrenToThread.size());
+
+
+	auto nextRoot = &nodesForProgram[firstIndex];
+	//std::cout << "info next pv " << nextRoot->move.toUSI() << " cp " << nextRoot->eval << " depth " << nextRoot->mass << std::endl;
+	tree->setRoot(nextRoot);
 
 	free(nodesFromFile);
 	free(parentsIndex);
 	//free(nodesForProgram);
 	fclose(fp);
-
 }
 
-SearchNode* JosekiInput::getBestMove(std::vector<SearchNode*> history)
+bool JosekiInput::getBestMove(SearchTree* tree, std::vector<SearchNode*> history)
 {
+	if (bestMoveOn == false) {
+		return false;
+	}
+
+	if (option.getC("joseki_sokusashi_on") == false) {
+		bestMoveOn = false;
+		return false;
+	}
+
 	FILE* fp;
 	fopen_s(&fp, (option.getS("joseki_input_folder_name") + "\\" + option.getS("joseki_input_file_name")).c_str(), "rb");
 	size_t index = 0;
@@ -94,23 +124,33 @@ SearchNode* JosekiInput::getBestMove(std::vector<SearchNode*> history)
 	fseek(fp, index * sizeof(josekinode), SEEK_SET);
 	fread_s(&jn, sizeof(josekinode), sizeof(josekinode), 1, fp);
 	index = jn.childIndex;
-
+	size_t lastIndex = 0;
 
 	for (int i = 1; i < history.size() + 1;++i) {
 		if (i == history.size()) {
 			fseek(fp, index * sizeof(josekinode), SEEK_SET);
 			fread_s(&jn, sizeof(josekinode), sizeof(josekinode), 1, fp);
-			SearchNode* r = new SearchNode;
-			r->restoreNode(Move(jn.move), jn.st, jn.eval, jn.mass);
-			return r;
+			//SearchNode* r = new SearchNode;
+			//r->restoreNode(Move(jn.move), jn.st, jn.eval, jn.mass);
+			//std::cout << "info getbestmove pv " << Move(jn.move).toUSI() << " depth " << jn.mass << " score cp " << jn.eval << std::endl;
+			if (jn.mass >= option.getD("joseki_sokusashi_border")) {
+				std::cout << "bestmove " << Move(jn.move).toUSI() << std::endl;
+				fclose(fp);
+				return true;
+			}
+			else {
+				break;
+			}
 		}
 
 		fseek(fp, index * sizeof(josekinode), SEEK_SET);
-		size_t lastIndex = index;
+		lastIndex = index;
 		for (int j = 0; j < jn.childCount; ++j) {
 			fread_s(&jn, sizeof(josekinode), sizeof(josekinode), 1, fp);
 			if (jn.move == history[i]->move.getU()) {
-				index = jn.childIndex;
+				if (jn.childCount != 0) {
+					index = jn.childIndex;
+				}
 				break;
 			}
 		}
@@ -118,9 +158,11 @@ SearchNode* JosekiInput::getBestMove(std::vector<SearchNode*> history)
 			break;
 		}
 	}
-	SearchNode* r = new SearchNode;
-	r->restoreNode(Move(0), SearchNode::State::T, 0, -1);
-	return r;
+	bestMoveOn = false;
+
+	josekiInput(tree, lastIndex);
+	fclose(fp);
+	return false;
 }
 
 static std::mutex mtx;
@@ -161,12 +203,6 @@ void JosekiInput::yomikomiRecursive(const size_t index) {
 std::vector<size_t> JosekiInput::yomikomiDepth(const size_t index, const int depth) {
 	auto c = yomikomiLine(index);
 
-	SearchNode* list = new SearchNode[c.size()];
-	for (int i = 0; i < c.size(); ++i) {
-		SearchNode* cc = &nodesForProgram[c[i]];
-		list[i].restoreNode(cc->move, cc->getState(), cc->eval, cc->mass);
-	}
-	nodesForProgram[index].children.setChildren(list, c.size());
 
 
 	if (depth == 0) {
