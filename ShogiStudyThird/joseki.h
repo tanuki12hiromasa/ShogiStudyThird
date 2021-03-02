@@ -63,6 +63,7 @@ public:
         }
     }
     void setIsSente(bool is) { isSente = is; }
+    void openingShareHandle();
 private:
     //定跡を利用するか等の変数
     bool yomikomi_on;
@@ -148,7 +149,6 @@ private:
 
     //メモリ共有を用いて読み込み書き込みを短縮する
     bool shareMemoryF = false;
-    HANDLE shareHandle;
     
     //出力
 public:
@@ -203,7 +203,6 @@ public:
     }
 
 private:
-    FILE* fp;	//定跡本体の読み込み用ファイル
     SearchNode** nodesForProgram;	//実際にプログラム内で活用していく定跡が格納されるところ
     size_t* parentsIndex;	//ノードのインデックスと親ノードの対応
     std::vector<std::string> tokenOfPosition;	//定跡が指し示す局面

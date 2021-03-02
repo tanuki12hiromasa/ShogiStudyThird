@@ -7,6 +7,8 @@
 #include <climits>
 #include <random>
 
+HANDLE shareHandle;
+
 //定跡フォルダーの中のファイル数を数える
 static int getFileCount() {
 	WIN32_FIND_DATA findFileData;
@@ -112,6 +114,12 @@ void Joseki::printOption() {
 	std::cout << "option name leaveNodeCount string default 0" << std::endl;
 	std::cout << "option name endBorderCount string default 999999" << std::endl;
 	std::cout << "option name shareMemoryF check default false" << std::endl;
+}
+
+void Joseki::openingShareHandle(){
+	shareHandle = OpenFileMapping(FILE_MAP_READ,TRUE, L"memoryShare");
+
+	std::cout << shareHandle << std::endl;
 }
 
 void Joseki::josekiOutputIGameOver(const std::vector<SearchNode*> const history,std::vector<std::string> tokens) {
@@ -431,26 +439,42 @@ void Joseki::josekiInput(SearchTree* tree) {
 	if (shareMemoryF) {
 		std::cout << "共有メモリを使用します" << std::endl;
 		size_t memsize = sizeof(josekinode) * nodeCount;
-		shareHandle = CreateFileMapping(NULL, NULL, PAGE_READWRITE, NULL, memsize, L"memoryShare");
+		shareHandle = CreateFileMapping(NULL, NULL, PAGE_READWRITE, memsize >> 32, (memsize << 32) >> 32, L"memoryShare");
+		std::cout << shareHandle << std::endl;
+
 		bool bAlreadyExists = (GetLastError() == ERROR_ALREADY_EXISTS);
-		nodesFromFile = (josekinode*)MapViewOfFile(shareHandle, FILE_MAP_ALL_ACCESS, NULL, NULL, memsize);
+		//nodesFromFile = (josekinode*)calloc(nodeCount, sizeof(josekinode));	//定跡の復元に一時的に利用するノード
+		nodesFromFile = (josekinode*)MapViewOfFile(shareHandle, FILE_MAP_ALL_ACCESS, NULL, NULL, NULL);
 		if (!bAlreadyExists) {
 			std::cout << "共有メモリが無かったので読み込みます" << std::endl;
 		}
 		else {
 			std::cout << "共有メモリから読み込みました" << std::endl;
 			loadFromFileF = false;
-		}
+		}		
+	}
+	else {
+		nodesFromFile = (josekinode*)calloc(nodeCount, sizeof(josekinode));	//定跡の復元に一時的に利用するノード
 	}
 	if(loadFromFileF) {
 		//定跡本体を開く
+		FILE* fp;	//定跡本体の読み込み用ファイル
 		errno_t err = fopen_s(&fp, (inputFileName).c_str(), "rb");
 		if (err) {
 			std::cout << inputFileName << "が開けませんでした。" << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		nodesFromFile = (josekinode*)calloc(nodeCount, sizeof(josekinode));	//定跡の復元に一時的に利用するノード
+		std::cout << "a" << std::endl;
+
+		//josekinode* nt = (josekinode*)calloc(nodeCount, sizeof(josekinode));	//定跡の復元に一時的に利用するノード
+		//fread(nt, sizeof(josekinode), nodeCount, fp);	//定跡本体をバイナリファイルから読み込み
+		//memcpy(nodesFromFile, nt, sizeof(josekinode) * nodeCount);
 		fread(nodesFromFile, sizeof(josekinode), nodeCount, fp);	//定跡本体をバイナリファイルから読み込み
+		//nodesFromFile = nt;
+		std::cout << "a" << std::endl;
+
+		fclose(fp);
+
 	}
 
 	nodesForProgram = (SearchNode**)calloc(nodeCount, sizeof(SearchNode*));	//プログラム内で使用するnode
@@ -480,10 +504,9 @@ void Joseki::josekiInput(SearchTree* tree) {
 
 	tree->setRoot(root,tokenOfPosition,nodeCount);
 	
-	free(nodesFromFile);
+	//free(nodesFromFile);
 	free(parentsIndex);
 	free(nodesForProgram);
-	fclose(fp);
 
 	std::cout << timerInterval() << "秒経過" << std::endl;
 }

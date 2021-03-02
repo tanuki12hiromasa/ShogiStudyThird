@@ -198,6 +198,9 @@ void Commander::execute() {
 			of << output << std::endl;
 			of.close();
 		}
+		else if (tokens[0] == "open") {
+			commander.joseki.openingShareHandle();
+		}
 	}
 }
 
