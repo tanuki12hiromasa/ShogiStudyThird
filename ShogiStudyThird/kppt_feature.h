@@ -1,7 +1,7 @@
 ﻿#pragma once
-#include "apery_param.h"
+#include "kppt_param.h"
 
-namespace apery {
+namespace kppt {
 	using EvalElementType = std::array<int16_t, 2>;
 	using KPPEvalElementType0 = EvalElementType[fe_end];
 	using KPPEvalElementType1 = KPPEvalElementType0[fe_end];
@@ -56,29 +56,30 @@ namespace apery {
 		return lhs;
 	}
 
-	class apery_feat {
+	class kppt_feat {
 	private:
 		static KPPEvalElementType1* KPP;
 		static KKPEvalElementType1* KKP;
 		static bool allocated;
 	public:
-		static std::string folderpath;
-		static void init();
+		static void init(const std::string& path);
+		static void save(const std::string& path);
 		static EvalSum EvalFull(const Kyokumen&, const EvalList&);
 
 	public:
-		apery_feat() {}
-		apery_feat(const Kyokumen& k) :idlist(k) { sum = EvalFull(k, idlist); }
+		kppt_feat() {}
+		kppt_feat(const Kyokumen& k) :idlist(k) { sum = EvalFull(k, idlist); }
 		EvalList idlist;
 		EvalSum sum;
 		void set(const Kyokumen& kyokumen);
 		void proceed(const Kyokumen& before, const Move& move);
 		void recede(const Kyokumen& before,const koma::Koma moved,const koma::Koma captured, const Move move, const EvalSum& cache);
 		EvalSum getCache() { return sum; }
-		bool operator==(const apery_feat& rhs)const;
-		bool operator!=(const apery_feat& rhs)const {
+		bool operator==(const kppt_feat& rhs)const;
+		bool operator!=(const kppt_feat& rhs)const {
 			return !operator==(rhs);
 		}
 		std::string toString()const;
+		friend class kppt_paramVector;
 	};
 }

@@ -128,6 +128,14 @@ namespace koma {
 		assert(0 <= x && x < 9 && 0 <= y && y < 9);
 		return x * 9 + y;
 	}
+	inline int mirrorX(const int& pos) {
+		int x = (int)pos / 9; int y = (int)pos - x * 9;
+		return XYtoPos(8 - x, y);
+	}
+	inline Position mirrorX(const Position& pos) {
+		if (pos > Position::SQMax)return pos;
+		else return (Position)mirrorX((int)pos);
+	}
 
 	inline bool isInside(const int pos) {
 		return pos >= Position::SQMin && pos < Position::SQNum;

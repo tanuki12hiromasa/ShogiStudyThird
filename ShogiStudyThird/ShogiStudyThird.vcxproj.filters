@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="apery">
-      <UniqueIdentifier>{c012aa1c-ed2c-4694-8455-86b4c121fb6b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ヘッダー ファイル\search">
       <UniqueIdentifier>{0a4e1673-0949-4d87-955d-133a8eab6d35}</UniqueIdentifier>
     </Filter>
@@ -36,6 +33,15 @@
     </Filter>
     <Filter Include="nnue\layers">
       <UniqueIdentifier>{034ce061-fc1c-4db3-93c1-b3324e7fca4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\learn">
+      <UniqueIdentifier>{4ccf0407-357d-4edf-9b39-47d3a2337cfb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\learn">
+      <UniqueIdentifier>{5b22538d-d820-49ce-8829-c91ed16c2abb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="kppt">
+      <UniqueIdentifier>{c012aa1c-ed2c-4694-8455-86b4c121fb6b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -63,14 +69,8 @@
     <ClCompile Include="move.cpp">
       <Filter>ソース ファイル\kiso</Filter>
     </ClCompile>
-    <ClCompile Include="apery_feature.cpp">
-      <Filter>apery</Filter>
-    </ClCompile>
     <ClCompile Include="node.cpp">
       <Filter>ソース ファイル\search</Filter>
-    </ClCompile>
-    <ClCompile Include="apery_evaluate.cpp">
-      <Filter>apery</Filter>
     </ClCompile>
     <ClCompile Include="move_gen.cpp">
       <Filter>ソース ファイル\search</Filter>
@@ -101,6 +101,24 @@
     </ClCompile>
     <ClCompile Include="nnue\nnue_feature.cpp">
       <Filter>nnue</Filter>
+    </ClCompile>
+    <ClCompile Include="learner.cpp">
+      <Filter>ソース ファイル\learn</Filter>
+    </ClCompile>
+    <ClCompile Include="kppt_learn.cpp">
+      <Filter>kppt</Filter>
+    </ClCompile>
+    <ClCompile Include="kppt_evaluate.cpp">
+      <Filter>kppt</Filter>
+    </ClCompile>
+    <ClCompile Include="kppt_feature.cpp">
+      <Filter>kppt</Filter>
+    </ClCompile>
+    <ClCompile Include="learn_util.cpp">
+      <Filter>ソース ファイル\learn</Filter>
+    </ClCompile>
+    <ClCompile Include="learn_method.cpp">
+      <Filter>ソース ファイル\learn</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -149,15 +167,6 @@
     <ClInclude Include="vec2.h">
       <Filter>ヘッダー ファイル\kiso</Filter>
     </ClInclude>
-    <ClInclude Include="apery_feature.h">
-      <Filter>apery</Filter>
-    </ClInclude>
-    <ClInclude Include="apery_param.h">
-      <Filter>apery</Filter>
-    </ClInclude>
-    <ClInclude Include="apery_evaluate.h">
-      <Filter>apery</Filter>
-    </ClInclude>
     <ClInclude Include="move_gen.h">
       <Filter>ヘッダー ファイル\search</Filter>
     </ClInclude>
@@ -205,6 +214,27 @@
     </ClInclude>
     <ClInclude Include="nnue\layers\input_slice.h">
       <Filter>nnue\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="learner.h">
+      <Filter>ヘッダー ファイル\learn</Filter>
+    </ClInclude>
+    <ClInclude Include="kppt_learn.h">
+      <Filter>kppt</Filter>
+    </ClInclude>
+    <ClInclude Include="kppt_evaluate.h">
+      <Filter>kppt</Filter>
+    </ClInclude>
+    <ClInclude Include="kppt_feature.h">
+      <Filter>kppt</Filter>
+    </ClInclude>
+    <ClInclude Include="kppt_param.h">
+      <Filter>kppt</Filter>
+    </ClInclude>
+    <ClInclude Include="learn_util.h">
+      <Filter>ヘッダー ファイル\learn</Filter>
+    </ClInclude>
+    <ClInclude Include="learn_method.h">
+      <Filter>ヘッダー ファイル\learn</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

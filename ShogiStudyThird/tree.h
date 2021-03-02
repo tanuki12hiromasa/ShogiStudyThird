@@ -16,7 +16,9 @@ public:
 	void makeNewTree(const Kyokumen& startpos,const std::vector<Move>& moves);
 	void makeNewTree(const std::vector<std::string>& usitokens);
 
+	void LeaveBranchNode(const bool b) { leave_branchNode = b; }
 	void setNodeMaxsize(const size_t s) { nodesMaxCount = s; }
+	void resetEvaluationCount() { evaluationcount = 0; }
 	void addEvaluationCount(const uint64_t n) { evaluationcount += n; }
 
 	SearchNode* getBestMove()const;//最もevalの高いrootのchildを返す
@@ -56,6 +58,7 @@ private:
 	std::atomic_bool enable_deleteTrees;
 
 	friend class Commander;
+	friend class L_Commander;
 	friend class ShogiTest;
 };
  

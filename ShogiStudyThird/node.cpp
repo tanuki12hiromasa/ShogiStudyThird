@@ -165,7 +165,7 @@ void SearchNode::setRepetition(const bool teban) {
 	eval = teban ? repetitionScore : (-repetitionScore);
 	origin_eval = eval.load();
 	mass = mateMass;
-	status = State::T;
+	status = State::R;
 }
 
 void SearchNode::setRepetitiveCheck() {
@@ -173,7 +173,7 @@ void SearchNode::setRepetitiveCheck() {
 	eval = mateScore;
 	origin_eval = mateScore;
 	mass = mateMass;
-	status = State::T;
+	status = State::R;
 }
 
 double SearchNode::getTs(const double baseT) const {

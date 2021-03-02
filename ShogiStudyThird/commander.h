@@ -52,6 +52,7 @@ private:
 	std::mutex treemtx;
 
 	friend class ShogiTest;
+	friend class L_Commander;
 
 	Joseki joseki;
 };

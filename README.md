@@ -11,7 +11,7 @@ AperyのKPPT型評価関数に対応しています．利用手順は以下
 3. data/kppt_apery/ 内に，[Apery](https://hiraokatakuya.github.io/apery/)から入手したKPP.bin，KKP.binファイルを置く
 
 # ライセンス
-本プログラムのKPPT型評価関数は[Apery](https://hiraokatakuya.github.io/apery/)を移植したものであり，GPLv3に従います．
+本プログラムのKPPT型評価関数は[Apery](https://hiraokatakuya.github.io/apery/)を改変したものであり，また、NNUE型評価関数は[やねうら王](https://github.com/yaneurao/YaneuraOu)/[tanuki-](https://github.com/nodchip/tanuki-)を改変したものであるため、本ソフトはGPLv3に従います．
 
 # 関連ソフト
 [5五将棋バージョン](https://github.com/tanuki12hiromasa/MCSS_55Shogi)：本ソフトの5五将棋版です．評価関数の学習実験用．  

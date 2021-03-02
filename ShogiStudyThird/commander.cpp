@@ -103,7 +103,7 @@ Commander::~Commander() {
 
 void Commander::coutOption() {
 	using namespace std;
-	//cout << "option name kppt_filepath type string default ./data/kppt_apery" << endl; //隠しオプション
+	cout << "option name eval_filepath type string default ./data/kppt_kppt" << endl;
 	cout << "option name leave_branchNode type check default false" << endl;
 	cout << "option name continuous_tree type check default true" << endl;
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
@@ -143,9 +143,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "continuous_tree") {
 			continuousTree = (token[4] == "true");
 		}
-		else if (token[2] == "kppt_filepath") {
-			//aperyのパラメータファイルの位置を指定する 隠しオプション
-			apery::apery_feat::folderpath = token[4];
+		else if (token[2] == "eval_filepath") {
+			//kpptのパラメータファイルの位置を指定する
+			Evaluator::setpath_input(token[4]);
 		}
 		else if (token[2] == "NumOfAgent") {
 			agentNum = std::stoi(token[4]);

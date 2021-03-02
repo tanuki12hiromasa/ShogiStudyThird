@@ -2,6 +2,7 @@
 //
 #include "stdafx.h"
 #include "commander.h"
+#include "learner.h"
 #include "usi.h"
 #include "stest.h"
 #include <iostream>
@@ -13,6 +14,7 @@ int main(int argc, char* argv[])
 	enginename += "_debug";
 #endif
 	Commander::execute(enginename);
+	//Learner::execute();
 	//ShogiTest::test();
 }
 
