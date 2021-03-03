@@ -14,7 +14,7 @@ SearchTree::~SearchTree() {
 	enable_deleteTrees = false;
 	cv_deleteTrees.notify_one();
 	auto root = getGameRoot();
-	delete root;
+	if(root) delete root;
 	thread_deleteTrees.join();
 }
 
