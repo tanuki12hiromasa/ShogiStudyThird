@@ -22,6 +22,8 @@ public:
 	SearchNode* getBestMove()const;//最もevalの高いrootのchildを返す
 	std::vector<SearchNode*> getPV()const;//rootからのpvの連なりを返す
 	void proceed(SearchNode* node);
+	void pause_deleteTree() { enable_deleteTrees = false; }
+	void restart_deleteTree() { enable_deleteTrees = true; }
 
 	const uint64_t getEvaluationCount()const { return evaluationcount; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
@@ -54,6 +56,7 @@ private:
 	std::condition_variable cv_deleteTrees;
 	std::mutex mtx_deleteTrees;
 	std::atomic_bool enable_deleteTrees;
+	std::atomic_bool alive_deleteTrees;
 
 	friend class Commander;
 	friend class ShogiTest;
