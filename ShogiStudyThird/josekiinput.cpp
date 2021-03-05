@@ -64,7 +64,7 @@ void JosekiInput::init() {
 
 void JosekiInput::josekiInput(SearchTree* tree, size_t firstIndex) {
 	if (!option.getC("joseki_input_on")) {
-		//return;
+		return;
 	}
 
 

@@ -15,7 +15,8 @@ void Commander::execute(const std::string& enginename) {
 			std::cout << "command ready" << std::endl;
 		}
 		else if (tokens[0] == "usi") {
-			std::cout << "id name " << enginename << std::endl;
+			//std::cout << "id name " << enginename << std::endl;
+			std::cout << "id name " << enginename << "Joseki" << std::endl;
 			std::cout << "id author Hiromasa_Iwamoto" << std::endl;
 			coutOption();
 			commander.joseki.coutOption();
@@ -118,9 +119,6 @@ void Commander::execute(const std::string& enginename) {
 		}
 		else if (tokens[0] == "quit") {
 			return;
-		}
-		else if (tokens[0] == "open") {
-			commander.joseki.openingShareHandle();
 		}
 	}
 }
