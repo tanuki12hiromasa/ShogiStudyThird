@@ -474,8 +474,8 @@ void Commander::chakushu(SearchNode* const bestchild) {
 	std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << depth
 		<< " score cp " << static_cast<int>(root->eval) << " nodes " << SearchNode::getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
-	tree.proceed(bestchild);
 	releaseAgent();
+	tree.proceed(bestchild);
 	if (permitPonder) {
 		startAgent();
 	}
@@ -492,11 +492,13 @@ void Commander::position(const std::vector<std::string>& tokens) {
 void Commander::releaseAgent() {
 	if (agents.empty())return;
 	if (deleteThread.joinable()) deleteThread.join();
+	tree.pause_deleteTree();
 	auto tmpthread =  std::thread(
-		[prevAgents = std::move(agents)]{
+		[&,prevAgents = std::move(agents)]{
 			for (auto& ag : prevAgents) {
 				ag->terminate();
 			}
+			tree.restart_deleteTree();
 		});
 	deleteThread.swap(tmpthread);
 	agents.clear();
