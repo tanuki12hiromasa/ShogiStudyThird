@@ -24,7 +24,7 @@ void JosekiInput::init() {
 	std::ifstream ifs(option.getS("joseki_input_folder_name") + "\\" + option.getS("joseki_input_file_info_name"));
 	if (!ifs.is_open()) {
 		std::cout << option.getS("joseki_input_folder_name") + "\\" + option.getS("joseki_input_file_info_name") << "が開けませんでした。" << std::endl;
-		std::cout << "定跡なしで開始します。" << std::endl;
+		std::cout << "start without joseki" << std::endl;
 		return;
 		//exit(EXIT_FAILURE);
 	}
@@ -46,7 +46,7 @@ void JosekiInput::init() {
 
 	ifs.close();
 
-	std::cout << "ノード数:" << nodeCount << std::endl;
+	std::cout << "node num:" << nodeCount << std::endl;
 
 	//定跡本体を開く
 	errno_t err = fopen_s(&fp, (option.getS("joseki_input_folder_name") + "\\" + option.getS("joseki_input_file_name")).c_str(), "rb");
@@ -82,7 +82,7 @@ void JosekiInput::josekiInput(SearchTree* tree, size_t firstIndex) {
 	for (auto c : childrenToThread) {
 		thr.push_back(std::thread(&JosekiInput::yomikomiRecursive, this, c));
 	}
-	std::cout << "スレッド数：" << thr.size() << std::endl;
+	std::cout << "thread num:" << thr.size() << std::endl;
 	for (int i = 0; i < thr.size(); ++i) {
 		thr[i].join();
 	}
