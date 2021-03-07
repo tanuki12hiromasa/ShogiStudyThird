@@ -20,7 +20,7 @@ void Commander::execute(const std::string& enginename) {
 			std::cout << "id author Hiromasa_Iwamoto" << std::endl;
 			coutOption();
 			commander.joseki.coutOption();
-			//commander.yaneuraJoseki.coutOption();
+			commander.yaneuraJoseki.option.coutOption();
 			std::cout << "usiok" << std::endl;
 		}
 		else if (tokens[0] == "setoption") {
@@ -55,7 +55,13 @@ void Commander::execute(const std::string& enginename) {
 				for (auto h : commander.tree.getHistory()) {
 					std::cout << "info pv " << h->move.toUSI() << " cp " << h->eval << " depth " << h->mass << std::endl;
 				}*/
-				commander.go(tokens);
+				std::string bestmove = commander.yaneuraJoseki.getBestMoveFromJoseki(commander.tree.startKyokumen.toSfen());
+				if (bestmove == "nullmove") {
+					commander.go(tokens);
+				}
+				else {
+					std::cout << "bestmove " << bestmove << std::endl;
+				}
 			}
 		}
 		else if (tokens[0] == "stop") {
@@ -264,7 +270,7 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else {
 			joseki.setOption(token);
-			//yaneuraJoseki.setOption(token);
+			yaneuraJoseki.option.setOption(token);
 		}
 	}
 }
@@ -293,6 +299,7 @@ void Commander::gameInit() {
 	info();
 
 	joseki.input.init();
+	yaneuraJoseki.readBook();
 }
 
 void Commander::setTsDistribution() {

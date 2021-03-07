@@ -117,11 +117,11 @@
     <ClCompile Include="pruning.cpp">
       <Filter>ソース ファイル\search</Filter>
     </ClCompile>
-    <ClCompile Include="yaneurajoseki.cpp">
-      <Filter>ソース ファイル\search</Filter>
-    </ClCompile>
     <ClCompile Include="josekioption.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\joseki</Filter>
+    </ClCompile>
+    <ClCompile Include="yaneurajoseki.cpp">
+      <Filter>ソース ファイル\joseki</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

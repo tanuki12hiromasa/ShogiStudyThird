@@ -54,7 +54,7 @@ private:
 	std::mutex treemtx;
 
 	Joseki joseki;	//定跡の読み込みや出力を管理
-	//YaneuraJoseki yaneuraJoseki;
+	YaneuraJoseki yaneuraJoseki;
 	
 	friend class ShogiTest;
 };
