@@ -55,12 +55,17 @@ void Commander::execute(const std::string& enginename) {
 				for (auto h : commander.tree.getHistory()) {
 					std::cout << "info pv " << h->move.toUSI() << " cp " << h->eval << " depth " << h->mass << std::endl;
 				}*/
-				std::string bestmove = commander.yaneuraJoseki.getBestMoveFromJoseki(commander.tree.startKyokumen.toSfen());
-				if (bestmove == "nullmove") {
-					commander.go(tokens);
+				if (commander.yaneuraJoseki.option.getC("yjoseki_on")) {
+					std::string bestmove = commander.yaneuraJoseki.getBestMoveFromJoseki(commander.tree.getRootPlayer().kyokumen.toSfen());
+					if (bestmove == "nullmove") {
+						commander.go(tokens);
+					}
+					else {
+						std::cout << "bestmove " << bestmove << std::endl;
+					}
 				}
 				else {
-					std::cout << "bestmove " << bestmove << std::endl;
+					commander.go(tokens);
 				}
 			}
 		}
