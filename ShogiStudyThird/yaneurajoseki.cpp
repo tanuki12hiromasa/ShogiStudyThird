@@ -10,7 +10,6 @@
 YaneuraJoseki::YaneuraJoseki(){
 	option.addOption("yjoseki_on", "check", "false");
 	option.addOption("yjoseki_random", "check", "false");
-	option.addOption("yjoseki_random", "check", "false");
 	option.addOption("yjoseki_folder_name", "string", "joseki");
 	option.addOption("yjoseki_input_name", "string", "joseki.bin");
 }
