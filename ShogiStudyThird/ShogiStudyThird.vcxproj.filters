@@ -120,6 +120,9 @@
     <ClCompile Include="learn_method.cpp">
       <Filter>ソース ファイル\learn</Filter>
     </ClCompile>
+    <ClCompile Include="kifu.cpp">
+      <Filter>ソース ファイル\learn</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -234,6 +237,9 @@
       <Filter>ヘッダー ファイル\learn</Filter>
     </ClInclude>
     <ClInclude Include="learn_method.h">
+      <Filter>ヘッダー ファイル\learn</Filter>
+    </ClInclude>
+    <ClInclude Include="kifu.h">
       <Filter>ヘッダー ファイル\learn</Filter>
     </ClInclude>
   </ItemGroup>

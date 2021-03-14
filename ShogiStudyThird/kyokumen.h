@@ -15,6 +15,7 @@ public:
 	Kyokumen(const std::vector<std::string>& usitokens);
 	std::string toSfen()const;
 	std::string toBanFigure()const;
+	bool isStartpos()const;
 	
 	koma::Koma proceed(const Move);//返り値は取られた駒(captured)
 	koma::Koma recede(const Move m, const koma::Koma cap);//返り値は動かした駒(to=>fromに動いた駒)

@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "commander.h"
 #include "usi.h" 
+#include "kifu.h"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -58,6 +59,7 @@ void Commander::execute(const std::string& enginename) {
 			commander.go_alive = false;
 			commander.info_alive = false;
 			commander.stopAgent();
+			commander.save_result(tokens);
 		}
 		else if (tokens[0] == "debugsetup") {
 			auto setLeaveNodeCommand = usi::split("setoption name leave_branchNode value true", ' ');
@@ -130,6 +132,8 @@ void Commander::coutOption() {
 	cout << "option name standard_time_upper type spin default 20000 min 1000 max 6000000" << endl;//即指しの判定時間の上限
 	cout << "option name overhead_time type spin default 200 min 0 max 10000" << endl;
 	cout << "option name estimate_movesnum type spin default 120 min 0 max 10000" << endl;
+	cout << "option name Output_kifu_for_learn type check default false" << endl;
+	cout << "option name Output_kifu_dirpath type string default ./kifu" << endl;
 }
 
 void Commander::setOption(const std::vector<std::string>& token) {
@@ -218,6 +222,12 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		}
 		else if (token[2] == "estimate_movesnum") {
 			estimate_movesnum = std::stoi(token[4]);
+		}
+		else if (token[2] == "Output_kifu_for_learn") {
+			output_kifu_forLearn = (token[4] == "true");
+		}
+		else if (token[2] == "Output_kifu_dirpath") {
+			output_kifu_dir = token[4];
 		}
 		else {
 			joseki.setOption(token);
@@ -487,6 +497,18 @@ void Commander::position(const std::vector<std::string>& tokens) {
 	stopAgent();
 	releaseAgent();
 	tree.set(tokens);
+}
+
+void Commander::save_result(const std::vector<std::string>& tokens) {
+	if (output_kifu_forLearn) {
+		bool playerteban = (tree.getFirstMoveNum() % 2 == 0);
+		GameResult result;
+		if (tokens[1] == "draw")result = GameResult::Draw;
+		else if (playerteban == (tokens[1] == "win")) result = GameResult::SenteWin;
+		else result = GameResult::GoteWin;
+
+		LearnKifu::save(tree, result);
+	}
 }
 
 void Commander::releaseAgent() {

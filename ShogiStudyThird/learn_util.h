@@ -15,10 +15,7 @@ public:
 	static SearchNode* getPrincipalLeaf(const SearchNode* const root);
 	static double EvalToProb(const double eval);
 	static double BackProb(const SearchNode& parent, const SearchNode& child, const double T);
+	static std::string getDateString();
 	static constexpr double probT = 600.0;
 	static double pTb;
-};
-
-enum class GameResult {
-	SenteWin, GoteWin, Draw
 };

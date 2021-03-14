@@ -23,6 +23,7 @@ private:
 	void info();
 	void chakushu(SearchNode* const bestmove);
 	void position(const std::vector<std::string>& tokens);
+	void save_result(const std::vector<std::string>& tokens);
 
 	SearchTree tree;
 	std::vector<std::unique_ptr<SearchAgent>> agents;
@@ -39,6 +40,8 @@ private:
 	std::chrono::milliseconds time_standard_upper{ 20000 };
 	std::chrono::milliseconds time_overhead {150};
 	int estimate_movesnum = 120;
+	bool output_kifu_forLearn = false;
+	std::string output_kifu_dir = "./kifu";
 
 	std::thread go_thread;
 	std::thread info_thread;

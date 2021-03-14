@@ -71,3 +71,13 @@ double LearnUtil::BackProb(const SearchNode& parent, const SearchNode& child, co
 	}
 	return std::exp(-(child.eval + parent.eval) / T) / Z;
 }
+
+std::string LearnUtil::getDateString() {
+	std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+	std::string s(30, '\0');
+	std::tm ima;
+	localtime_s(&ima, &now);
+	std::strftime(&s[0], s.size(), "%Y%m%d-%H%M", &ima);
+	s.resize(s.find('\0'));
+	return s;
+}

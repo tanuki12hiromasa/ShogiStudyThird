@@ -148,3 +148,7 @@ namespace koma {
 	extern Position KomaToMpos(Koma koma);
 	extern Position MochiToMpos(Mochigoma koma, bool sente);
 }
+
+enum class GameResult {
+	SenteWin, GoteWin, Draw
+};

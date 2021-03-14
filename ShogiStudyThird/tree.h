@@ -28,10 +28,12 @@ public:
 	const uint64_t getEvaluationCount()const { return evaluationcount; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
 	const SearchPlayer& getRootPlayer()const { return rootPlayer; }
+	const Kyokumen& getStartKyokumen()const { return startKyokumen; }
 	std::pair<unsigned,SearchNode*> findRepetition(const Kyokumen& kyokumen)const;//過去に同一局面が無かったか検索する なければ-1を返す
 	SearchNode* getRoot() const { return history.back(); }
 	SearchNode* getGameRoot() const { return history.front(); }
 	int getMoveNum() const { return history.size() - 1; }
+	std::uint64_t getFirstMoveNum() const { return first_move; }
 
 	void foutTree()const;
 private:
@@ -42,6 +44,7 @@ private:
 	SearchPlayer rootPlayer;
 	std::atomic_uint64_t evaluationcount;
 	std::uint64_t nodesMaxCount;
+	std::uint64_t first_move = 0;
 
 	bool leave_branchNode = false;
 	bool continuous_tree = true;

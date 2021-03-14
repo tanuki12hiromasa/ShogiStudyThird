@@ -13,8 +13,11 @@ int main(int argc, char* argv[])
 #ifdef _DEBUG
 	enginename += "_debug";
 #endif
+#ifndef _LEARN
 	Commander::execute(enginename);
-	//Learner::execute();
+#else
+	Learner::execute();
+#endif
 	//ShogiTest::test();
 }
 

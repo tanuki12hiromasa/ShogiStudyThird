@@ -160,6 +160,10 @@ std::string Kyokumen::toSfen()const {
 	return usi;
 }
 
+bool Kyokumen::isStartpos() const {
+	return bammen == prime_bammen && isSente == true;
+}
+
 koma::Koma Kyokumen::proceed(const Move move) {
 	const unsigned from = move.from(), to = move.to();
 	const bool prom = move.promote();

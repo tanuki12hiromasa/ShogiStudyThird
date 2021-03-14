@@ -110,15 +110,6 @@ int Learner::getWinner(std::vector<std::string>& sfen) {
 	else return 0;
 }
 
-const std::string getDateString() {
-	std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-	std::string s(30, '\0');
-	std::tm ima;
-	localtime_s(&ima, &now);
-	std::strftime(&s[0], s.size(), "%Y%m%d-%H%M", &ima);
-	s.resize(s.find('\0'));
-	return s;
-}
 
 void Learner::learn_start_by_randompos(const int batch, const int itr) {
 	std::cout << "start randompos rootstarp learn\n";
@@ -126,7 +117,7 @@ void Learner::learn_start_by_randompos(const int batch, const int itr) {
 	std::mt19937_64 engine{ std::random_device()() };
 	const std::string tempinfo = "./.learninfo";
 	const std::string tempgrad = "./.learngradient";
-	std::string datestring = getDateString();
+	std::string datestring = LearnUtil::getDateString();
 	int counter_itr = 0, counter_batch = 0;
 	unsigned long long rootnum = 0, learnedposnum = 0;
 	const double learn_rate_0 = 0.01;

@@ -109,6 +109,7 @@ void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& 
 		}
 		history.clear();
 	}
+	first_move = usihis.size();
 	startKyokumen = startpos;
 	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
 	rootPlayer = SearchPlayer(startKyokumen);
