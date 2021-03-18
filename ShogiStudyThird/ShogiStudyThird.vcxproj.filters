@@ -43,6 +43,9 @@
     <Filter Include="ソース ファイル\joseki">
       <UniqueIdentifier>{beb3af35-d144-414f-b990-6897a86d75f2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sqlite">
+      <UniqueIdentifier>{f2f63c2e-54c5-46f3-95e6-b7b0af17c8d8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -122,6 +125,12 @@
     </ClCompile>
     <ClCompile Include="pruning.cpp">
       <Filter>ソース ファイル\joseki</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite\sqlite3.c">
+      <Filter>sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="jdatabase.cpp">
+      <Filter>sqlite</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -244,6 +253,15 @@
     </ClInclude>
     <ClInclude Include="josekioption.h">
       <Filter>ヘッダー ファイル\joseki</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite\sqlite3.h">
+      <Filter>sqlite</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite\sqlite3ext.h">
+      <Filter>sqlite</Filter>
+    </ClInclude>
+    <ClInclude Include="jdatabase.h">
+      <Filter>sqlite</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

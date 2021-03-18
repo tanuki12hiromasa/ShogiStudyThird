@@ -161,6 +161,7 @@
     <ClCompile Include="bb_kiki.cpp" />
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="commander.cpp" />
+    <ClCompile Include="jdatabase.cpp" />
     <ClCompile Include="joseki.cpp" />
     <ClCompile Include="josekiinput.cpp" />
     <ClCompile Include="josekioption.cpp" />
@@ -177,6 +178,7 @@
     <ClCompile Include="nnue\nnue_feature.cpp" />
     <ClCompile Include="node.cpp" />
     <ClCompile Include="pruning.cpp" />
+    <ClCompile Include="sqlite\sqlite3.c" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
@@ -195,6 +197,7 @@
     <ClInclude Include="bitboard.h" />
     <ClInclude Include="commander.h" />
     <ClInclude Include="evaluator.h" />
+    <ClInclude Include="jdatabase.h" />
     <ClInclude Include="joseki.h" />
     <ClInclude Include="josekiinput.h" />
     <ClInclude Include="josekinode.h" />
@@ -220,6 +223,8 @@
     <ClInclude Include="node.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="pruning.h" />
+    <ClInclude Include="sqlite\sqlite3.h" />
+    <ClInclude Include="sqlite\sqlite3ext.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="stest.h" />
     <ClInclude Include="time_property.h" />

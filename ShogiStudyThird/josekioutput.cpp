@@ -157,3 +157,23 @@ void JosekiOutput::backUp(std::vector<SearchNode*> history)
 	std::cout << std::endl;
 	std::cout << "バックアップ完了" << std::endl;
 }
+
+
+void JosekiOutput::josekiOutputToDataBaseWithPath(JosekiDataBase* jdb, SearchNode* node, std::string path) {
+	if (node->move.toUSI() != "nullmove") {
+		path += node->move.toUSI() + " ";
+	}
+	jdb->replaceNodeWithPath(node, path);
+	for (auto& cn : node->children) {
+		josekiOutputToDataBaseWithPath(jdb, &cn, path);
+	}
+}
+
+
+void JosekiOutput::josekiOutputToDataBaseWithParent(JosekiDataBase* jdb, SearchNode* node, int parentId) {
+	int nextParentId = jdb->replaceNodeWithParent(node, parentId);
+	//std::cout << "id:" << nextParentId << std::endl;
+	for (auto& cn : node->children) {
+		josekiOutputToDataBaseWithParent(jdb, &cn, nextParentId);
+	}
+}

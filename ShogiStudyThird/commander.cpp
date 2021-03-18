@@ -44,17 +44,8 @@ void Commander::execute(const std::string& enginename) {
 				std::cout << "checkmate notimplemented" << std::endl;
 				continue;
 			}
-			//std::cout << "print historyA" << std::endl;
-			//for (auto h : commander.tree.getHistory()) {
-			//	std::cout << "info joseki pv " << h->move.toUSI() << " cp " << h->eval << " depth " << h->mass << std::endl;
-			//}
 
 			if (!commander.joseki.input.getBestMove(&commander.tree,commander.tree.getHistory())) {
-				/*std::cout << "print historyB" << std::endl;
-
-				for (auto h : commander.tree.getHistory()) {
-					std::cout << "info pv " << h->move.toUSI() << " cp " << h->eval << " depth " << h->mass << std::endl;
-				}*/
 				if (commander.yaneuraJoseki.option.getC("yjoseki_on")) {
 					std::string bestmove = commander.yaneuraJoseki.getBestMoveFromJoseki(commander.tree.getRootPlayer().kyokumen.toSfen());
 					if (bestmove == "nullmove") {
@@ -72,11 +63,6 @@ void Commander::execute(const std::string& enginename) {
 		else if (tokens[0] == "stop") {
 			commander.chakushu(commander.tree.getBestMove());
 		}
-		//else if (tokens[0] == "fouttree") {
-		//	std::cout << "ノード数：" << commander.tree.getNodeCount() << std::endl;
-		//	commander.tree.foutTree();
-		//	std::cout << "fouttree: done" << std::endl;
-		//}
 		else if (tokens[0] == "ponderhit") {
 			//先読みはするがponder機能は利用しない
 		}
@@ -94,23 +80,10 @@ void Commander::execute(const std::string& enginename) {
 		else if (tokens[0] == "staticevaluate") {
 			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
 		}
-		//else if (tokens[0] == "yomikomiold") {
-		//	commander.yomikomi();
-		//}
 		else if (tokens[0] == "josekiinput") {
 			commander.joseki.input.josekiInput(&(commander.tree));
 		}
-		//else if (tokens[0] == "foutjoseki") {
-		//	commander.joseki.setNodeCount(commander.tree.nodecount);
-		//	commander.joseki.josekiOutput(commander.tree.getHistory());
-		//	std::cout << "定跡出力完了" << std::endl;
-		//}
-		//else if (tokens[0] == "foutjosekitext") {
-		//	commander.joseki.josekiTextOutput(commander.tree.getHistory());
-		//}
-		//else if (tokens[0] == "pruning") {
-		//	std::cout << commander.joseki.pruning(commander.tree.getHistory().front()) << "ノードが削除されました" << std::endl;
-		//}
+
 		else if (tokens[0] == "getsfen") {
 			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
 		}
@@ -121,12 +94,11 @@ void Commander::execute(const std::string& enginename) {
 		else if (tokens[0] == "getBanFigure") {
 			std::cout << commander.tree.getRootPlayer().kyokumen.toBanFigure() << std::endl;
 		}
-		else if (tokens[0] == "getbestmovefromjoseki") {
-			/*SearchNode* node = commander.joseki.input.getBestMove(commander.tree.getHistory());
-			
-			std::cout << node->move.toUSI() << std::endl;
-			std::cout << node->eval << std::endl;
-			std::cout << node->mass << std::endl;*/
+		else if (tokens[0] == "outputdatabase") {
+			commander.joseki.josekiDataBase.open();
+			commander.joseki.output.josekiOutputToDataBaseWithParent(&commander.joseki.josekiDataBase, commander.tree.getHistory().front(),-1);
+			commander.joseki.josekiDataBase.close();
+			std::cout << "outputdatabase ok" << std::endl;
 		}
 		else if (tokens[0] == "quit") {
 			return;

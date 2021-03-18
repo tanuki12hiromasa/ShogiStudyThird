@@ -14,6 +14,7 @@ public:
     bool getBestMoveOn() { return bestMoveOn; }
     JosekiOption option;
     void init();
+
 private:
     FILE* fp;	//定跡本体の読み込み用ファイル
     SearchNode* nodesForProgram;	//実際にプログラム内で活用していく定跡が格納されるところ
