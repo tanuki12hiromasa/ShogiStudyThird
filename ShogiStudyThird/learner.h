@@ -14,7 +14,9 @@ private:
 	static int getWinner(std::vector<std::string>& sfen);
 
 	void learn_start_by_randompos(int batch, int itr);
-	//void learn_by_kifudata(const std::string& kifupath);
+
+	void learn_by_kifudata(const std::string& filepath);
+	void learn_by_kifudata_latest(const std::string& dirpath);
 
 	double T_search = 200;
 	double T_selfplay = 120;

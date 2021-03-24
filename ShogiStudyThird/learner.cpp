@@ -5,6 +5,7 @@
 #include <ctime>
 #include <string>
 #include "usi.h"
+#include "kifu.h"
 
 void Learner::execute() {
 	Learner learner;
@@ -57,6 +58,16 @@ void Learner::execute() {
 		else if (tokens[0] == "randomposlearn") {
 			if (tokens.size() < 2) { std::cout << "randomposlearn <batchsize> <itrsize>" << std::endl; continue; }
 			learner.learn_start_by_randompos(std::stoi(tokens[1]), std::stoi(tokens[2]));
+		}
+		else if (tokens[0] == "kifulearn") {
+			if (tokens.size() < 2) { std::cout << "" << std::endl; continue; }
+			if (tokens[1] == "latest") {
+				if(tokens.size()<3){ std::cout << "" << std::endl; continue; }
+				learner.learn_by_kifudata_latest(tokens[2]);
+			}
+			else {
+				learner.learn_by_kifudata(tokens[1]);
+			}
 		}
 		else if (tokens[0] == "quit") {
 			break;
@@ -233,3 +244,20 @@ void Learner::learn_start_by_randompos(const int batch, const int itr) {
 	std::cout << "learning end." << std::endl;
 }
 
+void Learner::learn_by_kifudata(const std::string& filepath) {
+	LearnKifu kifu(filepath);
+
+	for (std::uint64_t t = kifu.start; t < kifu.history.size(); t++) {
+
+		if (kifu.player_teban == (t % 2 == 0)) {
+
+		}
+
+	}
+
+}
+
+//最新の棋譜ファイルを検索して学習に利用する
+void Learner::learn_by_kifudata_latest(const std::string& dirpath) {
+
+}
