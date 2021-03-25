@@ -8,29 +8,46 @@ bool SearchAgent::use_original_kyokumen_eval = false;
 bool SearchAgent::QS_relativeDepth = false;
 int SearchAgent::drawmovenum = 320;
 
-SearchAgent::SearchAgent(SearchTree& tree, const double Ts,int seed)
-	:tree(tree),engine(seed),root(tree.getRoot()),Ts(Ts)
+SearchAgent::SearchAgent(SearchTree& tree, const double Ts,int seed, std::atomic_bool& enable, 
+	std::atomic_uint& old_threads_num, std::atomic_uint64_t& stamp)
+	:tree(tree),engine(seed),Ts(Ts),enable(enable),old_threads_num(old_threads_num),stamp(stamp)
 {
-	
-	if (root != nullptr)
-		alive = true;
-	else 
-		alive = false;
+	status = state::search;
 	th = std::thread(&SearchAgent::loop, this);
 }
 
 SearchAgent::SearchAgent(SearchAgent&& agent) noexcept
 	: tree(agent.tree), th(std::move(agent.th)), Ts(agent.Ts),
-	root(agent.root), engine(std::move(agent.engine))
+	enable(agent.enable), old_threads_num(old_threads_num),
+	stamp(stamp) ,engine(std::move(agent.engine))
 {
-	alive = agent.alive.load();
+	status = agent.status.load();
+}
+
+SearchAgent::~SearchAgent() {
+	status = state::terminate;
+	if (th.joinable()) th.join();
 }
 
 
-
 void SearchAgent::loop() {
-	while (alive) {
-		simulate(root);
+	using namespace std::chrono_literals;
+	std::uint64_t mystamp = 0;
+	while (status != state::terminate) {
+		if (old_threads_num > 0 && stamp != mystamp) {
+			old_threads_num--;
+			mystamp = stamp;
+		}
+		switch (status) {
+			case state::search:
+				if (enable) simulate(tree.getRoot());
+				else std::this_thread::sleep_for(20ms);
+				break;
+			case state::gc:
+				bool ok = deleteGarbage();
+				if (ok) status = state::search;
+				break;
+		}
 	}
 }
 
@@ -47,7 +64,7 @@ void SearchAgent::simulate(SearchNode* const root) {
 	std::vector<std::pair<uint64_t, std::array<uint8_t, 95>>> k_history;
 	//選択
 	while (!node->isLeaf()) {
-		if (!alive) return;
+		if (!enable) return;
 		double CE = std::numeric_limits<double>::max();
 		std::vector<dn> evals; evals.reserve(node->children.size());
 		for (auto& child : node->children) {
@@ -88,7 +105,7 @@ void SearchAgent::simulate(SearchNode* const root) {
 	}
 	//展開・評価
 	{
-		if (!alive) return;
+		if (!enable) return;
 		//末端ノードが他スレッドで展開中になっていないかチェック
 		LeafGuard dredear(node);
 		if (!dredear.Result()) {
@@ -241,7 +258,7 @@ double alphabeta(Move& pmove,SearchPlayer& player, int depth, double alpha, doub
 	return alpha;
 }
 
-uint64_t SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& player, const int hislength) {
+size_t SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& player, const int hislength) {
 	const int depth = (QS_relativeDepth) ? (SearchNode::getQSdepth() - hislength) : SearchNode::getQSdepth();
 	if (depth <= 0) {
 		const double eval = Evaluator::evaluate(player);
@@ -316,4 +333,76 @@ bool SearchAgent::checkRepetitiveCheck(const Kyokumen& kyokumen,const std::vecto
 		}
 	}
 	return false;
+}
+
+//削除が完了したらtrueを返す
+bool SearchAgent::deleteGarbage() {
+	using namespace std::chrono_literals;
+	if (old_threads_num > 0) {
+		std::this_thread::sleep_for(10ms);
+		return false;
+	}
+	else {
+		return !tree.deleteGarbage();
+	}
+}
+
+AgentPool::AgentPool(SearchTree& tree):time_stamp(std::random_device()()),tree(tree) {
+	old_thread_num = 0;
+	search_enable = false;
+}
+
+void AgentPool::setup() {
+	assert(!search_enable);
+	if (agents.size() < agent_num) {
+		for (std::size_t t = agents.size(); t < agent_num; t++) {
+			agents.push_back(std::unique_ptr<SearchAgent>(
+				new SearchAgent(tree, TsDistribution[t % TsDistribution.size()], t,
+					search_enable, old_thread_num, time_stamp)));
+		}
+	}
+	else if (agents.size() > agent_num) {
+		for (std::size_t t = agent_num; t < agents.size(); t++) {
+			agents[t]->status = SearchAgent::state::terminate;
+		}
+		agents.erase(agents.begin() + agent_num, agents.end());
+	}
+}
+
+void AgentPool::startSearch() {
+	search_enable = true;
+}
+
+void AgentPool::pauseSearch() {
+	search_enable = false;
+}
+
+void AgentPool::noticeProceed() {
+	std::cout << "notice\n";
+	assert(!search_enable);
+	if (agent_num <= gc_num) return;
+	for (std::size_t t = agent_num - gc_num; t < agent_num; t++) {
+		const auto& agent = agents[t];
+		agent->status = SearchAgent::state::gc;
+	}
+	old_thread_num = agent_num;
+	time_stamp++;
+}
+
+void AgentPool::deleteTree() {
+	using namespace std::chrono_literals;
+	search_enable = false;
+	tree.makeNewTree(Kyokumen(), {});
+	for (const auto& agent : agents) {
+		agent->status = SearchAgent::state::gc;
+	}
+	while (!tree.deleteGarbage()) { std::this_thread::sleep_for(20ms); }
+}
+
+void AgentPool::terminate() {
+	for (const auto& agent : agents) {
+		agent->status = SearchAgent::state::terminate;
+	}
+	agents.clear();
+	agent_num = 0;
 }

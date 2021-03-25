@@ -57,7 +57,7 @@ void Commander::execute(const std::string& enginename) {
 		else if (tokens[0] == "gameover") {
 			commander.go_alive = false;
 			commander.info_alive = false;
-			commander.stopAgent();
+			commander.agents.pauseSearch();
 		}
 		else if (tokens[0] == "debugsetup") {
 			auto setLeaveNodeCommand = usi::split("setoption name leave_branchNode value true", ' ');
@@ -93,9 +93,7 @@ Commander::~Commander() {
 	go_alive = false;
 	info_enable = false;
 	info_alive = false;
-	for (auto& ag : agents) {
-		ag->terminate();
-	}
+	agents.terminate();
 	if (deleteThread.joinable())deleteThread.detach();
 	if(go_thread.joinable()) go_thread.join();
 	if(info_thread.joinable())info_thread.join();
@@ -192,9 +190,6 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "Es_funcParam") {
 			SearchNode::setEsFuncParam(std::stod(token[4]));
 		}
-		else if (token[2] == "NodeMaxNum") {
-			tree.setNodeMaxsize(std::stoull(token[4]));
-		}
 		else if (token[2] == "DrawMoveNum") {
 			SearchAgent::setDrawMoveNum(std::stoi(token[4]));
 		}
@@ -231,7 +226,6 @@ void Commander::paramInit() {
 	SearchNode::setTdepth(100);
 	SearchNode::setTeval(40);
 	SearchNode::setQSearchDepth(0);
-	tree.setNodeMaxsize(150000000);
 	SearchNode::setMateScore(34000);
 	SearchNode::setMateOneScore(20);
 	SearchNode::setMateScoreBound(30000);
@@ -240,11 +234,9 @@ void Commander::paramInit() {
 }
 
 void Commander::gameInit() {
-	if (agents.empty()) {
-		BBkiki::init();
-		Evaluator::init();
-		tree.rootPlayer.feature.set(tree.rootPlayer.kyokumen);
-	}
+	BBkiki::init();
+	Evaluator::init();
+	agents.setup();
 	setTsDistribution();
 	info();
 
@@ -294,19 +286,6 @@ void Commander::setTsDistribution() {
 	}
 }
 
-void Commander::startAgent() {
-	assert(agents.empty());
-	assert(TsDistribution.size() == agentNum);
-	for (int i = 0; i < agentNum; i++) {
-		const double Ts = TsDistribution[i];
-		agents.push_back(std::unique_ptr<SearchAgent>(new SearchAgent(tree, Ts, i)));
-	}
-}
-void Commander::stopAgent() {
-	for (auto& ag : agents) {
-		ag->stop();
-	}
-}
 
 void Commander::go(const std::vector<std::string>& tokens) {
 	//宣言可能かどうかは先に調べる
@@ -327,7 +306,7 @@ void Commander::go(const std::vector<std::string>& tokens) {
 	tree.evaluationcount = 0ull;
 	info_prev_evcount = 0ull;
 	info_prevtime = std::chrono::system_clock::now();
-	startAgent();
+	agents.startSearch();
 	TimeProperty tp(kyokumen.teban(), tokens);
 	go_alive = false;
 	if(go_thread.joinable()) go_thread.join();
@@ -449,7 +428,7 @@ void Commander::info() {
 void Commander::chakushu(SearchNode* const bestchild) {
 	std::lock_guard<std::mutex> clock(coutmtx);
 	std::lock_guard<std::mutex> tlock(treemtx);
-	stopAgent();
+	agents.pauseSearch();
 	info_enable = false;
 	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
 	if (kyokumen.isDeclarable()) {
@@ -474,32 +453,17 @@ void Commander::chakushu(SearchNode* const bestchild) {
 	std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << depth
 		<< " score cp " << static_cast<int>(root->eval) << " nodes " << SearchNode::getNodeCount() << std::endl;
 	std::cout << "bestmove " << bestchild->move.toUSI() << std::endl;
-	releaseAgent();
 	tree.proceed(bestchild);
+	agents.noticeProceed();
 	if (permitPonder) {
-		startAgent();
+		agents.startSearch();
 	}
 	return;
 }
 
 void Commander::position(const std::vector<std::string>& tokens) {
 	std::lock_guard<std::mutex> lock(treemtx);
-	stopAgent();
-	releaseAgent();
+	agents.pauseSearch();
 	tree.set(tokens);
-}
-
-void Commander::releaseAgent() {
-	if (agents.empty())return;
-	if (deleteThread.joinable()) deleteThread.join();
-	tree.pause_deleteTree();
-	auto tmpthread =  std::thread(
-		[&,prevAgents = std::move(agents)]{
-			for (auto& ag : prevAgents) {
-				ag->terminate();
-			}
-			tree.restart_deleteTree();
-		});
-	deleteThread.swap(tmpthread);
-	agents.clear();
+	agents.noticeProceed();
 }
