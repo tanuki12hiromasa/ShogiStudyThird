@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "tree.h"
 #include "move_gen.h"
 #include <queue>
@@ -28,7 +28,7 @@ void SearchTree::set(const std::vector<std::string>& usitokens) {
 
 void SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) {
 	
-	if (history.empty() || startKyokumen != startpos || history.size() > usihis.size() || continuous_tree) {
+	if (history.empty() || startKyokumen != startpos || history.size() > usihis.size() || !continuous_tree) {
 		//初期状態ならmakenewtreeで初期化
 		//あるいは初期局面が異なるか与えられた棋譜が内部の棋譜より短いので探索木を作り直す
 		makeNewTree(startpos, usihis);
@@ -98,7 +98,6 @@ void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& 
 		auto root = history.front();
 		if (root) {
 			addGarbage(root, true);
-			delete root;
 		}
 		history.clear();
 	}
@@ -205,7 +204,6 @@ void SearchTree::addGarbage(SearchNode* const parent, bool deleteParent) {
 
 bool SearchTree::deleteGarbage() {
 	SearchNode::Children* root = nullptr;
-	std::cout << "dG ";
 	{
 		std::lock_guard<std::mutex> lock(mtx_deleteTrees);
 		if (garbage_parent.empty()) {
@@ -215,6 +213,8 @@ bool SearchTree::deleteGarbage() {
 		root = p.first->purge();
 		if (p.second) delete p.first;
 	}
-	if (!root) delete root;
+	//std::cout << "dg " << SearchNode::nodecount << " " << root->size();
+	if (root) delete root;
+	//std::cout << " " << SearchNode::nodecount << "\n";
 	return true;
 }
