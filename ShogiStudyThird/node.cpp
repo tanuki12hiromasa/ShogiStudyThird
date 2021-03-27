@@ -4,15 +4,11 @@
 #include <algorithm>
 #include <limits>
 
-double SearchNode::mateMass = 1;
+double SearchNode::mateMass = 9999999;
 double SearchNode::mateScore = 34000.0;//詰ませた側(勝った側)のscore
 double SearchNode::mateScoreBound = 30000.0;
 double SearchNode::mateOneScore = 20.0;
 double SearchNode::repetitionScore = -100;//先手側のscore（千日手のscoreは手番に依存する）
-double SearchNode::Ts_c = 1.0;
-int SearchNode::Ts_FunctionCode = 0;
-double SearchNode::T_eval = 40;
-double SearchNode::T_depth = 90;
 int SearchNode::QS_depth = 8;
 int SearchNode::Es_FunctionCode = 0;
 double SearchNode::Es_c = 1.0;
@@ -176,59 +172,8 @@ void SearchNode::setRepetitiveCheck() {
 	status = State::T;
 }
 
-double SearchNode::getTs(const double baseT) const {
-	switch (Ts_FunctionCode)
-	{
-	case 0:
-	default:
-		return baseT;
-	case 1:
-		return baseT * std::pow(Ts_c, mass.load());
-	}
-}
-
-double SearchNode::getTcMcVariance()const {
-	std::vector<double> cmasses;
-	double mean = 0;
-	for (const auto& child : children) {
-		const double m = child.mass;
-		cmasses.push_back(m);
-		mean += m;
-	}
-	mean /= cmasses.size();
-	double variance = 0;
-	for (const auto& m : cmasses) {
-		variance += (m - mean) * (m - mean);
-	}
-	return std::sqrt(variance / cmasses.size());
-}
-double SearchNode::getTcMcVarianceExpection()const {
-	std::vector<std::pair<double, double>> ems;
-	double min = std::numeric_limits<double>::max();
-	for (const auto& child : children) {
-		const double e = child.eval;
-		ems.push_back(std::make_pair(e, child.mass.load()));
-		if (e < min) {
-			min = e;
-		}
-	}
-	double Z = 0;
-	for (auto& e : ems) {
-		const double exp = std::exp(-(e.first - min) / T_depth);
-		Z += exp;
-		e.first = exp;
-	}
-	const double mean = mass - 1;
-	double variance = 0;
-	for (const auto& e : ems) {
-		variance += (e.second - mean) * (e.second - mean) * e.first;
-	}
-	return std::sqrt(variance / Z);
-}
-
-
-double SearchNode::getEs()const {
-	switch (Es_FunctionCode)
+double SearchNode::getEs(int funccode)const {
+	switch (funccode)
 	{
 	case 0:
 	default:
@@ -270,10 +215,10 @@ double SearchNode::getEs()const {
 	}
 }
 
-SearchNode* SearchNode::getBestChild()const {
+SearchNode* SearchNode::getBestChild(int funccode)const {
 	SearchNode* best = nullptr;
 	if (children.empty())return nullptr;
-	switch (PV_FuncCode) {
+	switch (funccode) {
 		default:
 		case 0: {
 			double min = std::numeric_limits<double>::max();

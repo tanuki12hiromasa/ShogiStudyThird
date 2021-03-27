@@ -102,6 +102,9 @@
     <ClCompile Include="nnue\nnue_feature.cpp">
       <Filter>nnue</Filter>
     </ClCompile>
+    <ClCompile Include="temperature.cpp">
+      <Filter>ソース ファイル\search</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -205,6 +208,9 @@
     </ClInclude>
     <ClInclude Include="nnue\layers\input_slice.h">
       <Filter>nnue\layers</Filter>
+    </ClInclude>
+    <ClInclude Include="temperature.h">
+      <Filter>ヘッダー ファイル\search</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

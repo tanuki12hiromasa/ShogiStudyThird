@@ -164,25 +164,25 @@ void Commander::setOption(const std::vector<std::string>& token) {
 			SearchAgent::setUseOriginalKyokumenEval(token[4] == "true");
 		}
 		else if (token[2] == "Ts_min") {
-			Ts_min = std::stod(token[4]);
+			SearchTemperature::Ts_min = std::stod(token[4]);
 		}
 		else if (token[2] == "Ts_max") {
-			Ts_max = std::stod(token[4]);
+			SearchTemperature::Ts_max = std::stod(token[4]);
 		}
 		else if (token[2] == "Ts_disperseFunc") {
-			TsDistFuncNum = std::stoi(token[4]);
+			SearchTemperature::TsDistFuncCode = std::stoi(token[4]);
 		}
 		else if (token[2] == "Ts_funcParam") {
-			SearchNode::setTsFuncParam(std::stod(token[4]));
+			SearchTemperature::TsNodeFuncConstant = (std::stod(token[4]));
 		}
 		else if (token[2] == "Ts_functionCode") {
-			SearchNode::setTsFuncCode(std::stoi(token[4]));
+			SearchTemperature::TsNodeFuncCode = (std::stoi(token[4]));
 		}
 		else if (token[2] == "T_eval") {
-			SearchNode::setTeval(std::stod(token[4]));
+			SearchTemperature::Te = (std::stod(token[4]));
 		}
 		else if (token[2] == "T_depth") {
-			SearchNode::setTdepth(std::stod(token[4]));
+			SearchTemperature::Td = (std::stod(token[4]));
 		}
 		else if (token[2] == "Es_functionCode") {
 			SearchNode::setEsFuncCode(std::stoi(token[4]));
@@ -223,69 +223,21 @@ void Commander::setOption(const std::vector<std::string>& token) {
 void Commander::paramInit() {
 	//usiによる設定前のデフォルト値
 
-	SearchNode::setTdepth(100);
-	SearchNode::setTeval(40);
-	SearchNode::setQSearchDepth(0);
+	SearchNode::setQSearchDepth(8);
 	SearchNode::setMateScore(34000);
 	SearchNode::setMateOneScore(20);
 	SearchNode::setMateScoreBound(30000);
 	SearchNode::setRepScore(0);
-	agentNum = 12;
 }
 
 void Commander::gameInit() {
 	BBkiki::init();
 	Evaluator::init();
 	agents.setup();
-	setTsDistribution();
 	info();
 
 	joseki.readBook();
 }
-
-void Commander::setTsDistribution() {
-	TsDistribution.clear();
-	switch (TsDistFuncNum) {
-		case 0:
-			for (int i = 0; i < agentNum; i++) TsDistribution.push_back((Ts_min + Ts_max) / 2);
-			break;
-		case 1:
-		{
-			const double delta = (Ts_max - Ts_min) / (agentNum - 1.0);
-			for (int i = 0; i < agentNum; i++) TsDistribution.push_back(Ts_min + delta * i);
-			break;
-		}
-		case 2:
-		{
-			const double minlog = std::log(Ts_min), maxlog = std::log(Ts_max);
-			const double delta = (maxlog - minlog) / (agentNum - 1.0);
-			for (int i = 0; i < agentNum; i++) TsDistribution.push_back(std::exp(minlog + delta * i));
-			break;
-		}
-		case 3:
-		{
-			const double c = (Ts_max + Ts_min) / 10.0;
-			const double a = 1.0 / (std::exp((Ts_max - Ts_min) / (c * 2.0)) - 1.0);
-			for (int i = 0; i < agentNum; i++) {
-				const double p = (double)i / (agentNum - 1.0);
-				TsDistribution.push_back(c * std::log((p + a) / (1 + a - p)) + (Ts_min + Ts_max) / 2.0);
-			}
-			break;
-		}
-		case 4:
-		{
-			const double minlog = std::log(Ts_min), maxlog = std::log(Ts_max);
-			const double c = (minlog + maxlog) / 40.0;
-			const double a = 1.0 / (std::exp((maxlog - minlog) / (c * 2.0)) - 1.0);
-			for (int i = 0; i < agentNum; i++) {
-				const double p = (double)i / (agentNum - 1.0);
-				TsDistribution.push_back(std::exp(c * std::log((p + a) / (1 + a - p)) + (minlog + maxlog) / 2.0));
-			}
-			break;
-		}
-	}
-}
-
 
 void Commander::go(const std::vector<std::string>& tokens) {
 	//宣言可能かどうかは先に調べる

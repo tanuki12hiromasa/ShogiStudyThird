@@ -48,10 +48,7 @@ private:
 	void addGarbage(SearchNode* const parent, bool deleteParent);
 
 	std::queue<std::pair<SearchNode*, bool>> garbage_parent;
-	std::condition_variable cv_deleteTrees;
 	std::mutex mtx_deleteTrees;
-	std::atomic_bool enable_deleteTrees;
-	std::atomic_bool alive_deleteTrees;
 
 	friend class Commander;
 	friend class ShogiTest;

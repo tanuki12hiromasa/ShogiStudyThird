@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "tree.h"
 #include "move_gen.h"
+#include "temperature.h"
 #include <random>
 #include <functional>
 
@@ -76,6 +77,5 @@ private:
 	std::size_t agent_num = 8;
 	std::size_t gc_num = 1;
 	std::vector<std::unique_ptr<SearchAgent>> agents;
-	std::vector<double> TsDistribution = { 120 };
 
 };

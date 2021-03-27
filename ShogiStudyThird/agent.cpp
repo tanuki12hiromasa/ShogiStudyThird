@@ -75,8 +75,8 @@ void SearchAgent::simulate(SearchNode* const root) {
 	using dn = std::pair<double, SearchNode*>;
 	using dd = std::pair<double, double>;
 	Searching _searching(searching);
-	const double T_e = SearchNode::getTeval();
-	const double T_d = SearchNode::getTdepth();
+	const double T_e = SearchTemperature::Te;
+	const double T_d = SearchTemperature::Td;
 	const double MateScoreBound = SearchNode::getMateScoreBound();
 	size_t newnodecount = 0;
 	SearchNode* node = root;
@@ -105,7 +105,7 @@ void SearchAgent::simulate(SearchNode* const root) {
 			}
 			return;
 		}
-		const double T_c = node->getTs(Ts);
+		const double T_c = SearchTemperature::getTs_atNode(Ts, *node);
 		double Z = 0;
 		for (const auto& eval : evals) {
 			Z += std::exp(-(eval.first - CE) / T_c);
@@ -397,7 +397,7 @@ void SearchAgent::simulate_learn() {
 			}
 			return;
 		}
-		const double T_c = node->getTs(Ts);
+		const double T_c = SearchTemperature::getTs_atNode(Ts, *node);
 		double Z = 0;
 		for (const auto& eval : evals) {
 			Z += std::exp(-(eval.first - CE) / T_c);
@@ -430,7 +430,7 @@ void AgentPool::setup() {
 	if (agents.size() < agent_num) {
 		for (std::size_t t = agents.size(); t < agent_num; t++) {
 			agents.push_back(std::unique_ptr<SearchAgent>(
-				new SearchAgent(tree, TsDistribution[t % TsDistribution.size()], t)));
+				new SearchAgent(tree, SearchTemperature::getTs((double)t / (agent_num - 1)), t)));
 		}
 	}
 	else if (agents.size() > agent_num) {
