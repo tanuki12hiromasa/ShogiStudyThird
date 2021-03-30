@@ -13,11 +13,7 @@ private:
 	void setOption(const std::vector<std::string>& token);
 	void paramInit();
 	void gameInit();
-	void setTsDistribution();
 
-	void startAgent();
-	void stopAgent();
-	void releaseAgent();
 	void go(const std::vector<std::string>& tokens);
 	std::pair<std::chrono::milliseconds, std::chrono::milliseconds> decide_timelimit(const TimeProperty time)const;
 	void info();
@@ -25,15 +21,11 @@ private:
 	void position(const std::vector<std::string>& tokens);
 
 	SearchTree tree;
-	std::vector<std::unique_ptr<SearchAgent>> agents;
+	AgentPool agents{ tree };
 	std::thread deleteThread;
 	int agentNum = 6;
 	bool permitPonder;
 	bool continuousTree = true;
-	double Ts_min = 40;
-	double Ts_max = 200;
-	int TsDistFuncNum = 0;
-	std::vector<double> TsDistribution;
 	int resign_border = 3;
 	std::chrono::milliseconds time_quickbm_lower{ 4000 };
 	std::chrono::milliseconds time_standard_upper{ 20000 };

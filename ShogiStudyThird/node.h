@@ -42,10 +42,6 @@ private:
 	static double mateScoreBound;
 	static double mateOneScore;
 	static double repetitionScore;
-	static double Ts_c;
-	static int Ts_FunctionCode;//探索指標の分散を期待値で重みづけするかどうかのフラグ
-	static double T_eval;
-	static double T_depth;
 	static int QS_depth;
 	static int Es_FunctionCode;
 	static double Es_c;
@@ -60,13 +56,7 @@ public:
 	static void setRepScore(const double score) { repetitionScore = score; }
 	static double getMateScoreBound() { return mateScoreBound; }
 	static double getMateScore() { return mateScore; }
-	static void setTsFuncParam(const double Ts) { Ts_c = Ts; }
-	static void setTsFuncCode(int c) { Ts_FunctionCode = c; }
-	static void setTeval(const double Te) { T_eval = Te; }
-	static void setTdepth(const double Td) { T_depth = Td; }
 	static void setQSearchDepth(const double mmqs) { QS_depth = mmqs; }
-	static double getTeval() { return T_eval; }
-	static double getTdepth() { return T_depth; }
 	static double getQSdepth() { return QS_depth; }
 	static void setEsFuncCode(const int code) { Es_FunctionCode = code; }
 	static void setEsFuncParam(const double c) { Es_c = c; }
@@ -95,16 +85,15 @@ public:
 	bool isLeaf()const { const auto s = status.load(); return s == State::N || s == State::iE; }
 	bool isTerminal()const { return status == State::T; }
 	bool isSearchable()const { const auto s = status.load(); return s == State::N || s == State::E; }
-	double getTs(const double baseT)const;
-	double getEs()const;
-	SearchNode* getBestChild()const;
+	double getEs()const { return getEs(Es_FunctionCode); }
+	double getEs(int funccode)const;
+	SearchNode* getBestChild()const { return getBestChild(PV_FuncCode); }
+	SearchNode* getBestChild(int funccode)const;
 	double getChildRate(SearchNode* const child,const double T)const;
 	int getMateNum()const;
 private:
 	void swap(SearchNode& node);
 	Children* purge();
-	double getTcMcVariance()const;
-	double getTcMcVarianceExpection()const;
 public:
 	Children children;
 	Move move;

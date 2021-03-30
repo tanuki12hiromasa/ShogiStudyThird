@@ -5,14 +5,15 @@
 芝浦将棋Jr.を改造して作られていた旧芝浦将棋Softmaxを，1から書き直したプログラムです．
 
 # 評価関数
-AperyのKPPT型評価関数に対応しています．利用手順は以下
-1. プログラムをVisual Studioでコンパイルする
-2. 生成された実行ファイルのあるディレクトリ内に，data ディレクトリを作成．その中に kppt_apery ディレクトリを作成する．
+利用手順は以下の通りです．評価関数ファイルはAperyのものを使用してください．
+1. 実行ファイルをダウンロードあるいはコンパイルする
+2. 実行ファイルのあるディレクトリ内に，data ディレクトリを作成．その中に kppt_apery ディレクトリを作成する．
 3. data/kppt_apery/ 内に，[Apery](https://hiraokatakuya.github.io/apery/)から入手したKPP.bin，KKP.binファイルを置く
+4. [将棋所](http://shogidokoro.starfree.jp/index.html)などの将棋GUIソフトに将棋エンジンとして登録すると，対局を行えます
 
 # ライセンス
 本プログラムのKPPT型評価関数は[Apery](https://hiraokatakuya.github.io/apery/)を移植したものであり，GPLv3に従います．
 
 # 関連ソフト
-[5五将棋バージョン](https://github.com/tanuki12hiromasa/MCSS_55Shogi)：本ソフトの5五将棋版です．評価関数の学習実験用．  
+[芝浦少将](https://github.com/tanuki12hiromasa/MCSS_55Shogi)：本ソフトの5五将棋版です．評価関数の学習実験用．  
 [連続対局ソフト](https://github.com/tanuki12hiromasa/USI_MultipleMatcher)：USI対応ソフトを連続対局させるソフトです．ソフト同士の勝率を測る際などに用いています．

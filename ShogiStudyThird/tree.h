@@ -16,14 +16,12 @@ public:
 	void makeNewTree(const Kyokumen& startpos,const std::vector<Move>& moves);
 	void makeNewTree(const std::vector<std::string>& usitokens);
 
-	void setNodeMaxsize(const size_t s) { nodesMaxCount = s; }
 	void addEvaluationCount(const uint64_t n) { evaluationcount += n; }
 
 	SearchNode* getBestMove()const;//最もevalの高いrootのchildを返す
 	std::vector<SearchNode*> getPV()const;//rootからのpvの連なりを返す
 	void proceed(SearchNode* node);
-	void pause_deleteTree() { enable_deleteTrees = false; }
-	void restart_deleteTree() { enable_deleteTrees = true; }
+	bool deleteGarbage();
 
 	const uint64_t getEvaluationCount()const { return evaluationcount; }
 	const std::vector<SearchNode*>& getHistory()const { return history; }
@@ -41,22 +39,16 @@ private:
 	Kyokumen startKyokumen;
 	SearchPlayer rootPlayer;
 	std::atomic_uint64_t evaluationcount;
-	std::uint64_t nodesMaxCount;
 
 	bool leave_branchNode = false;
 	bool continuous_tree = true;
 
 private:
 	SearchNode* addNewChild(SearchNode* const parent, const Move& move);
-	void deleteTrees(SearchNode::Children* root);
-	void deleteTreesLoop();
+	void addGarbage(SearchNode* const parent, bool deleteParent);
 
-	std::thread thread_deleteTrees;
-	std::queue<SearchNode::Children*> roots_deleteTrees;
-	std::condition_variable cv_deleteTrees;
+	std::queue<std::pair<SearchNode*, bool>> garbage_parent;
 	std::mutex mtx_deleteTrees;
-	std::atomic_bool enable_deleteTrees;
-	std::atomic_bool alive_deleteTrees;
 
 	friend class Commander;
 	friend class ShogiTest;

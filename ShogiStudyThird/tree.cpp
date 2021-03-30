@@ -5,18 +5,15 @@
 #include <fstream>
 
 SearchTree::SearchTree()
-	:rootPlayer(), startKyokumen(), thread_deleteTrees(&SearchTree::deleteTreesLoop, this),
+	:rootPlayer(), startKyokumen(), 
 	leave_branchNode(false),continuous_tree(true)
 {
 }
 
 SearchTree::~SearchTree() {
-	enable_deleteTrees = true;
-	alive_deleteTrees = false;
-	cv_deleteTrees.notify_one();
+	while (deleteGarbage());
 	auto root = getGameRoot();
 	delete root;
-	thread_deleteTrees.join();
 }
 
 void SearchTree::set(const std::vector<std::string>& usitokens) {
@@ -28,7 +25,7 @@ void SearchTree::set(const std::vector<std::string>& usitokens) {
 
 void SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) {
 	
-	if (history.empty() || startKyokumen != startpos || history.size() > usihis.size()) {
+	if (history.empty() || startKyokumen != startpos || history.size() > usihis.size() || !continuous_tree) {
 		//初期状態ならmakenewtreeで初期化
 		//あるいは初期局面が異なるか与えられた棋譜が内部の棋譜より短いので探索木を作り直す
 		makeNewTree(startpos, usihis);
@@ -48,9 +45,6 @@ void SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) 
 			const Move nextmove = usihis[i];
 			SearchNode* nextNode = nullptr;
 			if (parent->isLeaf() || parent->isTerminal()) {
-				if (!parent->children.empty()) deleteTrees(parent->purge());
-				const auto moves = MoveGenerator::genAllMove(parent->move, rootPlayer.kyokumen);
-				parent->addChildren(moves);
 				parent->status = SearchNode::State::Expanded;
 			}
 			for (auto& child : parent->children) {
@@ -64,11 +58,6 @@ void SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) 
 				nextNode = addNewChild(parent, nextmove);
 			}
 			proceed(nextNode);
-		}
-		//過去の探索結果を使わない場合は新たな根からの探索木を消去する
-		if (!continuous_tree) {
-			auto root = getRoot();
-			deleteTrees(root->purge());
 		}
 		return;
 	}
@@ -96,7 +85,7 @@ SearchNode* SearchTree::addNewChild(SearchNode* const parent, const Move& move) 
 		newchild.swap(oldchild);
 	}
 	//古いchildrenは破棄する
-	deleteTrees(p_oldchildren);
+	delete p_oldchildren;
 	//追加した子ノードのポインタを返す
 	return &(parent->children[parent->children.size() - 1]);
 }
@@ -105,8 +94,7 @@ void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& 
 	if (!history.empty()) {
 		auto root = history.front();
 		if (root) {
-			deleteTrees(root->purge());
-			delete root;
+			addGarbage(root, true);
 		}
 		history.clear();
 	}
@@ -152,7 +140,7 @@ void SearchTree::proceed(SearchNode* node) {
 		const auto parent = getRoot();
 		for (auto& child : parent->children) {
 			if (&child != node) {
-				deleteTrees(child.purge());
+				addGarbage(&child, false);
 			}
 		}
 	}
@@ -160,7 +148,6 @@ void SearchTree::proceed(SearchNode* node) {
 	rootPlayer.kyokumen.proceed(node->move);
 	rootPlayer.feature.set(rootPlayer.kyokumen);
 	history.push_back(node);
-	cv_deleteTrees.notify_all();
 }
 
 #pragma optimize("",on)
@@ -205,30 +192,25 @@ void SearchTree::foutTree()const {
 	fs.close();
 }
 
-void SearchTree::deleteTrees(SearchNode::Children* root) {
-	if (!root) return;
+void SearchTree::addGarbage(SearchNode* const parent, bool deleteParent) {
+	if (!parent) return;
 	std::lock_guard<std::mutex> lock(mtx_deleteTrees);
-	roots_deleteTrees.push(root);
+	garbage_parent.push(std::make_pair(parent, deleteParent));
 }
 
-void SearchTree::deleteTreesLoop() {
-	enable_deleteTrees = true;
-	alive_deleteTrees = true;
-	std::unique_lock<std::mutex> lock(mtx_deleteTrees);
-	while (alive_deleteTrees || !roots_deleteTrees.empty()) {
-		cv_deleteTrees.wait(lock, [this] {return enable_deleteTrees && !roots_deleteTrees.empty(); });
-		while (true) {
-			if (roots_deleteTrees.empty() || !enable_deleteTrees) {
-				break;
-			}
-			auto root = roots_deleteTrees.front();
-			roots_deleteTrees.pop();
-			lock.unlock();
-			if (root != nullptr) {
-				delete root;
-			}
-			lock.lock();
+bool SearchTree::deleteGarbage() {
+	SearchNode::Children* root = nullptr;
+	{
+		std::lock_guard<std::mutex> lock(mtx_deleteTrees);
+		if (garbage_parent.empty()) {
+			return false;
 		}
+		const auto p = garbage_parent.front(); garbage_parent.pop();
+		root = p.first->purge();
+		if (p.second) delete p.first;
 	}
-
+	//std::cout << "dg " << SearchNode::nodecount << " " << root->size();
+	if (root) delete root;
+	//std::cout << " " << SearchNode::nodecount << "\n";
+	return true;
 }
