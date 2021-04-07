@@ -96,9 +96,19 @@ void Commander::execute(const std::string& enginename) {
 		}
 		else if (tokens[0] == "outputdatabase") {
 			commander.joseki.josekiDataBase.open();
-			commander.joseki.output.josekiOutputToDataBaseWithParent(&commander.joseki.josekiDataBase, commander.tree.getHistory().front(),-1);
+			commander.joseki.josekiDataBase.josekiOutput(commander.tree.getHistory().front());
 			commander.joseki.josekiDataBase.close();
 			std::cout << "outputdatabase ok" << std::endl;
+		}
+		else if (tokens[0] == "yomikomi") {
+			commander.joseki.josekiDataBase.open();
+			commander.joseki.josekiDataBase.josekiInputFromDB(&commander.tree);
+			commander.joseki.josekiDataBase.close();
+		}
+		else if (tokens[0] == "getbestmovefromdb") {
+			commander.joseki.josekiDataBase.open();
+			commander.joseki.josekiDataBase.getBestMoveFromDB(commander.tree.getHistory());
+			commander.joseki.josekiDataBase.close();
 		}
 		else if (tokens[0] == "quit") {
 			return;

@@ -2,6 +2,7 @@
 #include "tree.h"
 #include "josekinode.h"
 #include "josekioption.h"
+#include "jdatabase.h"
 
 class JosekiInput {
     //入力
@@ -14,7 +15,6 @@ public:
     bool getBestMoveOn() { return bestMoveOn; }
     JosekiOption option;
     void init();
-
 private:
     FILE* fp;	//定跡本体の読み込み用ファイル
     SearchNode* nodesForProgram;	//実際にプログラム内で活用していく定跡が格納されるところ
@@ -27,6 +27,4 @@ private:
     std::vector<size_t> yomikomiLine(const size_t index);
     void yomikomiRecursive(const size_t index);
     std::vector<size_t> yomikomiDepth(const size_t index, const int depth);
-
-
 };

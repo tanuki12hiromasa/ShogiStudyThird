@@ -105,6 +105,7 @@ void JosekiInput::josekiInput(SearchTree* tree, size_t firstIndex) {
 	fclose(fp);
 }
 
+//定跡バイナリファイルから最善手を取り出す
 bool JosekiInput::getBestMove(SearchTree* tree, std::vector<SearchNode*> history)
 {
 	if (bestMoveOn == false) {
