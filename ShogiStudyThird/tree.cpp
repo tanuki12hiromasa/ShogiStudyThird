@@ -186,6 +186,9 @@ void SearchTree::setRoot(SearchNode* newroot){
 	if (!history.empty()) {
 		history.back() = newroot;
 	}
+	else {
+		history.push_back(newroot);
+	}
 }
 
 void SearchTree::deleteTrees(SearchNode::Children* root) {

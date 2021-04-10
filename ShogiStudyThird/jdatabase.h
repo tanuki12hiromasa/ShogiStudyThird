@@ -5,20 +5,50 @@
 #include "node.h"
 
 class JosekiDataBase {
+public:
+private:
+	class Stmt{
+	public:
+		Stmt(sqlite3 * db, std::string sql);
+		~Stmt();
+		bool step();
+
+		int getInt(int number);
+		size_t getSize_t(int number);
+		double getDouble(int number);
+		void bind(int num, int eval);
+		void bind(int num, size_t eval);
+		void bind(int num, double eval);
+
+		//void bindDouble(int num, double eval);
+		void reset();
+	private:
+		sqlite3_stmt* stmt = nullptr;
+	};
+	struct nodedata {
+		size_t id;
+		Move move;
+		SearchNode::State status;
+		double eval;
+		double depth;
+		nodedata(size_t _id, Move _move, SearchNode::State _status, double _eval, double _depth) :id(_id), move(_move), status(_status), eval(_eval), depth(_depth) {
+
+		}
+	};
+
 //定跡書き出し用
 public:
 	void replaceNodeWithPath(SearchNode* node, std::string path);
-	int replaceNodeWithParent(SearchNode* node, int parentId);
+	size_t replaceNodeWithParent(SearchNode* node, Stmt* insert, Stmt* select, size_t parentId);
 	//conditionsの条件に指定したノードで最初に出てきたもののIDを返す
-	int getIndex(std::string conditions);
+	size_t getIndex(std::string conditions);
 
 	//データベースへ書き出し
 	void josekiOutputToDataBaseWithPath(SearchNode* node, std::string path);
-	void josekiOutputToDataBaseWithParent(SearchNode* node, int parentId);
-	void josekiOutput(SearchNode* node, int parentID = -1);
+	void josekiOutputToDataBaseWithParent(SearchNode* node, Stmt* insert, Stmt* select, size_t parentId);
+	void josekiOutput(SearchNode* node, size_t parentID = 0);
 
 private:
-
 
 //定跡読み込み用
 public:
@@ -29,30 +59,9 @@ public:
 
 private:
 	//parentidを貰い、parentnodeにノードを再帰的に格納していく。
-	void yomikomiRecursiveFromDB(SearchNode* parentnode, const size_t parentid);
+	void yomikomiRecursiveFromDB(SearchNode* parentnode, Stmt* ss, size_t parentid);
 
-	class SelectStmt {
-	public:
-		SelectStmt(sqlite3* db, std::string columnsName, std::string tableName, std::string conditions);
-		~SelectStmt();
-		bool step();
 
-		int getInt(int number);
-		double getDouble(int number);
-	private:
-		sqlite3_stmt* stmt = nullptr;
-		sqlite3* db;
-	};
-	struct nodedata {
-		int id;
-		Move move;
-		SearchNode::State status;
-		double eval;
-		double depth;
-		nodedata(int _id, Move _move, SearchNode::State _status, double _eval, double _depth) :id(_id), move(_move), status(_status), eval(_eval), depth(_depth) {
-
-		}
-	};
 
 //定跡利用準備
 public:
