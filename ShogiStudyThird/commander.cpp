@@ -45,20 +45,22 @@ void Commander::execute(const std::string& enginename) {
 				continue;
 			}
 
-			if (!commander.joseki.input.getBestMove(&commander.tree,commander.tree.getHistory())) {
-				if (commander.yaneuraJoseki.option.getC("yjoseki_on")) {
-					std::string bestmove = commander.yaneuraJoseki.getBestMoveFromJoseki(commander.tree.getRootPlayer().kyokumen.toSfen());
-					if (bestmove == "nullmove") {
-						commander.go(tokens);
-					}
-					else {
-						std::cout << "bestmove " << bestmove << std::endl;
-					}
-				}
-				else {
-					commander.go(tokens);
-				}
-			}
+			//if (!commander.joseki.input.getBestMove(&commander.tree,commander.tree.getHistory())) {
+			//	if (commander.yaneuraJoseki.option.getC("yjoseki_on")) {
+			//		std::string bestmove = commander.yaneuraJoseki.getBestMoveFromJoseki(commander.tree.getRootPlayer().kyokumen.toSfen());
+			//		if (bestmove == "nullmove") {
+			//			commander.go(tokens);
+			//		}
+			//		else {
+			//			std::cout << "bestmove " << bestmove << std::endl;
+			//		}
+			//	}
+			//	else {
+			//		commander.go(tokens);
+			//	}
+			//}
+
+			commander.go(tokens);
 		}
 		else if (tokens[0] == "stop") {
 			commander.chakushu(commander.tree.getBestMove());
@@ -70,6 +72,8 @@ void Commander::execute(const std::string& enginename) {
 			commander.go_alive = false;
 			commander.info_alive = false;
 			commander.stopAgent();
+			commander.joseki.josekiDataBase.josekiOutput(commander.tree.getHistory().front());
+			std::cout << "gameoverok" << std::endl;
 		}
 		else if (tokens[0] == "debugsetup") {
 			auto setLeaveNodeCommand = usi::split("setoption name leave_branchNode value true", ' ');
@@ -98,9 +102,7 @@ void Commander::execute(const std::string& enginename) {
 		}
 		else if (tokens[0] == "kakidashidb") {
 			clock_t time = clock();
-			commander.joseki.josekiDataBase.open();
 			commander.joseki.josekiDataBase.josekiOutput(commander.tree.getHistory().front());
-			commander.joseki.josekiDataBase.close();
 			std::cout << tokens[0] << " ok" << std::endl;
 			std::cout << (clock() - time) / 1.0 / CLOCKS_PER_SEC << std::endl;
 		}
@@ -112,16 +114,12 @@ void Commander::execute(const std::string& enginename) {
 		}
 		else if (tokens[0] == "yomikomidb") {
 			clock_t time = clock();
-			commander.joseki.josekiDataBase.open();
 			commander.joseki.josekiDataBase.josekiInputFromDB(&commander.tree);
-			commander.joseki.josekiDataBase.close();
 			std::cout << tokens[0] << " ok" << std::endl;
 			std::cout << (clock() - time) / 1.0 / CLOCKS_PER_SEC << std::endl;
 		}
 		else if (tokens[0] == "getbestmovefromdb") {
-			commander.joseki.josekiDataBase.open();
 			commander.joseki.josekiDataBase.getBestMoveFromDB(commander.tree.getHistory());
-			commander.joseki.josekiDataBase.close();
 		}
 		else if (tokens[0] == "quit") {
 			return;
@@ -299,6 +297,8 @@ void Commander::gameInit() {
 	info();
 
 	joseki.input.init();
+	joseki.josekiDataBase.init();
+	joseki.josekiDataBase.josekiInputFromDB(&tree);
 	yaneuraJoseki.readBook();
 }
 

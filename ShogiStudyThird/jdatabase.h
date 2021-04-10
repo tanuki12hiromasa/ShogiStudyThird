@@ -38,6 +38,8 @@ private:
 
 //定跡書き出し用
 public:
+	void josekiOutput(SearchNode* node, size_t parentID = 0);
+private:
 	void replaceNodeWithPath(SearchNode* node, std::string path);
 	size_t replaceNodeWithParent(SearchNode* node, Stmt* insert, Stmt* select, size_t parentId);
 	//conditionsの条件に指定したノードで最初に出てきたもののIDを返す
@@ -46,9 +48,7 @@ public:
 	//データベースへ書き出し
 	void josekiOutputToDataBaseWithPath(SearchNode* node, std::string path);
 	void josekiOutputToDataBaseWithParent(SearchNode* node, Stmt* insert, Stmt* select, size_t parentId);
-	void josekiOutput(SearchNode* node, size_t parentID = 0);
 
-private:
 
 //定跡読み込み用
 public:
@@ -67,15 +67,16 @@ private:
 public:
 	JosekiDataBase();
 	~JosekiDataBase();
-	void open();
-	void close();
+	void init();
 	JosekiOption option;
 	
 
 private:
+	void open();
+	void close();
 	sqlite3* db;
 	std::string tableName;
-
+	bool isOpen = false;
 	const char* tableContentText = 
 		"("
 			"id integer primary key"		","

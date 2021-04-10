@@ -15,6 +15,7 @@ static int callback(void* _, int argc, char** argv, char** columnName) {
 }
 
 JosekiDataBase::JosekiDataBase(){
+	option.addOption("joseki_database_on", "check", "false");
 	option.addOption("joseki_database_folder", "string", "joseki");
 	option.addOption("joseki_database_name", "string", "test.db");
 	option.addOption("joseki_database_table_name", "string", "tablename");
@@ -23,6 +24,10 @@ JosekiDataBase::JosekiDataBase(){
 
 JosekiDataBase::~JosekiDataBase(){
 	close();
+}
+
+void JosekiDataBase::init(){
+	open();
 }
 
 
@@ -46,8 +51,11 @@ void JosekiDataBase::josekiOutputToDataBaseWithParent(SearchNode* node, Stmt* in
 }
 
 void JosekiDataBase::josekiOutput(SearchNode* node, size_t parentID){
-	Stmt *insert = new Stmt(db, "insert into " + tableName + "(parentid,move,status,eval,depth) values(?,?,?,?,?) on conflict(parentid,move) do update set status = ? , eval = ? , depth = ?");
+	if (!isOpen) {
+		init();
+	}
 
+	Stmt *insert = new Stmt(db, "insert into " + tableName + "(parentid,move,status,eval,depth) values(?,?,?,?,?) on conflict(parentid,move) do update set status = ? , eval = ? , depth = ?");
 	Stmt *select = new Stmt(db, "select id from " + tableName + " where parentid = ? and move = ?");
 	
 	//sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -172,8 +180,11 @@ bool JosekiDataBase::getBestMoveFromDB(std::vector<SearchNode*> his) {
 }
 
 void JosekiDataBase::josekiInputFromDB(SearchTree* tree) {
-	if (!option.getC("joseki_input_on")) {
-		//return;
+	if (option.getC("joseki_database_on") == false) {
+		return;
+	}
+	if (!isOpen) {
+		init();
 	}
 
 	SearchNode* nextRoot = new SearchNode;
@@ -288,10 +299,7 @@ void JosekiDataBase::open(){
 		std::cout << "begin:" << errorMessage << std::endl;
 	}
 
-	sqlite3_config(SQLITE_CONFIG_SERIALIZED);
-	//int64_t default_mmap_size = 256 * 1024 * 1024;
-	//int64_t max_mmap_size = 512 * 1024 * 1024;
-	//sqlite3_config(SQLITE_CONFIG_MMAP_SIZE, default_mmap_size, max_mmap_size);
+	isOpen = true;
 }
 
 void JosekiDataBase::close(){
@@ -303,8 +311,8 @@ void JosekiDataBase::close(){
 		sqlite3_exec(db, "ROLLBACK;", nullptr, nullptr, &errorMessage);
 	}
 
-
 	sqlite3_close(db);
+	isOpen = false;
 }
 
 void JosekiDataBase::createTable() {
