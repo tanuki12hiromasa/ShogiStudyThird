@@ -80,10 +80,6 @@ void Commander::execute(const std::string& enginename) {
 		else if (tokens[0] == "staticevaluate") {
 			std::cout << "info cp " << Evaluator::evaluate(commander.tree.getRootPlayer()) << std::endl;
 		}
-		else if (tokens[0] == "josekiinput") {
-			commander.joseki.input.josekiInput(&(commander.tree));
-		}
-
 		else if (tokens[0] == "getsfen") {
 			std::cout << commander.tree.getRootPlayer().kyokumen.toSfen() << std::endl;
 		}
@@ -94,16 +90,33 @@ void Commander::execute(const std::string& enginename) {
 		else if (tokens[0] == "getBanFigure") {
 			std::cout << commander.tree.getRootPlayer().kyokumen.toBanFigure() << std::endl;
 		}
-		else if (tokens[0] == "outputdatabase") {
+		else if (tokens[0] == "kakidashi") {
+			clock_t time = clock();
+			commander.joseki.output.josekiOutput(commander.tree.getHistory());
+			std::cout << tokens[0] << " ok" << std::endl;
+			std::cout << (clock() - time) / 1.0 / CLOCKS_PER_SEC << std::endl;
+		}
+		else if (tokens[0] == "kakidashidb") {
+			clock_t time = clock();
 			commander.joseki.josekiDataBase.open();
 			commander.joseki.josekiDataBase.josekiOutput(commander.tree.getHistory().front());
 			commander.joseki.josekiDataBase.close();
-			std::cout << "outputdatabase ok" << std::endl;
+			std::cout << tokens[0] << " ok" << std::endl;
+			std::cout << (clock() - time) / 1.0 / CLOCKS_PER_SEC << std::endl;
 		}
 		else if (tokens[0] == "yomikomi") {
+			clock_t time = clock();
+			commander.joseki.input.josekiInput(&commander.tree);
+			std::cout << tokens[0] << " ok" << std::endl;
+			std::cout << (clock() - time) / 1.0 / CLOCKS_PER_SEC << std::endl;
+		}
+		else if (tokens[0] == "yomikomidb") {
+			clock_t time = clock();
 			commander.joseki.josekiDataBase.open();
 			commander.joseki.josekiDataBase.josekiInputFromDB(&commander.tree);
 			commander.joseki.josekiDataBase.close();
+			std::cout << tokens[0] << " ok" << std::endl;
+			std::cout << (clock() - time) / 1.0 / CLOCKS_PER_SEC << std::endl;
 		}
 		else if (tokens[0] == "getbestmovefromdb") {
 			commander.joseki.josekiDataBase.open();
