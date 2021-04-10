@@ -28,7 +28,7 @@ void SearchTree::set(const std::vector<std::string>& usitokens) {
 
 void SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) {
 	
-	if (history.empty() || startKyokumen != startpos || history.size() > usihis.size()) {
+	if (history.empty() || startKyokumen != startpos/* || history.size() > usihis.size()*/) {
 		//初期状態ならmakenewtreeで初期化
 		//あるいは初期局面が異なるか与えられた棋譜が内部の棋譜より短いので探索木を作り直す
 		makeNewTree(startpos, usihis);

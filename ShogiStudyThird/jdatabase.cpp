@@ -26,12 +26,6 @@ JosekiDataBase::~JosekiDataBase(){
 	close();
 }
 
-void JosekiDataBase::init(){
-	open();
-}
-
-
-
 void JosekiDataBase::josekiOutputToDataBaseWithPath(SearchNode* node, std::string path) {
 	if (node->move.toUSI() != "nullmove") {
 		path += node->move.toUSI() + " ";
@@ -52,7 +46,7 @@ void JosekiDataBase::josekiOutputToDataBaseWithParent(SearchNode* node, Stmt* in
 
 void JosekiDataBase::josekiOutput(SearchNode* node, size_t parentID){
 	if (!isOpen) {
-		init();
+		open();
 	}
 
 	Stmt *insert = new Stmt(db, "insert into " + tableName + "(parentid,move,status,eval,depth) values(?,?,?,?,?) on conflict(parentid,move) do update set status = ? , eval = ? , depth = ?");
@@ -74,6 +68,8 @@ void JosekiDataBase::josekiOutput(SearchNode* node, size_t parentID){
 	else {
 		josekiOutputToDataBaseWithParent(node, insert, select, parentID);
 	}
+
+	close();
 }
 
 
@@ -132,6 +128,10 @@ void JosekiDataBase::Stmt::reset(){
 
 //データベースから最善手を取り出す
 bool JosekiDataBase::getBestMoveFromDB(std::vector<SearchNode*> his) {
+	if (!isOpen) {
+		open();
+	}
+
 	size_t parentID = 0;
 	bool bestmoveExist = true;
 	Stmt ss(db, "select id,move,status,eval,depth from " + tableName + " parentid = ?");
@@ -177,6 +177,8 @@ bool JosekiDataBase::getBestMoveFromDB(std::vector<SearchNode*> his) {
 			bestmoveExist = false;
 		}
 	}
+
+	close();
 }
 
 void JosekiDataBase::josekiInputFromDB(SearchTree* tree) {
@@ -184,7 +186,7 @@ void JosekiDataBase::josekiInputFromDB(SearchTree* tree) {
 		return;
 	}
 	if (!isOpen) {
-		init();
+		open();
 	}
 
 	SearchNode* nextRoot = new SearchNode;

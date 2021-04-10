@@ -297,7 +297,6 @@ void Commander::gameInit() {
 	info();
 
 	joseki.input.init();
-	joseki.josekiDataBase.init();
 	joseki.josekiDataBase.josekiInputFromDB(&tree);
 	yaneuraJoseki.readBook();
 }

@@ -67,7 +67,6 @@ private:
 public:
 	JosekiDataBase();
 	~JosekiDataBase();
-	void init();
 	JosekiOption option;
 	
 
