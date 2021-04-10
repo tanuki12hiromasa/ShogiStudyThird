@@ -81,7 +81,7 @@ bool JosekiOutput::outputInfo(const std::vector<SearchNode*> const history)
 	//std::cout << "ソート完了" << std::endl;
 	size_t nodeCount = SearchNode::getNodeCount();
 
-	std::ofstream ofs(option.getS("outputInfoFileName"));
+	std::ofstream ofs(option.getS("outputFileInfoName"));
 	ofs << "nodeCount," << nodeCount << std::endl;
 	ofs << moveHis << std::endl;
 	ofs << usiHis << std::endl;

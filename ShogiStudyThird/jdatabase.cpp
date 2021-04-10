@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include "node.h"
+#include "sqlite/sqlite3.h"
 #include "usi.h"
 
 static const int BUFFERSIZE = 256;
@@ -17,6 +18,7 @@ JosekiDataBase::JosekiDataBase(){
 	option.addOption("joseki_database_folder", "string", "joseki");
 	option.addOption("joseki_database_name", "string", "test.db");
 	option.addOption("joseki_database_table_name", "string", "tablename");
+	option.addOption("joseki_database_multi_thread_on", "check", "false");
 }
 
 JosekiDataBase::~JosekiDataBase(){
@@ -35,67 +37,101 @@ void JosekiDataBase::josekiOutputToDataBaseWithPath(SearchNode* node, std::strin
 	}
 }
 
-void JosekiDataBase::josekiOutputToDataBaseWithParent(SearchNode* node, int parentId) {
-	int nextParentId = replaceNodeWithParent(node, parentId);
+void JosekiDataBase::josekiOutputToDataBaseWithParent(SearchNode* node, Stmt* insert, Stmt* select, size_t parentId) {
+	size_t nextParentId = replaceNodeWithParent(node,insert,select, parentId);
 	//std::cout << "id:" << nextParentId << std::endl;
 	for (auto& cn : node->children) {
-		josekiOutputToDataBaseWithParent(&cn, nextParentId);
+		josekiOutputToDataBaseWithParent(&cn,insert,select, nextParentId);
 	}
 }
 
-void JosekiDataBase::josekiOutput(SearchNode* node, int parentID){
-	std::vector<std::thread> thr;
-	int nextparent = replaceNodeWithParent(node, parentID);
+void JosekiDataBase::josekiOutput(SearchNode* node, size_t parentID){
+	Stmt *insert = new Stmt(db, "insert into " + tableName + "(parentid,move,status,eval,depth) values(?,?,?,?,?) on conflict(parentid,move) do update set status = ? , eval = ? , depth = ?");
 
-	for (auto& cn:node->children) {
-		thr.push_back(std::thread(&JosekiDataBase::josekiOutputToDataBaseWithParent, this,&cn, nextparent));
+	Stmt *select = new Stmt(db, "select id from " + tableName + " where parentid = ? and move = ?");
+	
+	//sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+
+	
+	if (option.getC("joseki_database_multi_thread_on")) {
+		std::vector<std::thread> thr;
+		int nextparent = replaceNodeWithParent(node, insert, select, parentID);
+		for (auto& cn:node->children) {
+			thr.push_back(std::thread(&JosekiDataBase::josekiOutputToDataBaseWithParent, this, &cn, insert, select, nextparent));
+		}
+		for (int i = 0; i < thr.size();++i) {
+			thr[i].join();
+		}
 	}
-	for (int i = 0; i < thr.size();++i) {
-		thr[i].join();
+	else {
+		josekiOutputToDataBaseWithParent(node, insert, select, parentID);
 	}
 }
 
 
-int JosekiDataBase::getIndex(std::string conditions) {
-	SelectStmt ss(db, "id", tableName, conditions);
+size_t JosekiDataBase::getIndex(std::string conditions) {
+	Stmt ss(db, "select id from " + tableName + " where " + conditions);
 	ss.step();
-	return ss.getInt(0);
+	return ss.getSize_t(0);
 }
 
 
 
-JosekiDataBase::SelectStmt::SelectStmt(sqlite3* db, std::string columnsName, std::string tableName, std::string conditions) {
-	char sql[BUFFERSIZE];
-	sprintf_s(sql, BUFFERSIZE, "select %s from %s where %s", columnsName.c_str(), tableName.c_str(), conditions.c_str());
-	//std::cout << sql << std::endl;
-	auto status = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-	this->db = db;
+JosekiDataBase::Stmt::Stmt(sqlite3* db, std::string sqltext) {
+	static int i = 0;
+	auto status = sqlite3_prepare_v2(db, sqltext.c_str(), -1, &stmt, NULL);
+	if (status != SQLITE_OK)
+	{
+		printf("sql[%s] error! [%s]\n", sqltext.c_str(),sqlite3_errmsg(db));   // [unable to open database file]
+	}
+	++i;
 }
-JosekiDataBase::SelectStmt::~SelectStmt() {
+JosekiDataBase::Stmt::~Stmt() {
 	sqlite3_finalize(stmt);
 }
 
-bool JosekiDataBase::SelectStmt::step()
+bool JosekiDataBase::Stmt::step()
 {
 	return	sqlite3_step(stmt) == SQLITE_ROW;
 }
 
-int JosekiDataBase::SelectStmt::getInt(int number) {
+int JosekiDataBase::Stmt::getInt(int number) {
 	return sqlite3_column_int(stmt, number);
 }
-double JosekiDataBase::SelectStmt::getDouble(int number) {
+
+size_t JosekiDataBase::Stmt::getSize_t(int number){
+	return sqlite3_column_int64(stmt,number);
+}
+double JosekiDataBase::Stmt::getDouble(int number) {
 	return sqlite3_column_double(stmt, number);
+}
+
+void JosekiDataBase::Stmt::bind(int num, int eval){
+	sqlite3_bind_int(stmt, num, eval);
+}
+
+void JosekiDataBase::Stmt::bind(int num, size_t eval){
+	sqlite3_bind_int64(stmt, num, eval);
+}
+
+void JosekiDataBase::Stmt::bind(int num, double eval){
+	sqlite3_bind_double(stmt, num, eval);
+}
+
+void JosekiDataBase::Stmt::reset(){
+	sqlite3_reset(stmt);
 }
 
 //データベースから最善手を取り出す
 bool JosekiDataBase::getBestMoveFromDB(std::vector<SearchNode*> his) {
-	int parentID = -1;
+	size_t parentID = 0;
 	bool bestmoveExist = true;
+	Stmt ss(db, "select id,move,status,eval,depth from " + tableName + " parentid = ?");
 	for (int i = 0; i < his.size() && bestmoveExist; ++i) {
+		ss.bind(1,parentID);
 		std::cout << his[i]->move.toUSI() << std::endl;
 
 		//親ノードのIDから子ノードを取り出す
-		SelectStmt ss(db, "id,move,status,eval,depth", tableName, "parentid = " + std::to_string(parentID));
 
 		//子ノードがあるだけ続ける
 		while (true) {
@@ -106,15 +142,16 @@ bool JosekiDataBase::getBestMoveFromDB(std::vector<SearchNode*> his) {
 			}
 			//もし一致したらparentIDを変更して次へ
 			if (his[i]->move.getU() == ss.getInt(1)) {
-				parentID = ss.getInt(0);
+				parentID = ss.getSize_t(0);
 				break;
 			}
 		}
+		ss.reset();
 	}
 
 	//最善手を探す
 	if (bestmoveExist) {
-		SelectStmt ss(db, "id,move,status,eval,depth", tableName, "parentid = " + std::to_string(parentID));
+		ss.bind(1,parentID);
 		uint16_t bestU = 12384;
 		double bestEval = -9999999;
 		while (ss.step()) {
@@ -141,45 +178,46 @@ void JosekiDataBase::josekiInputFromDB(SearchTree* tree) {
 
 	SearchNode* nextRoot = new SearchNode;
 
-	SelectStmt ss(db,"id,move,status,eval,depth",tableName,"parentid = -1 and move = 12384");
+	Stmt ss(db,"select id,move,status,eval,depth from " + tableName + " where parentid = 0 and move = 12384");
 	ss.step();
-
 	//ルートノード自体の値を読み込み
+	size_t parentID = ss.getSize_t(0);
 	Move move(ss.getInt(1));
 	SearchNode::State status = (SearchNode::State)ss.getInt(2);
 	double eval = ss.getDouble(3);
 	double depth = ss.getDouble(4);
 	nextRoot->restoreNode(move, status, eval, depth);
 
-	//yomikomiRecursiveFromDB(nextRoot,ss.getInt(0));
 
-	//子ノードの数だけ再帰的に読みこむ
-	SelectStmt sschildren(db,"id,move,status,eval,depth", tableName, "parentid = " + std::to_string(ss.getInt(0)));
-	std::vector<nodedata> childrenData;
-	while (sschildren.step()) {
-		nodedata nd(sschildren.getInt(0), Move(sschildren.getInt(1)), (SearchNode::State)sschildren.getInt(2), sschildren.getDouble(3), sschildren.getDouble(4));
-		childrenData.push_back(nd);
+	if (option.getC("joseki_database_multi_thread_on")) {
+		//子ノードの数だけ再帰的に読みこむ
+		Stmt sschildren(db, "select id,move,status,eval,depth from " + tableName + " where parentid = " + std::to_string(parentID));
+		std::vector<nodedata> childrenData;
+		while (sschildren.step()) {
+			nodedata nd(sschildren.getSize_t(0), Move(sschildren.getInt(1)), (SearchNode::State)sschildren.getInt(2), sschildren.getDouble(3), sschildren.getDouble(4));
+			childrenData.push_back(nd);
+		}
+
+		//childrenにセットするために配列にし、実際に値も挿入
+		std::vector<std::thread> thr;
+		std::vector<Stmt*>sss;
+		SearchNode* list = new SearchNode[childrenData.size()];
+		for (int i = 0; i < childrenData.size(); ++i) {
+			Stmt* ss = new Stmt(db, "select id,move,status,eval,depth from " + tableName + " where parentid = ?");
+			list[i].restoreNode(childrenData[i].move, childrenData[i].status, childrenData[i].eval, childrenData[i].depth);
+			thr.push_back(std::thread(&JosekiDataBase::yomikomiRecursiveFromDB, this, &list[i], ss, childrenData[i].id));
+			sss.push_back(ss);
+		}
+		std::cout << "thread num:" << thr.size() << std::endl;
+		for (int i = 0; i < thr.size(); ++i) {
+			thr[i].join();
+		}
+		nextRoot->children.setChildren(list, childrenData.size());
 	}
-	//childrenにセットするために配列にし、実際に値も挿入
-	std::vector<std::thread> thr;
-	//std::vector<JosekiDataBase>jdbs;
-	SearchNode* list = new SearchNode[childrenData.size()];
-	for (int i = 0; i < childrenData.size(); ++i) {
-		/*JosekiDataBase jdb;
-		jdb.open();
-		jdbs.push_back(jdb);
-		jdbs.back().option = option;
-		jdbs.back().open();*/
-		list[i].restoreNode(childrenData[i].move, childrenData[i].status, childrenData[i].eval, childrenData[i].depth);
-		//thr.push_back(std::thread(&JosekiDataBase::yomikomiRecursiveFromDB, &jdbs.back(), &list[i], childrenData[i].id));
-		thr.push_back(std::thread(&JosekiDataBase::yomikomiRecursiveFromDB, this, &list[i], childrenData[i].id));
-	}
-	std::cout << "thread num:" << thr.size() << std::endl;
-	for (int i = 0; i < thr.size(); ++i) {
-		thr[i].join();
-		//jdbs[i].close();
-	}
-	nextRoot->children.setChildren(list, childrenData.size());
+	else {
+		Stmt* stmt = new Stmt(db, "select id,move,status,eval,depth from " + tableName + " where parentid = ?");
+		yomikomiRecursiveFromDB(nextRoot, stmt, parentID);
+	}	
 
 	//std::cout << "info next pv " << nextRoot->move.toUSI() << " cp " << nextRoot->eval << " depth " << nextRoot->mass << std::endl;
 	tree->setRoot(nextRoot);
@@ -189,25 +227,29 @@ void JosekiDataBase::josekiInputFromDB(SearchTree* tree) {
 }
 
 
-void JosekiDataBase::yomikomiRecursiveFromDB(SearchNode* parentnode, const size_t parentid) {
-	SelectStmt ss(db, "id,move,status,eval,depth", tableName, "parentid = " + std::to_string(parentid));
+void JosekiDataBase::yomikomiRecursiveFromDB(SearchNode* parentnode,Stmt* ss, size_t parentid) {
+	//Stmt ss(db, "id,move,status,eval,depth", tableName, "parentid = " + std::to_string(parentid));
 
 	std::vector<nodedata> children;
 
+	ss->bind(1,parentid);
+
 	//必要な値を全て取り出し
-	while (ss.step()) {
-		nodedata node(ss.getInt(0),Move(ss.getInt(1)), (SearchNode::State)ss.getInt(2), ss.getDouble(3), ss.getDouble(4));
+	while (ss->step()) {
+		nodedata node(ss->getSize_t(0),Move(ss->getInt(1)), (SearchNode::State)ss->getInt(2), ss->getDouble(3), ss->getDouble(4));
 		children.push_back(node);
 	}
-	//ss.~SelectStmt();
+	//ss.~Stmt();
+	ss->reset();
 
 	//childrenにセットするために配列にし、実際に値も挿入
 	SearchNode* list = new SearchNode[children.size()];
 	for (int i = 0; i < children.size();++i) {
 		list[i].restoreNode(children[i].move, children[i].status, children[i].eval, children[i].depth);
-		yomikomiRecursiveFromDB(&list[i], children[i].id);
+		yomikomiRecursiveFromDB(&list[i],ss, children[i].id);
 	}
 	parentnode->children.setChildren(list, children.size());
+
 }
 
 
@@ -247,6 +289,9 @@ void JosekiDataBase::open(){
 	}
 
 	sqlite3_config(SQLITE_CONFIG_SERIALIZED);
+	//int64_t default_mmap_size = 256 * 1024 * 1024;
+	//int64_t max_mmap_size = 512 * 1024 * 1024;
+	//sqlite3_config(SQLITE_CONFIG_MMAP_SIZE, default_mmap_size, max_mmap_size);
 }
 
 void JosekiDataBase::close(){
@@ -288,28 +333,30 @@ void JosekiDataBase::replaceNodeWithPath(SearchNode* node,std::string path)
 	}
 }
 
-int JosekiDataBase::replaceNodeWithParent(SearchNode* node, int parentId){
+size_t JosekiDataBase::replaceNodeWithParent(SearchNode* node, Stmt* insert, Stmt* select, size_t parentId){
 	char sql[BUFFERSIZE];
-	sprintf_s(sql, BUFFERSIZE, "insert into %s (parentid,move,status,eval,depth) values(%d,%d,%d,%f,%f) on conflict(parentid,move) do update set status = %d , eval = %f , depth = %f", tableName.c_str(), parentId, (int)node->move.getU(), (int)node->getState(), (double)node->eval, (double)node->mass, (int)node->getState(), (double)node->eval, (double)node->mass);
-	//std::cout << sql << std::endl;
-	char* errorMessage;
-	auto status = sqlite3_exec(db, sql, callback, nullptr, &errorMessage);
-	if (status != SQLITE_OK) {
-		std::cout << "replace:" << errorMessage << std::endl;
-	}
+	//sprintf_s(sql, BUFFERSIZE, "insert into %s (parentid,move,status,eval,depth) values(%d,%d,%d,%f,%f) on conflict(parentid,move) do update set status = %d , eval = %f , depth = %f", tableName.c_str(), parentId, (int)node->move.getU(), (int)node->getState(), (double)node->eval, (double)node->mass, (int)node->getState(), (double)node->eval, (double)node->mass);
+	int rc;
+	//"insert into %s(parentid,move,status,eval,depth) values(?,?,?,?,?) on conflict(parentid,move) do update set status = ? , eval = ? , depth = ?"
+	int n = 1;
+	insert->bind(n, parentId); ++n;
+	insert->bind(n, node->move.getU()); ++n;
+	insert->bind(n, (int)node->getState()); ++n;
+	insert->bind(n, node->eval); ++n;
+	insert->bind(n, node->mass); ++n;
+	insert->bind(n, (int)node->getState()); ++n;
+	insert->bind(n, node->eval); ++n;
+	insert->bind(n, node->mass); ++n;
 	
-	sprintf_s(sql, BUFFERSIZE, "select id from %s where parentid = ? and move = ?", tableName.c_str());
-	//std::cout << sql << std::endl;
-	sqlite3_stmt *stmt = nullptr;
-	status = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-	sqlite3_bind_int(stmt, 1, parentId);
-	sqlite3_bind_int(stmt, 2, (int)node->move.getU());
-	sqlite3_step(stmt);
-	int id = sqlite3_column_int(stmt, 0);
-	if (status != SQLITE_OK) {
-		std::cout << "select:" << errorMessage << std::endl;
-	}
-	
-	sqlite3_finalize(stmt);
-	return (int)id;
+	insert->step();
+
+	select->bind(1, parentId);
+	select->bind(2, (int)node->move.getU());
+	select->step();
+	size_t id = select->getSize_t(0);
+
+	insert->reset();
+	select->reset();
+
+	return id;
 }
