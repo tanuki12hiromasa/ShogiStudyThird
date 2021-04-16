@@ -66,7 +66,7 @@ void JosekiInput::josekiInput(SearchTree* tree, size_t firstIndex) {
 	if (!option.getC("joseki_input_on")) {
 		return;
 	}
-
+	init();
 
 	//すぐ下の子ノード達だけ展開する
 	int depth = 0;
