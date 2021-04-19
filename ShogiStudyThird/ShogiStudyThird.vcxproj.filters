@@ -105,6 +105,9 @@
     <ClCompile Include="temperature.cpp">
       <Filter>ソース ファイル\search</Filter>
     </ClCompile>
+    <ClCompile Include="random.cpp">
+      <Filter>ソース ファイル\kiso</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -211,6 +214,9 @@
     </ClInclude>
     <ClInclude Include="temperature.h">
       <Filter>ヘッダー ファイル\search</Filter>
+    </ClInclude>
+    <ClInclude Include="random.h">
+      <Filter>ヘッダー ファイル\kiso</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

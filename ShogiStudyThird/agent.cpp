@@ -15,8 +15,8 @@ std::atomic_uint SearchAgent::old_threads_num;
 void _learn_func(const std::vector<SearchNode*>, const SearchPlayer&) {}
 std::function<void(const std::vector<SearchNode*>& his, const SearchPlayer& leaf)> SearchAgent::learn_func = _learn_func;
 
-SearchAgent::SearchAgent(SearchTree& tree, const double Ts,int seed)
-	:tree(tree),engine(seed),Ts(Ts)
+SearchAgent::SearchAgent(SearchTree& tree, const double Ts,const Random::xoshiro256p& seed)
+	:tree(tree),random(seed),Ts(Ts)
 {
 	status = state::search;
 	searching = false;
@@ -24,7 +24,7 @@ SearchAgent::SearchAgent(SearchTree& tree, const double Ts,int seed)
 }
 
 SearchAgent::SearchAgent(SearchAgent&& agent) noexcept
-	: tree(agent.tree), th(std::move(agent.th)), Ts(agent.Ts)
+	: tree(agent.tree), th(std::move(agent.th)), Ts(agent.Ts), random(std::move(agent.random))
 {
 	status = agent.status.load();
 	searching = agent.searching.load();
@@ -110,7 +110,7 @@ void SearchAgent::simulate(SearchNode* const root) {
 		for (const auto& eval : evals) {
 			Z += std::exp(-(eval.first - CE) / T_c);
 		}
-		double pip = Z * random(engine);
+		double pip = Z * random.rand01();
 		node = evals.front().second;
 		for (const auto& eval : evals) {
 			pip -= std::exp(-(eval.first - CE) / T_c);
@@ -402,7 +402,7 @@ void SearchAgent::simulate_learn() {
 		for (const auto& eval : evals) {
 			Z += std::exp(-(eval.first - CE) / T_c);
 		}
-		double pip = Z * random(engine);
+		double pip = Z * random.rand01();
 		node = evals.front().second;
 		for (const auto& eval : evals) {
 			pip -= std::exp(-(eval.first - CE) / T_c);
@@ -427,10 +427,13 @@ AgentPool::AgentPool(SearchTree& tree):tree(tree) {
 
 void AgentPool::setup() {
 	assert(!SearchAgent::search_enable);
+	std::random_device rd;
+	Random::xoshiro256p random(rd(), rd(), rd(), rd());
 	if (agents.size() < agent_num) {
 		for (std::size_t t = agents.size(); t < agent_num; t++) {
 			agents.push_back(std::unique_ptr<SearchAgent>(
-				new SearchAgent(tree, SearchTemperature::getTs((double)t / (agent_num - 1)), t)));
+				new SearchAgent(tree, SearchTemperature::getTs((double)t / (agent_num - 1)), random)));
+			random.jump();
 		}
 	}
 	else if (agents.size() > agent_num) {

@@ -23,7 +23,6 @@ private:
 	SearchTree tree;
 	AgentPool agents{ tree };
 	std::thread deleteThread;
-	int agentNum = 6;
 	bool permitPonder;
 	bool continuousTree = true;
 	int resign_border = 3;

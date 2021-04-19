@@ -2,6 +2,7 @@
 #include "tree.h"
 #include "move_gen.h"
 #include "temperature.h"
+#include "random.h"
 #include <random>
 #include <functional>
 
@@ -21,7 +22,7 @@ private:
 		search, gc, learn, terminate
 	};
 public:
-	SearchAgent(SearchTree& tree, const double Ts, int seed);
+	SearchAgent(SearchTree& tree, const double Ts, const Random::xoshiro256p& seed);
 	SearchAgent(SearchAgent&&)noexcept;
 	~SearchAgent();
 	SearchAgent() = delete;
@@ -49,8 +50,7 @@ private:
 
 
 	//値域 [0,1.0) のランダムな値
-	std::uniform_real_distribution<double> random{ 0, 1.0 };
-	std::mt19937_64 engine; //初期シードはコンストラクタで受け取る
+	Random::xoshiro256p random; //初期シードはコンストラクタで受け取る
 
 	friend class ShogiTest;
 	friend class AgentPool;
