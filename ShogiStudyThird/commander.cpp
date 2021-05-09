@@ -416,6 +416,7 @@ void Commander::chakushu(SearchNode* const bestchild) {
 void Commander::position(const std::vector<std::string>& tokens) {
 	std::lock_guard<std::mutex> lock(treemtx);
 	agents.pauseSearch();
+	agents.joinPause();
 	tree.set(tokens);
 	agents.noticeProceed();
 }

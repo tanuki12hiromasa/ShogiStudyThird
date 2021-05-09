@@ -161,7 +161,7 @@ void SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		if (repnum > 0/*千日手である*/) {
-			if (repnum >= 3) {
+			if (repnum >= 1) {
 				if (checkRepetitiveCheck(player.kyokumen,history,latestRepnode)) {
 					node->setRepetitiveCheck();
 				}

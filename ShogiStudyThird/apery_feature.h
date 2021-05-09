@@ -80,5 +80,7 @@ namespace apery {
 			return !operator==(rhs);
 		}
 		std::string toString()const;
+
+		friend class ShogiTest;
 	};
 }
