@@ -161,7 +161,7 @@ void SearchAgent::simulate(SearchNode* const root) {
 			}
 		}
 		if (repnum > 0/*千日手である*/) {
-			if (repnum >= 1) {
+			if (repnum >= 3) {
 				if (checkRepetitiveCheck(player.kyokumen,history,latestRepnode)) {
 					node->setRepetitiveCheck();
 				}
@@ -191,25 +191,19 @@ void SearchAgent::simulate(SearchNode* const root) {
 		uint64_t evalcount = 0ull;
 		for (auto& child : node->children) {
 			const auto cache = player.proceedC(child.move);
-			evalcount += qsimulate(&child, player, history.size());
+			const auto eval = Evaluator::evaluate(player);
+			child.setOriginEval(eval);
+			child.setEvaluation(eval);
 			player.recede(child.move, cache);
 		}
-		tree.addEvaluationCount(evalcount);
+		evalcount += node->children.size();
 		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
 		node->children.sort();
-		//sortしたのでfrontが最小値になっているはず
-		double emin = node->children.begin()->eval;
-		double Z_e = 0;
-		for (const auto& child : node->children) {
-			Z_e += std::exp(-(child.eval - emin) / T_e);
-		}
-		double E = 0;
-		for (const auto& child : node->children) {
-			E -= child.eval * std::exp(-(child.eval - emin) / T_e) / Z_e;
-		}
-		node->setEvaluation(E);
+
+		evalcount += qsimulate(node, player, history.size());
 		node->setMass(1);
 		//node->status = SearchNode::State::E;
+		tree.addEvaluationCount(evalcount);
 	}//展開評価ここまで
 
 	//バックアップ
@@ -246,6 +240,7 @@ void SearchAgent::simulate(SearchNode* const root) {
 					E -= eval * std::exp(-(eval - emin) / T_e) / Z_e;
 					M += mass * std::exp(-(eval - emin) / T_d) / Z_d;
 				}
+				assert(M < 50);
 				node->setEvaluation(E);
 				node->setMass(M);
 			}
