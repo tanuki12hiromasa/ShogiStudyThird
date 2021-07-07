@@ -190,6 +190,26 @@ void genGoteBanMove(GeneratedMoves& en, const Kyokumen& kyokumen, const Bitboard
 	genGoteBanMove_koma(en, kyokumen, Koma::g_nHi, false, toMaskBB);
 }
 
+void genRemovedSenteBanMove(GeneratedMoves& en, const Kyokumen& kyokumen, const Bitboard& toMaskBB) {
+	using namespace koma;
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Fu, false, kyokumen.getEachBB(Koma::s_Fu) & bbmask::Dan1to4, toMaskBB);
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kyou, false, toMaskBB & bbmask::Dan2);
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, false, kyokumen.getEachBB(Koma::s_Kaku) & bbmask::Dan4to9, toMaskBB & bbmask::Dan1to3);
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Kaku, false, kyokumen.getEachBB(Koma::s_Kaku) & bbmask::Dan1to3, toMaskBB);
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Hi, false, kyokumen.getEachBB(Koma::s_Hi) & bbmask::Dan4to9, toMaskBB & bbmask::Dan1to3);
+	genSenteBanMove_koma(en, kyokumen, Koma::s_Hi, false, kyokumen.getEachBB(Koma::s_Hi) & bbmask::Dan1to3, toMaskBB);
+}
+
+void genRemovedGoteBanMove(GeneratedMoves& en, const Kyokumen& kyokumen, const Bitboard& toMaskBB) {
+	using namespace koma;
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Fu, false, kyokumen.getEachBB(Koma::g_Fu) & bbmask::Dan6to9, toMaskBB);
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kyou, false, toMaskBB & bbmask::Dan8);
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, false, kyokumen.getEachBB(Koma::g_Kaku) & bbmask::Dan1to6, toMaskBB & bbmask::Dan7to9);
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Kaku, false, kyokumen.getEachBB(Koma::g_Kaku) & bbmask::Dan7to9, toMaskBB);
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Hi, false, kyokumen.getEachBB(Koma::g_Hi) & bbmask::Dan1to6, toMaskBB & bbmask::Dan7to9);
+	genGoteBanMove_koma(en, kyokumen, Koma::g_Hi, false, kyokumen.getEachBB(Koma::g_Hi) & bbmask::Dan7to9, toMaskBB);
+}
+
 void genSenteBanMove_noMate(GeneratedMoves& en, const Kyokumen& kyokumen, Bitboard toMaskBB) {//不要な不成(歩,香2段目,角,飛),駒損する手,王手を生成しない
 	using namespace koma;
 	const auto& allBB = kyokumen.getAllBB();
@@ -353,6 +373,50 @@ std::vector<Move> MoveGenerator::genMove(Move& move, const Kyokumen& kyokumen) {
 	}
 	en.moves.shrink_to_fit();
 	return en.moves;
+}
+
+std::pair<std::vector<Move>, std::vector<Move>> MoveGenerator::genMoveWithRemoved(Move& move, const Kyokumen& kyokumen) {
+	GeneratedMoves en, removed;
+	en.moves.reserve(512);
+	if (kyokumen.teban()) {
+		auto kusemono = kyokumen.getSenteOuCheck(move);
+		if (kusemono.size() > 0) {
+			move.setOute(true);
+			if (kusemono.size() == 1) {
+				genSenteBanMove(en, kyokumen, kusemono[0]);
+				genRemovedSenteBanMove(removed, kyokumen, kusemono[0]);
+				genSenteUchiMove(en, kyokumen, kusemono[0] & ~kyokumen.getAllBB());
+			}
+			genSenteOuMove(en, kyokumen, ~kyokumen.getSenteBB());
+		}
+		else {
+			genSenteBanMove(en, kyokumen, ~kyokumen.getSenteBB());
+			genRemovedSenteBanMove(removed, kyokumen, ~kyokumen.getSenteBB());
+			genSenteUchiMove(en, kyokumen, ~kyokumen.getAllBB());
+			genSenteOuMove(en, kyokumen, ~kyokumen.getSenteBB());
+		}
+	}
+	else {
+		auto kusemono = kyokumen.getGoteOuCheck(move);
+		if (kusemono.size() > 0) {
+			move.setOute(true);
+			if (kusemono.size() == 1) {
+				genGoteBanMove(en, kyokumen, kusemono[0]);
+				genRemovedGoteBanMove(removed, kyokumen, kusemono[0]);
+				genGoteUchiMove(en, kyokumen, kusemono[0] & ~kyokumen.getAllBB());
+			}
+			genGoteOuMove(en, kyokumen, ~kyokumen.getGoteBB());
+		}
+		else {
+			genGoteBanMove(en, kyokumen, ~kyokumen.getGoteBB());
+			genRemovedGoteBanMove(removed, kyokumen, ~kyokumen.getGoteBB());
+			genGoteUchiMove(en, kyokumen, ~kyokumen.getAllBB());
+			genGoteOuMove(en, kyokumen, ~kyokumen.getGoteBB());
+		}
+	}
+	en.moves.shrink_to_fit();
+	removed.moves.shrink_to_fit();
+	return std::make_pair(std::move(en.moves), std::move(removed.moves));
 }
 
 std::vector<Move> MoveGenerator::genCapMove(Move& move, const Kyokumen& kyokumen) {
