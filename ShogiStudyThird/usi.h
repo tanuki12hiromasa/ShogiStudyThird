@@ -18,4 +18,5 @@ namespace usi {
 	extern std::string posToUsi(const koma::Position pos);
 	extern char tebanToUsi(bool teban);
 	extern std::vector<std::string> split(const std::string& str, char splitter);
+	extern std::string combine(std::vector<std::string>::const_iterator begin, const std::vector<std::string>::const_iterator end, char splitter);
 }
