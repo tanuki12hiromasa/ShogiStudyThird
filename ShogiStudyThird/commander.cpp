@@ -286,21 +286,23 @@ void Commander::go(const std::vector<std::string>& tokens) {
 			constexpr auto sleeptime = 50ms;
 			std::this_thread::sleep_for(sleeptime);
 			const auto bestnode = root->getBestChild();
-			const double pi = root->getChildRate(bestnode, 40);
-			if (bestnode == recentBestNode) { //最善ノードが変わっていない
-				pi_average = (pi_average * continuous_counter + pi) / ((double)continuous_counter + 1);
-				continuous_counter++;
-				if (continuous_counter > 4) { //一定回数以上最善が不変であれば信頼できるとして暫定着手とする
-					provisonalBestMove = recentBestNode;
-					provisonal_pi = pi_average;
+			if (bestnode != nullptr) {
+				const double pi = root->getChildRate(bestnode, 40);
+				if (bestnode == recentBestNode) { //最善ノードが変わっていない
+					pi_average = (pi_average * continuous_counter + pi) / ((double)continuous_counter + 1);
+					continuous_counter++;
+					if (continuous_counter > 4) { //一定回数以上最善が不変であれば信頼できるとして暫定着手とする
+						provisonalBestMove = recentBestNode;
+						provisonal_pi = pi_average;
+					}
 				}
+				else {
+					changecounter++;
+					pi_average = pi;
+					continuous_counter = 1;
+				}
+				recentBestNode = bestnode;
 			}
-			else {
-				changecounter++;
-				pi_average = pi;
-				continuous_counter = 1;
-			}
-			recentBestNode = bestnode;
 			//即指しの条件を満たしたら指す
 			if (continuous_counter * sleeptime > std::max(timelimit.first / 2, time_quickbm_lower)) {
 				break;
