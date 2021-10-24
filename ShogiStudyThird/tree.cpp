@@ -11,9 +11,8 @@ SearchTree::SearchTree()
 }
 
 SearchTree::~SearchTree() {
+	reset();
 	while (deleteGarbage());
-	auto root = getGameRoot();
-	delete root;
 }
 
 void SearchTree::set(const std::vector<std::string>& usitokens) {
@@ -55,7 +54,7 @@ void SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) 
 				}
 			}
 			if (nextNode == nullptr) {
-				nextNode = addNewChild(parent, nextmove);
+				nextNode = new SearchNode(nextmove);
 			}
 			proceed(nextNode);
 		}
@@ -67,39 +66,11 @@ void SearchTree::makeNewTree(const std::vector<std::string>& usitokens) {
 	makeNewTree(Kyokumen(usitokens), moves);
 }
 
-SearchNode* SearchTree::addNewChild(SearchNode* const parent, const Move& move) {
-	//childrenは後から数を増やせないので作り直す
-	auto p_oldchildren = parent->purge();
-	auto& oldchildren = *p_oldchildren;
-	std::vector<Move> moves;
-	for (const auto& child : oldchildren) {
-		moves.push_back(child.move);
-	}
-	moves.push_back(move);
-	parent->addChildren(moves);
-	//各子ノードの情報を入れ替える
-	for (int i = 0; i < oldchildren.size(); i++) {
-		auto& oldchild = oldchildren[i];
-		auto& newchild = parent->children[i];
-		assert(oldchild.move == newchild.move);
-		newchild.swap(oldchild);
-	}
-	//古いchildrenは破棄する
-	delete p_oldchildren;
-	//追加した子ノードのポインタを返す
-	return &(parent->children[parent->children.size() - 1]);
-}
-
 void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& usihis) {
-	if (!history.empty()) {
-		auto root = history.front();
-		if (root) {
-			addGarbage(root, true);
-		}
-		history.clear();
-	}
+	reset();
 	startKyokumen = startpos;
-	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
+	historymap.emplace(startKyokumen.getHash(), std::make_pair(startKyokumen.getBammen(), 0));
+	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, startKyokumen.isOute())));
 	rootPlayer = SearchPlayer(startKyokumen);
 	for (const auto& usimove : usihis) {
 		SearchNode* rootNode = getRoot();
@@ -113,7 +84,7 @@ void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& 
 			}
 		}
 		if (next == nullptr) {
-			next = addNewChild(rootNode, usimove);
+			next = new SearchNode(usimove);
 		}
 		proceed(next);
 	}
@@ -144,9 +115,10 @@ void SearchTree::proceed(SearchNode* node) {
 			}
 		}
 	}
-	historymap.emplace(rootPlayer.kyokumen.getHash(), std::make_pair(rootPlayer.kyokumen.getBammen(), history.size() - 1));
 	rootPlayer.kyokumen.proceed(node->move);
 	rootPlayer.feature.set(rootPlayer.kyokumen);
+	historymap.emplace(rootPlayer.kyokumen.getHash(), std::make_pair(rootPlayer.kyokumen.getBammen(), history.size()));
+	node->move.setOute(rootPlayer.kyokumen.isOute());
 	history.push_back(node);
 }
 
@@ -192,25 +164,55 @@ void SearchTree::foutTree()const {
 	fs.close();
 }
 
+void SearchTree::reset() {
+	if (!history.empty()) {
+		for (long long t = history.size() - 1; t > 0; t--) {
+			//逆順に棋譜を辿り、親の居るノードなら根本は残し、単独の木なら根ごと消してもらう
+			const auto& node = history[t];
+			const auto& parent = history[t - 1];
+			bool isChild = false;
+			for (const auto& child : parent->children) {
+				if (&child == node) {
+					isChild = true;
+					break;
+				}
+			}
+			addGarbage(node, !isChild);
+		}
+		addGarbage(history[0], true);
+		
+		historymap.clear();
+		history.clear();
+	}
+}
+
 void SearchTree::addGarbage(SearchNode* const parent, bool deleteParent) {
 	if (!parent) return;
 	std::lock_guard<std::mutex> lock(mtx_deleteTrees);
-	garbage_parent.push(std::make_pair(parent, deleteParent));
+	const auto children = parent->purge();
+	if (deleteParent) {
+		garbage_parent.emplace(parent, children);
+	}
+	else {
+		garbage_parent.emplace(nullptr, children);
+	}
 }
 
 bool SearchTree::deleteGarbage() {
-	SearchNode::Children* root = nullptr;
+	SearchNode* parent = nullptr;
+	SearchNode::Children* children = nullptr;
 	{
 		std::lock_guard<std::mutex> lock(mtx_deleteTrees);
 		if (garbage_parent.empty()) {
 			return false;
 		}
 		const auto p = garbage_parent.front(); garbage_parent.pop();
-		root = p.first->purge();
-		if (p.second) delete p.first;
+		parent = p.first;
+		children = p.second;
 	}
 	//std::cout << "dg " << SearchNode::nodecount << " " << root->size();
-	if (root) delete root;
+	if (children) delete children;
+	if (parent) delete parent;
 	//std::cout << " " << SearchNode::nodecount << "\n";
 	return true;
 }

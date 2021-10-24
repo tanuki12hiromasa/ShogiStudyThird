@@ -173,6 +173,7 @@
     <ClCompile Include="nnue\nnue_evaluate.cpp" />
     <ClCompile Include="nnue\nnue_feature.cpp" />
     <ClCompile Include="node.cpp" />
+    <ClCompile Include="random.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
@@ -211,6 +212,7 @@
     <ClInclude Include="nnue\nnue_param.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="random.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="stest.h" />
     <ClInclude Include="temperature.h" />

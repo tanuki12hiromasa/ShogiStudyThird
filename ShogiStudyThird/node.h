@@ -17,6 +17,7 @@ public:
 	public:
 		~Children();
 		void sporn(const std::vector<Move>& moves);
+
 		void clear();
 		void sort();//評価値の良い順に子ノードを並び替える
 		SearchNode* begin() { return list; }
@@ -78,7 +79,9 @@ public:
 	void setMate();
 	void setDeclare();
 	void setRepetition(const bool teban);
+	void setRepetitiveEnd(const bool teban);
 	void setRepetitiveCheck();
+	void setRepetitiveCheckmate();
 	void setOriginEval(const double evaluation) { origin_eval = evaluation; }
 
 	double getEvaluation()const { return eval.load(); }

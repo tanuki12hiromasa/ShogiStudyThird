@@ -4,14 +4,16 @@
 #include "move.h"
 #include "vec2.h"
 
+using Bammen = std::array<std::uint8_t, 95>;
+
 class Kyokumen {
 	friend class MoveGenerator;
 	friend class ShogiTest;
 public:
 	Kyokumen();
 	Kyokumen(const std::array<koma::Koma, 81>&, const std::array<unsigned,7>&, const std::array<unsigned, 7>&, bool);
-	Kyokumen(const std::array<std::uint8_t, 95>&, bool);
-	Kyokumen(std::array<std::uint8_t, 95>&&, bool);
+	Kyokumen(const Bammen&, bool);
+	Kyokumen(Bammen&&, bool);
 	Kyokumen(const std::vector<std::string>& usitokens);
 	std::string toSfen()const;
 	std::string toBanFigure()const;
@@ -19,7 +21,7 @@ public:
 	koma::Koma proceed(const Move);//返り値は取られた駒(captured)
 	koma::Koma recede(const Move m, const koma::Koma cap);//返り値は動かした駒(to=>fromに動いた駒)
 
-	const std::array<std::uint8_t, 95>& getBammen()const { return bammen; }
+	const Bammen& getBammen()const { return bammen; }
 	std::uint64_t getHash()const;
 	bool teban()const { return isSente; }
 	koma::Koma getKoma(const koma::Position pos)const { assert(pos < 81); return static_cast<koma::Koma> (bammen[static_cast<size_t>(pos)]); }
@@ -45,6 +47,12 @@ public:
 	Bitboard senteKiki_ingnoreKing()const;
 	Bitboard goteKiki_ingnoreKing()const;
 
+	bool isOute(const Move& m = Move())const;
+	bool isSenteOute(const Move)const;
+	bool isGoteOute(const Move)const;
+	bool isSenteOute()const;
+	bool isGoteOute()const;
+
 	bool operator==(const Kyokumen& rhs)const;
 	bool operator!=(const Kyokumen& rhs)const { return !operator==(rhs); }
 private:
@@ -52,7 +60,7 @@ private:
 	void reflectBitboard();
 
 	bool isSente;
-	std::array<std::uint8_t,95> bammen;//81番以降は持ち駒の数 SS2ndでは別の配列にしていたのを統合
+	Bammen bammen;//81番以降は持ち駒の数 SS2ndでは別の配列にしていたのを統合
 	Bitboard allKomaBB;
 	Bitboard senteKomaBB;
 	Bitboard goteKomaBB;

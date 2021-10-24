@@ -90,5 +90,18 @@ namespace usi {
 		return tokens;
 	}
 
+	std::string combine(std::vector<std::string>::const_iterator begin, const std::vector<std::string>::const_iterator end, char splitter) {
+		std::string str;
+		auto it = begin;
+		while (it != end) {
+			str += *it;
+			it++;
+			if (it != end) {
+				str += splitter;
+			}
+		}
+		return str;
+	}
+
 	std::string btos(bool b) { return b ? "true" : "false"; }
 }

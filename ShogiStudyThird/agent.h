@@ -2,8 +2,11 @@
 #include "tree.h"
 #include "move_gen.h"
 #include "temperature.h"
+#include "random.h"
 #include <random>
 #include <functional>
+
+//#define EXPAND_GRANDCHILDREN //探索での展開時に孫ノードまで展開するオプション
 
 class SearchAgent {
 public:
@@ -18,10 +21,10 @@ private:
 	static int drawmovenum;
 
 	enum class state {
-		search, gc, learn, terminate
+		search, gc, terminate
 	};
 public:
-	SearchAgent(SearchTree& tree, const double Ts, int seed);
+	SearchAgent(SearchTree& tree, const double Ts, const Random::xoshiro256p& seed);
 	SearchAgent(SearchAgent&&)noexcept;
 	~SearchAgent();
 	SearchAgent() = delete;
@@ -32,9 +35,9 @@ public:
 private:
 	void simulate(SearchNode* const root);
 	size_t qsimulate(SearchNode* const root, SearchPlayer& player, const int hislength);
+	bool checkRepetition(SearchNode* const node, const Kyokumen& kyokumen, const std::vector<SearchNode*>& history, const std::vector<std::pair<std::uint64_t, Bammen>>& k_history);
 	bool checkRepetitiveCheck(const Kyokumen& k,const std::vector<SearchNode*>& searchhis, const SearchNode* const latestRepnode)const;
 	bool deleteGarbage();
-	void simulate_learn();
 
 	SearchTree& tree;
 	SearchPlayer player;
@@ -49,12 +52,10 @@ private:
 
 
 	//値域 [0,1.0) のランダムな値
-	std::uniform_real_distribution<double> random{ 0, 1.0 };
-	std::mt19937_64 engine; //初期シードはコンストラクタで受け取る
+	Random::xoshiro256p random; //初期シードはコンストラクタで受け取る
 
 	friend class ShogiTest;
 	friend class AgentPool;
-	static std::function<void(const std::vector<SearchNode*>& his,const SearchPlayer& leaf)> learn_func;
 };
 
 class AgentPool {
@@ -66,9 +67,6 @@ public:
 	void startSearch();
 	void pauseSearch();
 	void joinPause();
-	void learnSearch(
-		const std::function<void(const std::vector<SearchNode*>& his, const SearchPlayer& leaf)>& func_learn,
-		const std::function<void(void)>& func_finish);
 	void noticeProceed();
 	void deleteTree();
 	void terminate();

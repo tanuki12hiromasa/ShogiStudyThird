@@ -101,7 +101,7 @@ Commander::~Commander() {
 
 void Commander::coutOption() {
 	using namespace std;
-	//cout << "option name kppt_filepath type string default ./data/kppt_apery" << endl; //隠しオプション
+	cout << "option name eval_folderpath type string default ./data/kppt_apery" << endl;
 	cout << "option name leave_branchNode type check default false" << endl;
 	cout << "option name continuous_tree type check default true" << endl;
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
@@ -141,12 +141,13 @@ void Commander::setOption(const std::vector<std::string>& token) {
 		else if (token[2] == "continuous_tree") {
 			continuousTree = (token[4] == "true");
 		}
-		else if (token[2] == "kppt_filepath") {
-			//aperyのパラメータファイルの位置を指定する 隠しオプション
-			apery::apery_feat::folderpath = token[4];
+		else if (token[2] == "eval_folderpath") {
+			//aperyのパラメータファイルの位置を指定する
+			const auto path = usi::combine(token.begin() + 4, token.end(), ' ');
+			apery::apery_feat::folderpath = path;
 		}
 		else if (token[2] == "NumOfAgent") {
-			agentNum = std::stoi(token[4]);
+			agents.setAgentNum(std::stoi(token[4]));
 		}
 		else if (token[2] == "leave_qsearchNode") {
 			SearchAgent::setLeaveQSNode(token[4]=="true");
@@ -233,6 +234,7 @@ void Commander::paramInit() {
 void Commander::gameInit() {
 	BBkiki::init();
 	Evaluator::init();
+	tree.reset();
 	agents.setup();
 	info();
 
@@ -416,6 +418,7 @@ void Commander::chakushu(SearchNode* const bestchild) {
 void Commander::position(const std::vector<std::string>& tokens) {
 	std::lock_guard<std::mutex> lock(treemtx);
 	agents.pauseSearch();
+	//agents.joinPause(); //agentの探索が停止するのを待ってから次に進めたい場合はこの処理を行わせる バグ等がなければ待たなくても大丈夫な筈
 	tree.set(tokens);
 	agents.noticeProceed();
 }

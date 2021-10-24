@@ -11,6 +11,7 @@ class SearchTree {
 public:
 	SearchTree();
 	~SearchTree();
+	void reset();
 	void set(const Kyokumen& startpos, const std::vector<Move>& moves);
 	void set(const std::vector<std::string>& usitokens);
 	void makeNewTree(const Kyokumen& startpos,const std::vector<Move>& moves);
@@ -44,10 +45,9 @@ private:
 	bool continuous_tree = true;
 
 private:
-	SearchNode* addNewChild(SearchNode* const parent, const Move& move);
 	void addGarbage(SearchNode* const parent, bool deleteParent);
 
-	std::queue<std::pair<SearchNode*, bool>> garbage_parent;
+	std::queue<std::pair<SearchNode*, SearchNode::Children*>> garbage_parent;
 	std::mutex mtx_deleteTrees;
 
 	friend class Commander;

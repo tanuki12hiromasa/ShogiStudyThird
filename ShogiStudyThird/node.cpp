@@ -157,6 +157,11 @@ void SearchNode::setDeclare() {
 }
 
 void SearchNode::setRepetition(const bool teban) {
+	origin_eval = teban ? repetitionScore : (-repetitionScore);
+	eval = origin_eval;
+}
+
+void SearchNode::setRepetitiveEnd(const bool teban) {
 	//deleteTree();
 	eval = teban ? repetitionScore : (-repetitionScore);
 	origin_eval = eval.load();
@@ -165,6 +170,11 @@ void SearchNode::setRepetition(const bool teban) {
 }
 
 void SearchNode::setRepetitiveCheck() {
+	origin_eval = mateScoreBound - 1;
+	eval = origin_eval;
+}
+
+void SearchNode::setRepetitiveCheckmate() {
 	//deleteTree();
 	eval = mateScore;
 	origin_eval = mateScore;
