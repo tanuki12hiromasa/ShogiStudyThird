@@ -148,7 +148,7 @@ void SearchAgent::simulate(SearchNode* const root) {
 		uint64_t evalcount = 0ull;
 		for (auto& child : node->children) {
 			const auto cache = player.proceedC(child.move);
-			history.pop_back();
+			history.push_back(&child);
 			if (!checkRepetition(&child, player.kyokumen, history, k_history)) {
 				evalcount += qsimulate(&child, player, history.size());
 			}

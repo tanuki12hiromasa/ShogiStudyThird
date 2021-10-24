@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "move.h"
 #include <atomic>
 #include <vector>
@@ -17,6 +17,7 @@ public:
 	public:
 		~Children();
 		void sporn(const std::vector<Move>& moves);
+
 		void clear();
 		void sort();//評価値の良い順に子ノードを並び替える
 		SearchNode* begin() { return list; }

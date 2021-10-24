@@ -234,6 +234,7 @@ void Commander::paramInit() {
 void Commander::gameInit() {
 	BBkiki::init();
 	Evaluator::init();
+	tree.reset();
 	agents.setup();
 	info();
 
@@ -417,7 +418,7 @@ void Commander::chakushu(SearchNode* const bestchild) {
 void Commander::position(const std::vector<std::string>& tokens) {
 	std::lock_guard<std::mutex> lock(treemtx);
 	agents.pauseSearch();
-	agents.joinPause();
+	//agents.joinPause(); //agentの探索が停止するのを待ってから次に進めたい場合はこの処理を行わせる バグ等がなければ待たなくても大丈夫な筈
 	tree.set(tokens);
 	agents.noticeProceed();
 }
