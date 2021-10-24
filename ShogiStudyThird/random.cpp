@@ -1,8 +1,16 @@
 ﻿#include "random.h"
 #include <limits>
+#include <random>
 
 namespace Random {
-
+	xoshiro256p::xoshiro256p() {
+		std::random_device rd;
+		std::uniform_int_distribution urandom(std::numeric_limits<u64>::min(), std::numeric_limits<u64>::max());
+		s[0] = urandom(rd);
+		s[1] = urandom(rd);
+		s[2] = urandom(rd);
+		s[3] = urandom(rd);
+	}
 	xoshiro256p::xoshiro256p(u64 a, u64 b, u64 c, u64 d)
 		:s({ a,b,c,d })
 	{}

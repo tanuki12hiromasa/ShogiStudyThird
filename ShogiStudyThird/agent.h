@@ -6,6 +6,8 @@
 #include <random>
 #include <functional>
 
+//#define EXPAND_GRANDCHILDREN //探索での展開時に孫ノードまで展開するオプション
+
 class SearchAgent {
 public:
 	static void setLeaveQSNode(bool b) { leave_QsearchNode = b; }
@@ -19,7 +21,7 @@ private:
 	static int drawmovenum;
 
 	enum class state {
-		search, gc, learn, terminate
+		search, gc, terminate
 	};
 public:
 	SearchAgent(SearchTree& tree, const double Ts, const Random::xoshiro256p& seed);
@@ -33,9 +35,9 @@ public:
 private:
 	void simulate(SearchNode* const root);
 	size_t qsimulate(SearchNode* const root, SearchPlayer& player, const int hislength);
+	bool checkRepetition(SearchNode* const node, const Kyokumen& kyokumen, const std::vector<SearchNode*>& history, const std::vector<std::pair<std::uint64_t, Bammen>>& k_history);
 	bool checkRepetitiveCheck(const Kyokumen& k,const std::vector<SearchNode*>& searchhis, const SearchNode* const latestRepnode)const;
 	bool deleteGarbage();
-	void simulate_learn();
 
 	SearchTree& tree;
 	SearchPlayer player;
@@ -54,7 +56,6 @@ private:
 
 	friend class ShogiTest;
 	friend class AgentPool;
-	static std::function<void(const std::vector<SearchNode*>& his,const SearchPlayer& leaf)> learn_func;
 };
 
 class AgentPool {
@@ -66,9 +67,6 @@ public:
 	void startSearch();
 	void pauseSearch();
 	void joinPause();
-	void learnSearch(
-		const std::function<void(const std::vector<SearchNode*>& his, const SearchPlayer& leaf)>& func_learn,
-		const std::function<void(void)>& func_finish);
 	void noticeProceed();
 	void deleteTree();
 	void terminate();

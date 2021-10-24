@@ -55,7 +55,8 @@ void SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) 
 				}
 			}
 			if (nextNode == nullptr) {
-				nextNode = addNewChild(parent, nextmove);
+				makeNewTree(startpos, usihis);
+				return;
 			}
 			proceed(nextNode);
 		}
@@ -99,6 +100,8 @@ void SearchTree::makeNewTree(const Kyokumen& startpos, const std::vector<Move>& 
 		history.clear();
 	}
 	startKyokumen = startpos;
+	historymap.clear();
+	historymap.emplace(startKyokumen.getHash(), std::make_pair(startKyokumen.getBammen(), 0));
 	history.push_back(new SearchNode(Move(koma::Position::NullMove, koma::Position::NullMove, false)));
 	rootPlayer = SearchPlayer(startKyokumen);
 	for (const auto& usimove : usihis) {
@@ -144,9 +147,9 @@ void SearchTree::proceed(SearchNode* node) {
 			}
 		}
 	}
-	historymap.emplace(rootPlayer.kyokumen.getHash(), std::make_pair(rootPlayer.kyokumen.getBammen(), history.size() - 1));
 	rootPlayer.kyokumen.proceed(node->move);
 	rootPlayer.feature.set(rootPlayer.kyokumen);
+	historymap.emplace(rootPlayer.kyokumen.getHash(), std::make_pair(rootPlayer.kyokumen.getBammen(), history.size()));
 	history.push_back(node);
 }
 

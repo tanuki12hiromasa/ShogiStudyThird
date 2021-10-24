@@ -17,6 +17,8 @@ struct LittleBitboard {
 };
 
 class Bitboard {
+public:
+	static Bitboard genOneposBB(unsigned pos) { Bitboard bb; bb.set(pos); return bb; }
 private:
 	static const unsigned bbNum = 81;
 public:

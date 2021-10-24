@@ -14,6 +14,7 @@ namespace Random {
 	*/
 	class xoshiro256p {
 	public:
+		xoshiro256p();
 		xoshiro256p(u64 a, u64 b, u64 c, u64 d);
 		xoshiro256p(const xoshiro256p& x);
 		xoshiro256p(xoshiro256p&& x)noexcept;

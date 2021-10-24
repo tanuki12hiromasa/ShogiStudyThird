@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "move.h"
 #include <atomic>
 #include <vector>
@@ -78,7 +78,9 @@ public:
 	void setMate();
 	void setDeclare();
 	void setRepetition(const bool teban);
+	void setRepetitiveEnd(const bool teban);
 	void setRepetitiveCheck();
+	void setRepetitiveCheckmate();
 	void setOriginEval(const double evaluation) { origin_eval = evaluation; }
 
 	double getEvaluation()const { return eval.load(); }
