@@ -163,6 +163,7 @@
     <ClCompile Include="commander.cpp" />
     <ClCompile Include="joseki.cpp" />
     <ClCompile Include="koma.cpp" />
+    <ClCompile Include="kppt_learn.cpp" />
     <ClCompile Include="kyokumen.cpp" />
     <ClCompile Include="leaf_guard.cpp" />
     <ClCompile Include="main.cpp">
@@ -187,6 +188,7 @@
     <ClInclude Include="agent.h" />
     <ClInclude Include="kppt_evaluate.h" />
     <ClInclude Include="kppt_feature.h" />
+    <ClInclude Include="kppt_learn.h" />
     <ClInclude Include="kppt_param.h" />
     <ClInclude Include="bb_kiki.h" />
     <ClInclude Include="bitboard.h" />

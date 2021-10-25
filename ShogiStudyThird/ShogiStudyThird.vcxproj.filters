@@ -108,6 +108,9 @@
     <ClCompile Include="random.cpp">
       <Filter>ソース ファイル\kiso</Filter>
     </ClCompile>
+    <ClCompile Include="kppt_learn.cpp">
+      <Filter>kppt</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -217,6 +220,9 @@
     </ClInclude>
     <ClInclude Include="random.h">
       <Filter>ヘッダー ファイル\kiso</Filter>
+    </ClInclude>
+    <ClInclude Include="kppt_learn.h">
+      <Filter>kppt</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

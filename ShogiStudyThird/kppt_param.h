@@ -75,5 +75,10 @@ namespace kppt {
 		e_hand_pawn,e_hand_lance,e_hand_knight,e_hand_silver,e_hand_bishop,e_hand_rook,e_hand_gold
 	};
 	inline EvalIndex mochiToIndex(koma::Mochigoma k, bool teban) { return teban ? sMochiToIndexArr[static_cast<size_t>(k)] : gMochiToIndexArr[static_cast<size_t>(k)]; }
+	constexpr EvalIndex mirror(const EvalIndex index) {
+		if (index < fe_hand_end)return index;
+		int pos = (index - fe_hand_end) % 25;
+		return static_cast<EvalIndex>((int)index - pos + koma::mirrorX(pos));
+	}
 
 }
