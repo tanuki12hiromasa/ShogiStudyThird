@@ -156,8 +156,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="agent.cpp" />
-    <ClCompile Include="apery_evaluate.cpp" />
-    <ClCompile Include="apery_feature.cpp" />
+    <ClCompile Include="kppt_evaluate.cpp" />
+    <ClCompile Include="kppt_feature.cpp" />
     <ClCompile Include="bb_kiki.cpp" />
     <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="commander.cpp" />
@@ -185,9 +185,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="agent.h" />
-    <ClInclude Include="apery_evaluate.h" />
-    <ClInclude Include="apery_feature.h" />
-    <ClInclude Include="apery_param.h" />
+    <ClInclude Include="kppt_evaluate.h" />
+    <ClInclude Include="kppt_feature.h" />
+    <ClInclude Include="kppt_param.h" />
     <ClInclude Include="bb_kiki.h" />
     <ClInclude Include="bitboard.h" />
     <ClInclude Include="commander.h" />

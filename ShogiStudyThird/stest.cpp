@@ -237,7 +237,7 @@ bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int d
 			return false;
 		}
 		f.recede(k, moved, cap, c.move, cache);
-		if (f != cf) { //apery_kppt
+		if (f != cf) { //kppt
 			std::cout << "error: feature recede" << std::endl;
 			std::cout << "kyokumen:\nposition " << k.toSfen() << "\n" << k.toBanFigure() << std::endl;
 			std::cout << "move: " << c.move.toUSI() << std::endl;
@@ -273,25 +273,25 @@ void ShogiTest::test() {
 		using ll = long long;
 		std::map<ll, ull> map;
 		double sum = 0;
-		for (ull i = 0; i < apery::SquareNum; i++) {
-			for (ull j = 0; j < apery::SquareNum; j++) {
-				for (ull k = 0; k < apery::EvalIndex::fe_end; k++) {
-					map[apery::apery_feat::KKP[i][j][k][0]]++;
-					map[apery::apery_feat::KKP[i][j][k][1]]++;
-					sum += std::abs(apery::apery_feat::KKP[i][j][k][0]);
-					sum += std::abs(apery::apery_feat::KKP[i][j][k][1]);
+		for (ull i = 0; i < kppt::SquareNum; i++) {
+			for (ull j = 0; j < kppt::SquareNum; j++) {
+				for (ull k = 0; k < kppt::EvalIndex::fe_end; k++) {
+					map[kppt::kppt_feat::KKP[i][j][k][0]]++;
+					map[kppt::kppt_feat::KKP[i][j][k][1]]++;
+					sum += std::abs(kppt::kppt_feat::KKP[i][j][k][0]);
+					sum += std::abs(kppt::kppt_feat::KKP[i][j][k][1]);
 				}
 			}
 		}
 		std::cout << "mean:" << (sum / (81 * 81 * 1548)) << "\n";
 		sum = 0;
-		for (ull i = 0; i < apery::SquareNum; i++) {
-			for (ull j = 0; j < apery::EvalIndex::fe_end; j++) {
-				for (ull k = 0; k < apery::EvalIndex::fe_end; k++) {
-					map[apery::apery_feat::KPP[i][j][k][0]]++;
-					map[apery::apery_feat::KPP[i][j][k][1]]++;
-					sum += std::abs(apery::apery_feat::KPP[i][j][k][0]);
-					sum += std::abs(apery::apery_feat::KPP[i][j][k][1]);
+		for (ull i = 0; i < kppt::SquareNum; i++) {
+			for (ull j = 0; j < kppt::EvalIndex::fe_end; j++) {
+				for (ull k = 0; k < kppt::EvalIndex::fe_end; k++) {
+					map[kppt::kppt_feat::KPP[i][j][k][0]]++;
+					map[kppt::kppt_feat::KPP[i][j][k][1]]++;
+					sum += std::abs(kppt::kppt_feat::KPP[i][j][k][0]);
+					sum += std::abs(kppt::kppt_feat::KPP[i][j][k][1]);
 				}
 			}
 		}

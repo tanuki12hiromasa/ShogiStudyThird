@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "kyokumen.h"
 
-namespace apery {
+namespace kppt {
 	constexpr int SquareNum = 81;
 	inline constexpr int inverse(int pos) { return SquareNum - 1 - pos; }
 
@@ -21,18 +21,6 @@ namespace apery {
 	constexpr int HorseScore = (1050 * 9 / 10);
 	constexpr int DragonScore = (1550 * 9 / 10);
 	constexpr int KingScore = (15000);
-
-	const std::array<int, static_cast<size_t>(koma::Koma::KomaNum)> PieceScoreArr = {
-		PawnScore, LanceScore, KnightScore, SilverScore, BishopScore, RookScore, GoldScore,
-		ScoreZero, // King
-		ProPawnScore, ProLanceScore, ProKnightScore, ProSilverScore, HorseScore, DragonScore,
-		-PawnScore, -LanceScore, -KnightScore, -SilverScore, -BishopScore, -RookScore, -GoldScore,
-		ScoreZero, // King
-		-ProPawnScore, -ProLanceScore, -ProKnightScore, -ProSilverScore, -HorseScore, -DragonScore,
-	};
-	inline int PieceScore(koma::Koma k) { return PieceScoreArr[static_cast<size_t>(k)]; }
-	inline int PieceScore(koma::Mochigoma m) { return PieceScoreArr[static_cast<size_t>(m)]; }
-	inline int PieceScore(koma::Mochigoma m, bool teban) { return teban ? PieceScoreArr[static_cast<size_t>(m)] : -PieceScoreArr[static_cast<size_t>(m)]; }
 
 	enum EvalIndex : int32_t {
 		f_hand_pawn = 0, // 0
