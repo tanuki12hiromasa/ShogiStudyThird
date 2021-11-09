@@ -121,6 +121,10 @@ void SearchNode::addChildren(const std::vector<Move>& moves) {
 	children.sporn(moves);
 }
 
+void SearchNode::setExpanded() {
+	status = State::Expanded;
+}
+
 void SearchNode::setMateVariation(const double childmin) {
 	if (childmin > 0) {
 		eval = -childmin + mateOneScore;
@@ -166,7 +170,7 @@ void SearchNode::setRepetitiveEnd(const bool teban) {
 	eval = teban ? repetitionScore : (-repetitionScore);
 	origin_eval = eval.load();
 	mass = mateMass;
-	status = State::T;
+	status = State::D;
 }
 
 void SearchNode::setRepetitiveCheck() {

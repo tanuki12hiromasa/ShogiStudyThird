@@ -51,6 +51,7 @@ private:
 	std::mutex mtx_deleteTrees;
 
 	friend class Commander;
+	friend class LearnCommander;
 	friend class ShogiTest;
 };
  

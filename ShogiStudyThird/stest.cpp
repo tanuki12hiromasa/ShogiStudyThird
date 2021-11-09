@@ -268,38 +268,7 @@ void ShogiTest::test() {
 	BBkiki::init();
 	Evaluator::init();
 	std::cout << "initialized." << std::endl;
-	{
-		using ull = unsigned long long;
-		using ll = long long;
-		std::map<ll, ull> map;
-		double sum = 0;
-		for (ull i = 0; i < kppt::SquareNum; i++) {
-			for (ull j = 0; j < kppt::SquareNum; j++) {
-				for (ull k = 0; k < kppt::EvalIndex::fe_end; k++) {
-					map[kppt::kppt_feat::KKP[i][j][k][0]]++;
-					map[kppt::kppt_feat::KKP[i][j][k][1]]++;
-					sum += std::abs(kppt::kppt_feat::KKP[i][j][k][0]);
-					sum += std::abs(kppt::kppt_feat::KKP[i][j][k][1]);
-				}
-			}
-		}
-		std::cout << "mean:" << (sum / (81 * 81 * 1548)) << "\n";
-		sum = 0;
-		for (ull i = 0; i < kppt::SquareNum; i++) {
-			for (ull j = 0; j < kppt::EvalIndex::fe_end; j++) {
-				for (ull k = 0; k < kppt::EvalIndex::fe_end; k++) {
-					map[kppt::kppt_feat::KPP[i][j][k][0]]++;
-					map[kppt::kppt_feat::KPP[i][j][k][1]]++;
-					sum += std::abs(kppt::kppt_feat::KPP[i][j][k][0]);
-					sum += std::abs(kppt::kppt_feat::KPP[i][j][k][1]);
-				}
-			}
-		}
-		for (const auto& num : map) {
-			std::cout << num.first << ":" << num.second << "\n";
-		}
-		std::cout << "mean:" << (sum / (81 * 1548 * 1548)) << "\n";
-	}
+
 #if 0
 	{
 		std::string sfen = "position sfen 4k4/5+p3/5P3/9/9/9/9/9/4K4 b 2r2b4g4s4n4l16p 1";

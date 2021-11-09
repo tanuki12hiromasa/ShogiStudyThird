@@ -37,6 +37,12 @@
     <Filter Include="kppt">
       <UniqueIdentifier>{c012aa1c-ed2c-4694-8455-86b4c121fb6b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ヘッダー ファイル\learn">
+      <UniqueIdentifier>{cd8ed298-64cf-4ec4-b92a-69245f152abc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\learn">
+      <UniqueIdentifier>{63176a8d-470b-4a7f-ad4e-6a632604d781}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -110,6 +116,12 @@
     </ClCompile>
     <ClCompile Include="kppt_learn.cpp">
       <Filter>kppt</Filter>
+    </ClCompile>
+    <ClCompile Include="learn_util.cpp">
+      <Filter>ソース ファイル\learn</Filter>
+    </ClCompile>
+    <ClCompile Include="learn_commander.cpp">
+      <Filter>ソース ファイル\learn</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -223,6 +235,12 @@
     </ClInclude>
     <ClInclude Include="kppt_learn.h">
       <Filter>kppt</Filter>
+    </ClInclude>
+    <ClInclude Include="learn_util.h">
+      <Filter>ヘッダー ファイル\learn</Filter>
+    </ClInclude>
+    <ClInclude Include="learn_commander.h">
+      <Filter>ヘッダー ファイル\learn</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

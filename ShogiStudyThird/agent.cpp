@@ -124,13 +124,8 @@ void SearchAgent::simulate(SearchNode* const root) {
 		if (!dredear.Result()) {
 			return;
 		}
-		/*
-		if (player.kyokumen.isDeclarable()) {
-			node->setDeclare();
-			goto backup;
-		}
-		*/
-		
+		//以前はここで宣言勝ちを判定していたが、子ノードで網羅的にチェックするのと、treeのrootはproceed時にチェックするので不要と判断した
+
 		{//子ノード生成
 			const auto moves = MoveGenerator::genMove(node->move, player.kyokumen);
 			if (moves.empty()) {
@@ -143,7 +138,79 @@ void SearchAgent::simulate(SearchNode* const root) {
 			}
 			node->addChildren(moves);
 		}
-#if 0
+#ifdef EXPAND_GRANDCHILDREN
+		//孫ノードまで(次の自手番まで)展開する
+		uint64_t evalcount = 0ull;
+		int dbg_X = 0;
+		for (auto& child : node->children) {
+			dbg_X++;
+			const auto cache = player.proceedC(child.move);
+			history.push_back(&child);
+			if (!checkRepetition(&child, player.kyokumen, history, k_history) || !child.isRepetition()) {
+				{
+					const auto moves = MoveGenerator::genMove(child.move, player.kyokumen);
+					if (moves.empty()) {
+						child.setMate();
+						history.pop_back();
+						player.recede(child.move, cache);
+						continue;
+					}
+					else if (history.size() - 1 + tree.getMoveNum() >= drawmovenum) {
+						node->setRepetitiveEnd(player.kyokumen.teban());
+						history.pop_back();
+						player.recede(child.move, cache);
+						continue;
+					}
+					child.addChildren(moves);
+				}
+				k_history.emplace_back(player.kyokumen.getHash(), player.kyokumen.getBammen());
+				for (auto& grandchild : child.children) {
+					const auto gcache = player.proceedC(grandchild.move);
+					history.push_back(&grandchild);
+					if (!checkRepetition(&grandchild, player.kyokumen, history, k_history)) {
+						evalcount += qsimulate(&grandchild, player, history.size());
+					}
+					history.pop_back();
+					player.recede(grandchild.move, gcache);
+				}
+				{
+					//子ノードの評価値をバックアップで計算
+					child.children.sort();
+					double emin = child.children.begin()->eval;
+					double Z_e = 0;
+					for (const auto& grandchild : child.children) {
+						Z_e += std::exp(-(grandchild.eval - emin) / T_e);
+					}
+					double E = 0;
+					for (const auto& grandchild : child.children) {
+						E -= grandchild.eval * std::exp(-(grandchild.eval - emin) / T_e) / Z_e;
+					}
+					child.setEvaluation(E);
+					child.setOriginEval(E);
+					child.setMass(1);
+					child.setExpanded();
+				}
+				k_history.pop_back();
+			}
+			history.pop_back();
+			player.recede(child.move, cache);
+		}
+		assert(history.size() == k_history.size() + 1);
+		tree.addEvaluationCount(evalcount);
+		//sortは静止探索後の方が評価値順の並びが維持されやすい　親スタートの静止探索ならその前後共にsortしてもいいかもしれない
+		node->children.sort();
+		//sortしたので一番上が最小値になっているはず
+		double emin = node->children.begin()->eval;
+		double Z_e = 0;
+		for (const auto& child : node->children) {
+			Z_e += std::exp(-(child.eval - emin) / T_e);
+		}
+		double E = 0;
+		for (const auto& child : node->children) {
+			E -= child.eval * std::exp(-(child.eval - emin) / T_e) / Z_e;
+		}
+		node->setEvaluation(E);
+		node->setMass(2);
 #else
 		uint64_t evalcount = 0ull;
 		for (auto& child : node->children) {
@@ -261,7 +328,7 @@ size_t SearchAgent::qsimulate(SearchNode* const root, SearchPlayer& player, cons
 		}
 	}
 	else if (hislength - 1 + tree.getMoveNum() >= drawmovenum) {
-		root->setRepetition(player.kyokumen.teban());
+		root->setRepetitiveEnd(player.kyokumen.teban());
 		return 1ull;
 	}
 	if (depth <= 0) {
