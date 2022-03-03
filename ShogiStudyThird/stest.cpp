@@ -237,7 +237,7 @@ bool ShogiTest::checkRecedeR(Kyokumen& k, Feature& f, SearchNode* p, const int d
 			return false;
 		}
 		f.recede(k, moved, cap, c.move, cache);
-		if (f != cf) { //apery_kppt
+		if (f != cf) { //kppt
 			std::cout << "error: feature recede" << std::endl;
 			std::cout << "kyokumen:\nposition " << k.toSfen() << "\n" << k.toBanFigure() << std::endl;
 			std::cout << "move: " << c.move.toUSI() << std::endl;
@@ -268,38 +268,7 @@ void ShogiTest::test() {
 	BBkiki::init();
 	Evaluator::init();
 	std::cout << "initialized." << std::endl;
-	{
-		using ull = unsigned long long;
-		using ll = long long;
-		std::map<ll, ull> map;
-		double sum = 0;
-		for (ull i = 0; i < apery::SquareNum; i++) {
-			for (ull j = 0; j < apery::SquareNum; j++) {
-				for (ull k = 0; k < apery::EvalIndex::fe_end; k++) {
-					map[apery::apery_feat::KKP[i][j][k][0]]++;
-					map[apery::apery_feat::KKP[i][j][k][1]]++;
-					sum += std::abs(apery::apery_feat::KKP[i][j][k][0]);
-					sum += std::abs(apery::apery_feat::KKP[i][j][k][1]);
-				}
-			}
-		}
-		std::cout << "mean:" << (sum / (81 * 81 * 1548)) << "\n";
-		sum = 0;
-		for (ull i = 0; i < apery::SquareNum; i++) {
-			for (ull j = 0; j < apery::EvalIndex::fe_end; j++) {
-				for (ull k = 0; k < apery::EvalIndex::fe_end; k++) {
-					map[apery::apery_feat::KPP[i][j][k][0]]++;
-					map[apery::apery_feat::KPP[i][j][k][1]]++;
-					sum += std::abs(apery::apery_feat::KPP[i][j][k][0]);
-					sum += std::abs(apery::apery_feat::KPP[i][j][k][1]);
-				}
-			}
-		}
-		for (const auto& num : map) {
-			std::cout << num.first << ":" << num.second << "\n";
-		}
-		std::cout << "mean:" << (sum / (81 * 1548 * 1548)) << "\n";
-	}
+
 #if 0
 	{
 		std::string sfen = "position sfen 4k4/5+p3/5P3/9/9/9/9/9/4K4 b 2r2b4g4s4n4l16p 1";

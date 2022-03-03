@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "kyokumen.h"
 
-namespace apery {
+namespace kppt {
 	constexpr int SquareNum = 81;
 	inline constexpr int inverse(int pos) { return SquareNum - 1 - pos; }
 
@@ -21,18 +21,6 @@ namespace apery {
 	constexpr int HorseScore = (1050 * 9 / 10);
 	constexpr int DragonScore = (1550 * 9 / 10);
 	constexpr int KingScore = (15000);
-
-	const std::array<int, static_cast<size_t>(koma::Koma::KomaNum)> PieceScoreArr = {
-		PawnScore, LanceScore, KnightScore, SilverScore, BishopScore, RookScore, GoldScore,
-		ScoreZero, // King
-		ProPawnScore, ProLanceScore, ProKnightScore, ProSilverScore, HorseScore, DragonScore,
-		-PawnScore, -LanceScore, -KnightScore, -SilverScore, -BishopScore, -RookScore, -GoldScore,
-		ScoreZero, // King
-		-ProPawnScore, -ProLanceScore, -ProKnightScore, -ProSilverScore, -HorseScore, -DragonScore,
-	};
-	inline int PieceScore(koma::Koma k) { return PieceScoreArr[static_cast<size_t>(k)]; }
-	inline int PieceScore(koma::Mochigoma m) { return PieceScoreArr[static_cast<size_t>(m)]; }
-	inline int PieceScore(koma::Mochigoma m, bool teban) { return teban ? PieceScoreArr[static_cast<size_t>(m)] : -PieceScoreArr[static_cast<size_t>(m)]; }
 
 	enum EvalIndex : int32_t {
 		f_hand_pawn = 0, // 0
@@ -87,5 +75,10 @@ namespace apery {
 		e_hand_pawn,e_hand_lance,e_hand_knight,e_hand_silver,e_hand_bishop,e_hand_rook,e_hand_gold
 	};
 	inline EvalIndex mochiToIndex(koma::Mochigoma k, bool teban) { return teban ? sMochiToIndexArr[static_cast<size_t>(k)] : gMochiToIndexArr[static_cast<size_t>(k)]; }
+	constexpr EvalIndex mirror(const EvalIndex index) {
+		if (index < fe_hand_end)return index;
+		int pos = (index - fe_hand_end) % 25;
+		return static_cast<EvalIndex>((int)index - pos + koma::mirrorX(pos));
+	}
 
 }

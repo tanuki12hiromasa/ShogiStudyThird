@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include "player.h"
 
-#include "apery_evaluate.h"
-#include "apery_feature.h"
+#include "kppt_evaluate.h"
+#include "kppt_feature.h"
 #include "nnue/nnue_evaluate.h"
 
 //使用する評価関数を指定する
@@ -16,11 +16,11 @@
 //using Evaluator = sss::sss_eval;
 //using Feature = sss::sss_feat;
 
-//apery
+//kppt
 #ifdef USE_KPPT
-using Evaluator = apery::apery_evaluator;
-using Feature = apery::apery_feat;
-using FeatureCache = apery::EvalSum;
+using Evaluator = kppt::kppt_evaluator;
+using Feature = kppt::kppt_feat;
+using FeatureCache = kppt::EvalSum;
 #endif
 
 //NNUE

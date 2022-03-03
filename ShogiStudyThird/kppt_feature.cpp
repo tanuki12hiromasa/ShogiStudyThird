@@ -1,9 +1,21 @@
 ﻿#include "stdafx.h"
-#include "apery_feature.h"
+#include "kppt_feature.h"
 #include <iostream>
 #include <fstream>
 
-namespace apery {
+namespace kppt {
+	std::array<PieceScoreType, static_cast<size_t>(koma::Koma::KomaNum)> PieceScoreArr = {
+		PawnScore, LanceScore, KnightScore, SilverScore, BishopScore, RookScore, GoldScore,
+		ScoreZero, // King
+		ProPawnScore, ProLanceScore, ProKnightScore, ProSilverScore, HorseScore, DragonScore,
+		-PawnScore, -LanceScore, -KnightScore, -SilverScore, -BishopScore, -RookScore, -GoldScore,
+		ScoreZero, // King
+		-ProPawnScore, -ProLanceScore, -ProKnightScore, -ProSilverScore, -HorseScore, -DragonScore
+	};
+	KPPEvalElementType1* KPP;
+	KKPEvalElementType1* KKP;
+	bool allocated = false;
+
 	void EvalList::set(const Kyokumen& kyokumen) {
 		using namespace ::koma;
 		int nlist = 0;
@@ -43,11 +55,8 @@ namespace apery {
 		assert(nlist == 38);
 	}
 
-	std::string apery_feat::folderpath = "data/kppt_apery";
-	KPPEvalElementType1* apery_feat::KPP;
-	KKPEvalElementType1* apery_feat::KKP;
-	bool apery_feat::allocated = false;
-	void apery_feat::init() {
+
+	void kppt_feat::init(const std::string& folderpath) {
 		if (!allocated) {
 			allocated = true;
 			KPP = new KPPEvalElementType1[SquareNum];
@@ -55,6 +64,19 @@ namespace apery {
 			memset(KPP, 0, sizeof(KPPEvalElementType1) * (size_t)SquareNum);
 			memset(KKP, 0, sizeof(KKPEvalElementType1) * (size_t)SquareNum);
 		}
+#ifdef KPPT_DYNAMIC_PIECE_SCORE
+		{
+			std::ifstream fs(folderpath + "/Piece.bin", std::ios::binary);
+			if (!fs) {
+				std::cerr << "error:file(" << folderpath << "/Piece.bin) cannot open" << std::endl;
+	}
+			else {
+				for (auto& p : PieceScoreArr) {
+					fs.read((char*)&p, sizeof(p));
+				}
+			}
+		}
+#endif
 		{
 			std::ifstream fs(folderpath + "/KPP.bin", std::ios::binary);
 			if (!fs) {
@@ -81,7 +103,48 @@ namespace apery {
 		}
 	}
 
-	EvalSum apery_feat::EvalFull(const Kyokumen& kyokumen, const EvalList& elist) {
+	void kppt_feat::save(const std::string& folderpath) {
+#ifdef KPPT_DYNAMIC_PIECE_SCORE
+		{
+			std::ofstream fs(folderpath + "/Piece.bin", std::ios::binary);
+			if (fs) {
+				for (auto& p : PieceScoreArr) {
+					fs.write((char*)&p, sizeof(p));
+				}
+			}
+			else {
+				std::cerr << "error:file(" << folderpath << "/Piece.bin) cannot open" << std::endl;
+			}
+		}
+#endif
+		{
+			std::ofstream fs(folderpath + "/KPP.bin", std::ios::binary);
+			if (!fs) {
+				std::cerr << "error:file(KPP.bin) cannot open" << std::endl;
+				return;
+			}
+			auto end = (char*)KPP + sizeof(KPPEvalElementType2);
+			for (auto it = (char*)KPP; it < end; it += (1 << 30)) {
+				size_t size = (it + (1 << 30) < end ? (1 << 30) : end - it);
+				fs.write(it, size);
+			}
+		}
+		{
+			std::ofstream fs(folderpath + "/KKP.bin", std::ios::binary);
+			if (!fs) {
+				std::cerr << "error:file(KKP.bin) cannot open" << std::endl;
+				return;
+			}
+			auto end = (char*)KKP + sizeof(KKPEvalElementType2);
+			for (auto it = (char*)KKP; it < end; it += (1 << 30)) {
+				size_t size = (it + (1 << 30) < end ? (1 << 30) : end - it);
+				fs.write(it, size);
+			}
+		}
+		std::cout << "Parameters have been written to " << folderpath << std::endl;
+	}
+
+	EvalSum kppt_feat::EvalFull(const Kyokumen& kyokumen, const EvalList& elist) {
 		const unsigned skpos = kyokumen.sOuPos();
 		const unsigned gkpos = kyokumen.gOuPos();
 		const auto* ppskpp = KPP[skpos];
@@ -104,14 +167,14 @@ namespace apery {
 		return sum;
 	}
 
-	void apery_feat::set(const Kyokumen& kyokumen) {
+	void kppt_feat::set(const Kyokumen& kyokumen) {
 		idlist.set(kyokumen);
 		sum = EvalFull(kyokumen, idlist);
 	}
 
 	//listとsumを差分更新する
 	//listの更新前にsumから変更部分を引いて、list更新後にsumに新しい部分を足す
-	void apery_feat::proceed(const Kyokumen& before, const Move& move) {
+	void kppt_feat::proceed(const Kyokumen& before, const Move& move) {
 #define Replace(before,after,list) {int i=0;for(;i<EvalList::EvalListSize;i++){if(list[i]==before){list[i]=after;break;}}assert(i<38);}
 		using namespace ::koma;
 		const Position from = move.from();
@@ -359,7 +422,7 @@ namespace apery {
 #undef Replace
 	}
 
-	void apery_feat::recede(const Kyokumen& before, const koma::Koma moved, const koma::Koma captured, const Move move, const EvalSum& cache) {
+	void kppt_feat::recede(const Kyokumen& before, const koma::Koma moved, const koma::Koma captured, const Move move, const EvalSum& cache) {
 		using namespace koma;
 #define Replace(before,after,list) {int i=0;for(;i<EvalList::EvalListSize;i++){if(list[i]==after){list[i]=before;break;}}assert(i<38);}
 		const bool teban = before.teban();
@@ -411,7 +474,7 @@ namespace apery {
 		sum.p = cache.p;
 	}
 
-	bool apery_feat::operator==(const apery_feat& rhs)const {
+	bool kppt_feat::operator==(const kppt_feat& rhs)const {
 		//return idlist.list0 == rhs.idlist.list0 && idlist.list1 == rhs.idlist.list1 && idlist.material == idlist.material && sum.p == rhs.sum.p;
 		if (idlist.material != rhs.idlist.material || sum.p != rhs.sum.p) return false;
 		if (idlist.list0 == rhs.idlist.list0 && idlist.list1 == rhs.idlist.list1) return true;//idlistは順番が不定だが、一致する場合はtrueなので先に返す
@@ -432,7 +495,7 @@ namespace apery {
 		return true;
 	}
 
-	std::string apery_feat::toString()const {
+	std::string kppt_feat::toString()const {
 		std::string str;
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 2; j++) {

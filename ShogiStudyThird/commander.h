@@ -6,7 +6,7 @@
 class Commander {
 public:
 	static void execute(const std::string& enginename);
-private:
+protected:
 	Commander();
 	~Commander();
 	static void coutOption();

@@ -26,5 +26,12 @@ namespace Eval::NNUE {
 		static void init();
 		static void save();
 		static double evaluate(const SearchPlayer& player);
+
+		static void setpath_input(const std::string& path) { ifolderpath = path; }
+		static void setpath_output(const std::string& path) { ofolderpath = path; }
+		static const std::string& getpath_input() { return ifolderpath; }
+		static const std::string& getpath_output() { return ofolderpath; }
+
+		static std::string name() { return "NNUE"; }
 	};
 }

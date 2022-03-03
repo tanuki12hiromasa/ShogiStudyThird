@@ -8,8 +8,8 @@ class SearchNode {
 	friend class SearchTree;
 public:
 	enum class State : std::int8_t {
-		NotExpanded, inExpanding, Expanded, Terminal,
-		N = NotExpanded, iE=inExpanding, E = Expanded, T = Terminal
+		NotExpanded, inExpanding, Expanded, Terminal, Draw,
+		N = NotExpanded, iE=inExpanding, E = Expanded, T = Terminal, D = Draw
 	};
 
 	class Children {
@@ -75,6 +75,7 @@ public:
 	void setEvaluation(const double evaluation) { eval = evaluation; }
 	void setMass(const double m) { mass = m; }
 
+	void setExpanded();
 	void setMateVariation(const double childmin);
 	void setMate();
 	void setDeclare();
@@ -86,7 +87,8 @@ public:
 
 	double getEvaluation()const { return eval.load(); }
 	bool isLeaf()const { const auto s = status.load(); return s == State::N || s == State::iE; }
-	bool isTerminal()const { return status == State::T; }
+	bool isTerminal()const { return status == State::T || status == State::D; }
+	bool isRepetition()const { return status == State::D; }
 	bool isSearchable()const { const auto s = status.load(); return s == State::N || s == State::E; }
 	double getEs()const { return getEs(Es_FunctionCode); }
 	double getEs(int funccode)const;

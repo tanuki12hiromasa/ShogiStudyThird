@@ -15,7 +15,7 @@ void Commander::execute(const std::string& enginename) {
 			std::cout << "command ready" << std::endl;
 		}
 		else if (tokens[0] == "usi") {
-			std::cout << "id name " << enginename << std::endl;
+			std::cout << "id name " << enginename << "_" << Evaluator::name() << std::endl;
 			std::cout << "id author Hiromasa_Iwamoto" << std::endl;
 			coutOption();
 			Joseki::coutOption();
@@ -101,7 +101,7 @@ Commander::~Commander() {
 
 void Commander::coutOption() {
 	using namespace std;
-	cout << "option name eval_folderpath type string default ./data/kppt_apery" << endl;
+	cout << "option name eval_folderpath type string default ./data/kppt" << endl;
 	cout << "option name leave_branchNode type check default false" << endl;
 	cout << "option name continuous_tree type check default true" << endl;
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
@@ -142,9 +142,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 			continuousTree = (token[4] == "true");
 		}
 		else if (token[2] == "eval_folderpath") {
-			//aperyのパラメータファイルの位置を指定する
+			//評価関数のパラメータファイルの位置を指定する
 			const auto path = usi::combine(token.begin() + 4, token.end(), ' ');
-			apery::apery_feat::folderpath = path;
+			Evaluator::setpath_input(path);
 		}
 		else if (token[2] == "NumOfAgent") {
 			agents.setAgentNum(std::stoi(token[4]));
