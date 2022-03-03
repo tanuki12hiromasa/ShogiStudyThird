@@ -29,6 +29,7 @@ public:
 	static SearchPlayer getQSBest(const SearchNode* const root, SearchPlayer& player, const int depthlimit);
 	static SearchPlayer getQSBest(const SearchNode* const root, SearchPlayer& player);
 	static double EvalToProb(const double eval);
+	static double EvalToSignProb(const double eval);
 	static double BackProb(const SearchNode& parent, const SearchNode& child, const double T);
 	static double ResultToProb(GameResult result, bool teban);
 	static double ResultToReward(GameResult result, bool teban, double r_win, double r_draw, double r_lose);

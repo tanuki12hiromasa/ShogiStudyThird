@@ -136,6 +136,10 @@ double LearnUtil::EvalToProb(const double eval) {
 	return 1.0 / (1.0 + std::exp(-eval / probT));
 }
 
+double LearnUtil::EvalToSignProb(const double eval) {
+	return 2.0 / (1.0 + std::exp(-eval / probT)) - 1.0;
+}
+
 double LearnUtil::BackProb(const SearchNode& parent, const SearchNode& child, const double T) {
 	double Z = 0;
 	for (const auto& c : parent.children) {

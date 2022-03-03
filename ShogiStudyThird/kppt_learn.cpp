@@ -28,7 +28,7 @@ namespace kppt {
 		for (unsigned sk = 0; sk < SquareNum; sk++) {
 			for (unsigned gk = 0; gk < SquareNum; gk++) {
 				for (unsigned p = 0; p < fe_end; p++) {
-					auto& vec = kppt::KPP[sk][gk][p];
+					auto& vec = kppt::KKP[sk][gk][p];
 					if (vec[0] > absmax) {
 						vec[0] = absmax;
 					}
@@ -93,14 +93,14 @@ namespace kppt {
 	inline void kpp_addGrad(EvalVectorFloat* const kpp, const int kpos, const int k, const int l, const float bg, const float tg) {
 		kpp[kpptToLkpptnum(kpos, k, l, 0)] += bg;
 		kpp[kpptToLkpptnum(kpos, k, l, 1)] += tg;
-		kpp[kpptToLkpptnum(koma::mirrorX(kpos), mirror((EvalIndex)k), mirror((EvalIndex)l), 0)] += bg;
-		kpp[kpptToLkpptnum(koma::mirrorX(kpos), mirror((EvalIndex)k), mirror((EvalIndex)l), 1)] += tg;
+		kpp[kpptToLkpptnum(koma::mirrorX(kpos), mirror((EvalIndex)k), mirror((EvalIndex)l), 0)] += bg;//左右反転した盤面を同じだけ学習 もし学習がうまくいかなかったら無効化してみるのも手かもしれない
+		kpp[kpptToLkpptnum(koma::mirrorX(kpos), mirror((EvalIndex)k), mirror((EvalIndex)l), 1)] += tg;//左右反転した盤面を同じだけ学習
 	}
 	inline void kkp_addGrad(EvalVectorFloat* const kkp, const int skpos, const int gkpos, const int k, const float bg, const float tg) {
 		kkp[kkptToLkkptnum(skpos, gkpos, k, 0)] += bg;
 		kkp[kkptToLkkptnum(skpos, gkpos, k, 1)] += tg;
-		kkp[kkptToLkkptnum(koma::mirrorX(skpos), koma::mirrorX(gkpos), mirror((EvalIndex)k), 0)] += bg;
-		kkp[kkptToLkkptnum(koma::mirrorX(skpos), koma::mirrorX(gkpos), mirror((EvalIndex)k), 1)] += tg;
+		kkp[kkptToLkkptnum(koma::mirrorX(skpos), koma::mirrorX(gkpos), mirror((EvalIndex)k), 0)] += bg;//左右反転した盤面を同じだけ学習
+		kkp[kkptToLkkptnum(koma::mirrorX(skpos), koma::mirrorX(gkpos), mirror((EvalIndex)k), 1)] += tg;//左右反転した盤面を同じだけ学習
 	}
 	void kppt::kppt_paramVector::piece_addGrad(const float scalar, const Kyokumen& kyokumen) {
 		{ //歩
@@ -166,7 +166,7 @@ namespace kppt {
 		const unsigned invgkpos = inverse(gkpos);
 		const unsigned invskpos = inverse(skpos);
 		const float bammenscalar = (player.kyokumen.teban()) ? scalar : -scalar;
-		const float tebanscalar = scalar;
+		const float tebanscalar = scalar / 8.0;
 		for (unsigned i = 0; i < EvalList::EvalListSize; ++i) {
 			const int k0 = player.feature.idlist.list0[i];
 			const int k1 = player.feature.idlist.list1[i];
@@ -178,7 +178,7 @@ namespace kppt {
 				kpp_addGrad(kpp, invgkpos, k1, l1, -bammenscalar, tebanscalar);
 			}
 			kkp_addGrad(kkp, skpos, gkpos, k0, bammenscalar, tebanscalar);
-			kkp_addGrad(kkp, invgkpos, invskpos, k1, -bammenscalar, -tebanscalar);
+			kkp_addGrad(kkp, invgkpos, invskpos, k1, -bammenscalar, tebanscalar);
 		}
 		piece_addGrad(scalar, player.kyokumen);
 	}
@@ -209,6 +209,26 @@ namespace kppt {
 				PieceScoreArr[i] = -absmax;
 			}
 		}
+	}
+
+	//ベクトル中の最大値を1にするようにスカラー倍する
+	void kppt_paramVector::normalize() {
+		const auto max = abs_max_value();
+		//std::cout << "absmax: " << max << std::endl;
+		if (max != 0 && max < 1) {
+			operator*=(1 / max);
+		}
+	}
+
+	EvalVectorFloat kppt_paramVector::abs_max_value() const {
+		EvalVectorFloat max = 0;
+		for (size_t i = 0; i < lkpptnum; i++) {
+			max = std::max(max, std::abs(KPP[i]));
+		}
+		for (size_t i = 0; i < lkkptnum; i++) {
+			max = std::max(max, std::abs(KKP[i]));
+		}
+		return max;
 	}
 
 	void kppt_paramVector::updateEval() {

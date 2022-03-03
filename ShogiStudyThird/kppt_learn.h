@@ -32,6 +32,8 @@ namespace kppt {
 		void piece_addGrad(const float scalar, const Kyokumen&);
 		void addGrad(const float scalar, const SearchPlayer&);
 		void clamp(float absmax);
+		void normalize();
+		EvalVectorFloat abs_max_value()const;
 
 		void updateEval();
 		void save(const std::string& path);//勾配ファイルを出力

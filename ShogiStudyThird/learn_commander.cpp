@@ -90,18 +90,27 @@ void LearnCommander::execute() {
 }
 
 void LearnCommander::coutID() {
-	std::cout << "id name ";
+	std::cout << "id name SST_";
 #ifdef LEARN_TD_LAMBDA_PROB
 	std::cout << "TD(l)prob_";
 #endif
 #ifdef LEARN_TD_LAMBDA_CP
 	std::cout << "TD(l)cp_";
 #endif
+#ifdef LEARN_TD_LAMBDA_ROOT
+	std::cout << "TD(l)root_";
+#endif
 #ifdef LEARN_PG
 	std::cout << "PG_";
 #endif
-#ifdef LEARN_REGRESSION
-	std::cout << "Reg_";
+#ifdef LEARN_PG_ROOT
+	std::cout << "PG(root)_";
+#endif
+#ifdef LEARN_REGRESSION_LEAVES
+	std::cout << "Reg(leaves)_";
+#endif
+#ifdef LEARN_REGRESSION_ROOT
+	std::cout << "Reg(root)_";
 #endif
 #ifdef LEARN_BOOTSTRAP_ROOT
 	std::cout << "BTSroot_";
@@ -110,15 +119,24 @@ void LearnCommander::coutID() {
 	std::cout << "BTSnode_";
 #endif
 #ifdef SAMPLING_GRAD_PROB
-	std::cout << "sampling(prob)_";
+	std::cout << "sampling(prob)[skip]_";
 #endif
 #ifdef SAMPLING_GRAD_CP
-	std::cout << "sampling(cp)_";
+	std::cout << "sampling(cp)[skip]_";
 #endif
-#ifdef PVLEAF_GRAD
-	std::cout << "pvleaf_";
+#ifdef SAMPLING_GRAD_STEP_PROB
+	std::cout << "sampling(prob)[step]_";
 #endif
-	std::cout << "Learn" << std::endl;
+#ifdef SAMPLING_GRAD_STEP_CP
+	std::cout << "sampling(cp)[step]_";
+#endif
+#ifdef PVLEAF_GRAD_SKIP
+	std::cout << "pvleaf[skip]_";
+#endif
+#ifdef PVLEAF_GRAD_STEP
+	std::cout << "pvleaf[step]_";
+#endif
+	std::cout << "Learn_" << Evaluator::name() << std::endl;
 	std::cout << "id author Hiromasa_Iwamoto" << std::endl;
 }
 
@@ -126,7 +144,7 @@ void LearnCommander::coutLearnerOption() {
 	using namespace std;
 	cout << "option name Batch_Num type spin default 1 min 1 max 99999999999" << endl;
 	cout << "option name T_search type string default 120" << endl;
-#ifdef SAMPLING_GRAD_PROB
+#ifdef SAMPLING_GRAD
 	cout << "option name Grad_Sampling_Num type spin default 10000 min 1 max 99999999999" << endl;
 	cout << "option name T_sampling_grad_prob type string default 1.0" << endl;
 #endif
@@ -135,11 +153,22 @@ void LearnCommander::coutLearnerOption() {
 	cout << "option name TD_gamma type string default 0.95" << endl;
 	cout << "option name TD_rate type string default 0.1" << endl;
 #endif
-#ifdef LEARN_REGRESSION
-	cout << "option name Regression_rate type string default 200" << endl;
+#ifdef LEARN_TD_LAMBDA_ROOT
+	cout << "option name TDroot_lambda type string default 0.9" << endl;
+	cout << "option name TDroot_gamma type string default 0.95" << endl;
+	cout << "option name TDroot_rate type string default 0.1" << endl;
+#endif
+#ifdef LEARN_REGRESSION_LEAVES
+	cout << "option name Regression_leaves_rate type string default 200" << endl;
+#endif
+#ifdef LEARN_REGRESSION_ROOT
+	cout << "option name Regression_root_rate type string default 200" << endl;
 #endif
 #ifdef LEARN_PG
 	cout << "option name PG_rate type string default 0.1" << endl;
+#ifdef LEARN_PG_ROOT
+	cout << "option name PGroot_rate type string default 0.1" << endl;
+#endif
 #endif
 #ifdef LEARN_BOOTSTRAP_ROOT
 	cout << "option name BTSroot_rate type string default 0.001" << endl;
@@ -165,7 +194,7 @@ void LearnCommander::setLearnerOption(const std::vector<std::string>& token) {
 	else if (token[2] == "T_search") {
 		T_search = std::stoull(token[4]);
 	}
-#ifdef SAMPLING_GRAD_PROB
+#ifdef SAMPLING_GRAD
 	else if (token[2] == "Grad_Sampling_Num") {
 		samplingnum = std::stoull(token[4]);
 	}
@@ -184,14 +213,35 @@ void LearnCommander::setLearnerOption(const std::vector<std::string>& token) {
 		td_rate = std::stod(token[4]);
 	}
 #endif
-#ifdef LEARN_REGRESSION
-	else if (token[2] == "Regression_rate") {
-		reg_rate = std::stod(token[4]);
+#ifdef LEARN_TD_LAMBDA_ROOT
+	else if (token[2] == "TDroot_lambda") {
+		tdr_lambda = std::stod(token[4]);
+	}
+	else if (token[2] == "TDroot_gamma") {
+		tdr_gamma = std::stod(token[4]);
+	}
+	else if (token[2] == "TDroot_rate") {
+		tdr_rate = std::stod(token[4]);
+	}
+#endif
+#ifdef LEARN_REGRESSION_LEAVES
+	else if (token[2] == "Regression_leaves_rate") {
+		reg_leaves_rate = std::stod(token[4]);
+	}
+#endif
+#ifdef LEARN_REGRESSION_ROOT
+	else if (token[2] == "Regression_root_rate") {
+		reg_root_rate = std::stod(token[4]);
 	}
 #endif
 #ifdef LEARN_PG
 	else if (token[2] == "PG_rate") {
 		pg_rate = std::stod(token[4]);
+	}
+#endif
+#ifdef LEARN_PG_ROOT
+	else if (token[2] == "PGroot_rate") {
+		pgroot_rate = std::stod(token[4]);
 	}
 #endif
 #ifdef LEARN_BOOTSTRAP_ROOT
@@ -383,6 +433,10 @@ void LearnCommander::learn_from_tree(const SearchPlayer& kyokumen, const SearchN
 		}
 		return;
 	}
+	if (root->isTerminal() && root->isRepetition()) {
+		learn_at_gameover(MyGameResult::Draw);
+		return;
+	}
 
 	LearnVec dv;
 	double eval = 0;
@@ -391,7 +445,7 @@ void LearnCommander::learn_from_tree(const SearchPlayer& kyokumen, const SearchN
 #else
 #define	Learn_BTS_random(dw, c, player) ((void)0)
 #endif
-#ifdef PVLEAF_GRAD
+#ifdef PVLEAF_GRAD_SKIP
 #ifdef LEARN_V
 	{
 		const SearchNode* node = root;
@@ -419,7 +473,7 @@ void LearnCommander::learn_from_tree(const SearchPlayer& kyokumen, const SearchN
 	}
 #endif //LEARN_V
 #ifdef LEARN_PG
-	const double T_pg = T_search;
+	const double T_pg = SearchTemperature::Te;
 	LearnVec pg_e_vec;
 	if (!root->children.empty() && !root->isLeaf()) {//PG-Leaf
 		double Z, e_min;
@@ -456,13 +510,73 @@ void LearnCommander::learn_from_tree(const SearchPlayer& kyokumen, const SearchN
 				else {
 					pg_e_vec.addGrad(-p, player);
 				}
+}
+		}
+	}
+#endif //LEARN_PG
+#endif //PVLEAF_GRAD_SKIP
+
+#ifdef PVLEAF_GRAD_STEP
+#ifdef LEARN_V
+	{
+		const SearchNode* node = root;
+		SearchPlayer player = kyokumen;
+		int sign = 1;
+		while (!node->isLeaf() && !node->children.empty()) {
+			//1手ずつ進める
+			const SearchNode* const child = LearnUtil::choiceBestChild(node);
+			if (child == nullptr) break;
+			player.proceed(child->move);
+			Learn_BTS_random(dw_btsrand, Evaluator::evaluate(player), child->eval, player);
+			node = child;
+			sign = -sign;
+		}
+#ifdef LEARN_QS_LEAF
+		player = LearnUtil::getQSBest(node, player);
+#endif
+		dv.addGrad(sign, player);
+		eval = Evaluator::evaluate(player) * sign;
+		//std::cout << "(d:" << depth << ") ";
+	}
+#endif //LEARN_V
+#ifdef LEARN_PG
+	const double T_pg = SearchTemperature::Te;
+	LearnVec pg_e_vec;
+	if (!root->children.empty() && !root->isLeaf()) {//PG-Leaf
+		double Z, e_min;
+		Z = LearnUtil::getChildrenZ(root, T_pg, e_min);
+		if (Z != 0) {
+			for (const auto& a : root->children) {
+				SearchPlayer player = kyokumen;
+				player.proceed(a.move);
+				const SearchNode* node = &a;
+				int sign = -1;
+				while (!node->isLeaf() && !node->children.empty()) {
+					//1手ずつ進める
+					const SearchNode* const child = LearnUtil::choiceBestChild(node);
+					if (child == nullptr) break;
+					Learn_BTS_random(dw_btsrand, Evaluator::evaluate(player), node->eval, player);
+					player.proceed(child->move);
+					node = child;
+					sign = -sign;
+				}
+#ifdef LEARN_QS_LEAF
+				player = LearnUtil::getQSBest(node, player);
+#endif
+				const double p = std::exp(-(a.eval - e_min) / T_pg) / Z;
+				if (a.move == bestmove->move) {
+					pg_e_vec.addGrad((1.0 - p) * sign, player);
+				}
+				else {
+					pg_e_vec.addGrad(-p * sign, player);
+				}
 			}
 		}
 	}
 #endif //LEARN_PG
-#endif //PVLEAF_GRAD
+#endif //PVLEAF_GRAD_STEP
 
-#ifdef SAMPLING_GRAD
+#ifdef SAMPLING_GRAD_SKIP //2手ごと(自手番だけ)でサンプリングする
 #ifdef LEARN_PG
 	LearnVec pg_dQt, pg_dPQ;
 	long long pg_Qtcount = 0;
@@ -526,14 +640,64 @@ void LearnCommander::learn_from_tree(const SearchPlayer& kyokumen, const SearchN
 	else {
 		dv.addGrad(1, kyokumen);
 	}
+	dv.normalize();
+#endif //SAMPLING_GRAD_SKIP
+
+#ifdef SAMPLING_GRAD_STEP //両手番でサンプリングする
+#ifdef LEARN_PG
+	LearnVec pg_dQt, pg_dPQ;
+	long long pg_Qtcount = 0;
 #endif
+	eval = root->eval;
+	if (!root->isLeaf()) {
+		const double T = SearchTemperature::Te;
+		for (int _sample = 0; _sample < samplingnum; _sample++) {
+			SearchPlayer player = kyokumen;
+			double c = 1;
+			//始めの2手を計算
+			const double V0 = root->eval;
+			const SearchNode* const a = LearnUtil::choicePolicyRandomChild(root, T, random.rand01());
+			if (a != nullptr) {
+				const double Q0 = -a->eval;
+				player.proceed(a->move);
+				const SearchNode* node = a;
+				//末端まで移動
+				while (!node->isLeaf() && !node->children.empty()) {
+					const auto child = LearnUtil::choicePolicyRandomChild(node, T, random.rand01());
+					if (child == nullptr) break;
+
+					const double E_node = node->eval;
+					const double E_child = -child->eval;
+					c *= -((LearnUtil::EvalToProb(E_child) - LearnUtil::EvalToProb(E_node)) / T_sgp + 1.0);
+					Learn_BTS_random(dw_btsrand, Evaluator::evaluate(player), node->eval, player);
+					player.proceed(child->move);
+					node = child;
+				}
+#ifdef LEARN_PG
+				pg_dPQ.addGrad(-c, player);
+				if (a->move == bestmove->move) {
+					pg_dQt.addGrad(-c, player);
+					pg_Qtcount++;
+				}
+#endif
+				c *= -((LearnUtil::EvalToProb(Q0) - LearnUtil::EvalToProb(V0)) / T_sgp + 1.0);
+			}
+			dv.addGrad(c, player);
+		}
+		dv *= (1.0 / samplingnum);
+	}
+	else {
+		dv.addGrad(1, kyokumen);
+	}
+	dv.normalize();
+#endif //SAMPLING_GRAD_STEP
 
 #ifdef LEARN_TD_LAMBDA
 	{
 #ifdef LEARN_TD_LAMBDA_CP
 		const double td_eval = eval;
 #elif defined(LEARN_TD_LAMBDA_PROB)
-		const double td_eval = LearnUtil::EvalToProb(eval);
+		const double td_eval = LearnUtil::EvalToSignProb(eval);
 #endif
 		if (!td_first) {
 			const double delta = td_gamma * td_eval - td_Vt;
@@ -547,59 +711,123 @@ void LearnCommander::learn_from_tree(const SearchPlayer& kyokumen, const SearchN
 		td_e_vec += dv;
 	}
 #endif
-#ifdef LEARN_REGRESSION
+#ifdef LEARN_TD_LAMBDA_ROOT
+	{
+		const double tdr_eval = LearnUtil::EvalToSignProb(Evaluator::evaluate(kyokumen));
+		const double r = (LearnUtil::EvalToSignProb(eval) - tdr_eval) * 0.01;
+		if (!tdr_first) {
+			const double delta = r + tdr_gamma * tdr_eval - tdr_Vt;
+			dw_tdr += delta * tdr_e_vec;
+		}
+		else {
+			tdr_first = false;
+		}
+		tdr_Vt = tdr_eval;
+		tdr_e_vec *= tdr_gamma * tdr_lambda;
+		tdr_e_vec += dv;
+	}
+#endif
+#ifdef LEARN_REGRESSION_LEAVES
 	{
 		const double Pwin = LearnUtil::EvalToProb(eval);
-		dw_reg_win += (1.0 - Pwin) * (1 / LearnUtil::probT) * (1 - Pwin) * Pwin * dv;
-		dw_reg_lose += (0 - Pwin) * (1 / LearnUtil::probT) * (1 - Pwin) * Pwin * dv;
+		dw_reg_win += reg_leaves_rate * (1.0 - Pwin) * (1 / LearnUtil::probT) * (1 - Pwin) * Pwin * dv;
+		dw_reg_lose += reg_leaves_rate * (0 - Pwin) * (1 / LearnUtil::probT) * (1 - Pwin) * Pwin * dv;
+	}
+#endif
+#ifdef LEARN_REGRESSION_ROOT
+	{
+		const double HPwin = LearnUtil::EvalToProb(Evaluator::evaluate(kyokumen));
+		dw_reg_win.addGrad(reg_root_rate * (1.0 - HPwin) * (1 / LearnUtil::probT) * (1 - HPwin) * HPwin, kyokumen);
+		dw_reg_lose.addGrad(reg_root_rate * (0 - HPwin) * (1 / LearnUtil::probT) * (1 - HPwin) * HPwin, kyokumen);
+	}
+	if (bestmove != nullptr) {
+		SearchPlayer player = kyokumen; player.proceed(bestmove->move);
+		const double HPwin = LearnUtil::EvalToProb(Evaluator::evaluate(player));
+		dw_reg_win.addGrad(reg_root_rate * (0 - HPwin) * (1 / LearnUtil::probT) * (1 - HPwin) * HPwin, player);
+		dw_reg_lose.addGrad(reg_root_rate * (1.0 - HPwin) * (1 / LearnUtil::probT) * (1 - HPwin) * HPwin, player);
 	}
 #endif
 #ifdef LEARN_PG
 #ifdef SAMPLING_GRAD
-	pg_dQt *= 1.0 / pg_Qtcount;
-	pg_dPQ *= -1.0 / samplingnum;
-	pg_dQt += pg_dPQ;
-	dw_pg += pg_dQt;
+	{
+		pg_dQt *= 1.0 / pg_Qtcount;
+		pg_dPQ *= -1.0 / samplingnum;
+		const auto c = 1.0 / pg_dQt.abs_max_value();
+		pg_dQt += pg_dPQ;
+		if (c > 1.0) pg_dQt *= c;
+		dw_pg += pg_dQt;
+	}
 #endif
 #ifdef PVLEAF_GRAD
 	dw_pg += (1.0 / T_pg) * pg_e_vec;
 #endif
 #endif
+#ifdef LEARN_PG_ROOT
+	if (bestmove != nullptr) {
+		double Z = 0, CE = root->children.begin()->eval;
+		const double T = SearchTemperature::Te;
+		for (const auto& child : root->children) { CE = std::min(CE, child.eval.load()); }
+		for (const auto& child : root->children) { Z += std::exp(-(child.eval - CE) / T); }
+		for (const auto& child : root->children) {
+			SearchPlayer player = kyokumen; player.proceed(child.move);
+			const double pi = std::exp(-(child.eval - CE) / T) / Z;
+			//相手番で学習するので、PGEと符号が反対になる
+			dw_pgroot.addGrad(pi, player);
+			if (child.move == bestmove->move) {
+				dw_pgroot.addGrad(-1, player);
+			}
+		}
+	}
+#endif
 #ifdef LEARN_BOOTSTRAP_ROOT
 	{
 		const double H = Evaluator::evaluate(kyokumen);
-		dw_btsroot += (LearnUtil::EvalToProb(H) - LearnUtil::EvalToProb(eval)) * dv;
+		const double V = root->eval;
+		dw_btsroot.addGrad(LearnUtil::EvalToProb(H) - LearnUtil::EvalToProb(V), kyokumen);
 	}
-#endif
+#endif	
 #undef Learn_BTS_random
 }
 
 void LearnCommander::learn_at_gameover(MyGameResult result) {
 	LearnVec dw;
+	const double r = LearnUtil::ResultToReward(result, reward_win, reward_draw, reward_lose);
 	const double length_revision = kifulength_mean / (tree.getHistory().size() + 1.0); //対局の長さで学習の重みが変わらないように補正する係数
 	const std::string vec_tempfilepath = Evaluator::getpath_output() + "/.learngrad";
 	if (std::filesystem::exists(vec_tempfilepath)) dw.load(vec_tempfilepath);
 #ifdef LEARN_TD_LAMBDA
 	{
-		const double r = LearnUtil::ResultToReward(result, reward_win, reward_draw, reward_lose);
+#ifdef LEARN_TD_LAMBDA_CP
+		const double td_eval = td_Vt;
+#elif defined(LEARN_TD_LAMBDA_PROB)
+		const double td_eval = LearnUtil::ResultToReward(result, 1, 0, -1);
+#endif
 		const double delta = r + td_gamma * td_Vt - td_Vt;
 		dw_td += delta * td_e_vec;
 		dw += length_revision * td_rate * dw_td;
 	}
 #endif
+#ifdef LEARN_TD_LAMBDA_ROOT
+	{
+		const double tdr_eval = LearnUtil::ResultToReward(result, 1, 0, -1);
+		const double delta = r + tdr_gamma * tdr_eval - tdr_Vt;
+		dw_tdr += delta * tdr_e_vec;
+		dw += length_revision * tdr_rate * dw_tdr;
+	}
+#endif
 #ifdef LEARN_REGRESSION
 	if (result == MyGameResult::PlayerWin) {
-		dw += length_revision * reg_rate * dw_reg_win;
+		dw += length_revision * dw_reg_win;
 	}
 	else if (result == MyGameResult::PlayerLose) {
-		dw += length_revision * reg_rate * dw_reg_lose;
+		dw += length_revision * dw_reg_lose;
 	}
 #endif
 #ifdef LEARN_PG
-	{
-		const double r = LearnUtil::ResultToReward(result, reward_win, reward_draw, reward_lose);
-		dw += length_revision * pg_rate * r * dw_pg;
-	}
+	dw += length_revision * pg_rate * r * dw_pg;
+#endif
+#ifdef LEARN_PG_ROOT
+	dw += length_revision * pgroot_rate * r * dw_pgroot;
 #endif
 #ifdef LEARN_BOOTSTRAP_ROOT
 	dw += length_revision * -btsroot_rate * dw_btsroot;

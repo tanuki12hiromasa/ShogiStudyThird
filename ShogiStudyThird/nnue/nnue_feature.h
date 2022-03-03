@@ -47,7 +47,7 @@ namespace Eval {
 			using WeightType = std::int16_t;
 			using OutputType = TransformedFeatureType;
 			
-			static constexpr IndexType kInputDimensions = 125388U;
+			static constexpr IndexType kInputDimensions = EvalIndex::fe_end * SquareNum;//125388U;
 			static constexpr IndexType kOutputDimentions = kTransformedFeatureDimensions * 2;
 			static constexpr IndexType kHalfDimensions = kTransformedFeatureDimensions;
 			static constexpr std::size_t kBufferSize = kOutputDimentions * sizeof(OutputType);

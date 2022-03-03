@@ -15,7 +15,7 @@ void Commander::execute(const std::string& enginename) {
 			std::cout << "command ready" << std::endl;
 		}
 		else if (tokens[0] == "usi") {
-			std::cout << "id name " << enginename << std::endl;
+			std::cout << "id name " << enginename << "_" << Evaluator::name() << std::endl;
 			std::cout << "id author Hiromasa_Iwamoto" << std::endl;
 			coutOption();
 			Joseki::coutOption();

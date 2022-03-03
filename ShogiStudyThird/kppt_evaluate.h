@@ -19,6 +19,7 @@ namespace kppt {
 		static void genFirstEvalFile(const std::string& folderpath);
 
 		static void print(int iskpp);
+		static std::string name() { return "KPPT"; }
 	private:
 		static std::string ifolderpath;
 		static std::string ofolderpath;
