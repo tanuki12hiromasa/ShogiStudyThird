@@ -129,8 +129,8 @@ namespace koma {
 		return x * 9 + y;
 	}
 	inline int mirrorX(const int& pos) {
-		int x = (int)pos / 5; int y = (int)pos - x * 5;
-		return XYtoPos(4 - x, y);
+		int x = (int)pos / 9; int y = (int)pos - x * 9;
+		return XYtoPos(8 - x, y);
 	}
 	inline Position mirrorX(const Position& pos) {
 		if (pos > Position::SQMax)return pos;
