@@ -43,7 +43,7 @@ void SearchTree::set(const Kyokumen& startpos, const std::vector<Move>& usihis) 
 			SearchNode* parent = getRoot();
 			const Move nextmove = usihis[i];
 			SearchNode* nextNode = nullptr;
-			if (parent->isLeaf() || parent->isTerminal()) {
+			if (parent->isLeaf()) {
 				parent->status = SearchNode::State::Expanded;
 			}
 			for (auto& child : parent->children) {

@@ -404,7 +404,7 @@ void Commander::chakushu(SearchNode* const bestchild) {
 	}
 	std::string pvstr;
 	int depth = 1;
-	for (SearchNode* node = bestchild; depth < 15 && node != nullptr; depth++,node = node->getBestChild()) pvstr += node->move.toUSI() + ' ';
+	for (SearchNode* node = bestchild; depth < 15 && !node->isLeaf() && node != nullptr; depth++,node = node->getBestChild()) pvstr += node->move.toUSI() + ' ';
 	std::cout << std::fixed;
 	std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << depth
 		<< " score cp " << static_cast<int>(root->eval) << " nodes " << SearchNode::getNodeCount() << std::endl;

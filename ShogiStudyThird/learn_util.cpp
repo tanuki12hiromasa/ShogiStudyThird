@@ -63,9 +63,11 @@ SearchNode* LearnUtil::choiceBestChild(const SearchNode* const root) {
 	return best;
 }
 
-SearchNode* LearnUtil::getPrincipalLeaf(const SearchNode* const root) {
+SearchNode* LearnUtil::getPrincipalLeaf(SearchNode* const root) {
 	const auto child = choiceBestChild(root);
-	if (child == nullptr || child->isTerminal() || child->isLeaf())
+	if (child == nullptr)
+		return root;
+	else if (child->isLeaf())
 		return child;
 	else
 		return getPrincipalLeaf(child);
