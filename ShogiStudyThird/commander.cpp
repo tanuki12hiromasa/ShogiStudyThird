@@ -102,6 +102,7 @@ Commander::~Commander() {
 void Commander::coutOption() {
 	using namespace std;
 	cout << "option name eval_folderpath type string default ./data/kppt" << endl;
+	cout << "option name interim_info type check default true" << endl;
 	cout << "option name leave_branchNode type check default false" << endl;
 	cout << "option name continuous_tree type check default true" << endl;
 	cout << "option name NumOfAgent type spin default 12 min 1 max 128" << endl;
@@ -134,6 +135,9 @@ void Commander::setOption(const std::vector<std::string>& token) {
 	if (token.size() > 4) {
 		if (token[2] == "USI_Ponder") {
 			permitPonder = (token[4] == "true");
+		}
+		else if (token[2] == "interim_info") {
+			interimInfo = (token[4] == "true");
 		}
 		else if (token[2] == "leave_branchNode") {
 			tree.leave_branchNode = (token[4] == "true");
@@ -281,45 +285,55 @@ void Commander::go(const std::vector<std::string>& tokens) {
 		int loopcounter = 0;
 		std::cout << "info string time:" << timelimit.first.count() << ", " << timelimit.second.count() << std::endl;
 		std::this_thread::sleep_for(searchtime / 32);
-		do {
-			loopcounter++;
-			constexpr auto sleeptime = 50ms;
-			std::this_thread::sleep_for(sleeptime);
-			const auto bestnode = root->getBestChild();
-			if (bestnode != nullptr) {
-				const double pi = root->getChildRate(bestnode, 40);
-				if (bestnode == recentBestNode) { //最善ノードが変わっていない
-					pi_average = (pi_average * continuous_counter + pi) / ((double)continuous_counter + 1);
-					continuous_counter++;
-					if (continuous_counter > 4) { //一定回数以上最善が不変であれば信頼できるとして暫定着手とする
-						provisonalBestMove = recentBestNode;
-						provisonal_pi = pi_average;
+		if (tp.rule == TimeProperty::TimeRule::fischer || tp.left > 100ms) {
+			do {
+				loopcounter++;
+				constexpr auto sleeptime = 50ms;
+				std::this_thread::sleep_for(sleeptime);
+				const auto bestnode = root->getBestChild();
+				if (bestnode != nullptr) {
+					const double pi = root->getChildRate(bestnode, 40);
+					if (bestnode == recentBestNode) { //最善ノードが変わっていない
+						pi_average = (pi_average * continuous_counter + pi) / ((double)continuous_counter + 1);
+						continuous_counter++;
+						if (continuous_counter > 4) { //一定回数以上最善が不変であれば信頼できるとして暫定着手とする
+							provisonalBestMove = recentBestNode;
+							provisonal_pi = pi_average;
+						}
 					}
+					else {
+						changecounter++;
+						pi_average = pi;
+						continuous_counter = 1;
+					}
+					recentBestNode = bestnode;
 				}
-				else {
-					changecounter++;
-					pi_average = pi;
-					continuous_counter = 1;
+				//即指しの条件を満たしたら指す
+				if (continuous_counter * sleeptime > std::max(timelimit.first / 2, time_quickbm_lower)) {
+					break;
 				}
-				recentBestNode = bestnode;
-			}
-			//即指しの条件を満たしたら指す
-			if (continuous_counter * sleeptime > std::max(timelimit.first / 2, time_quickbm_lower)) {
-				break;
-			}
-			if ((loopcounter & 0xF) == 0) {
-				double changerate = (double)changecounter / loopcounter;
-				searchtime = (changerate > 0.05) ? std::chrono::duration_cast<std::chrono::milliseconds>(timelimit.first * changerate / 0.05) : timelimit.first;
-			}
-			//標準時間になったら指すか決める もし拮抗している局面なら時間を延長する
-			if (std::chrono::system_clock::now() - starttime >= searchtime && provisonalBestMove != nullptr) {
-				break;
-			}
-			//時間上限になったら指す
-			if (std::chrono::system_clock::now() - starttime + sleeptime >= timelimit.second) {
-				break;
-			}
-		} while (std::abs(root->eval) < SearchNode::getMateScoreBound());
+				if ((loopcounter & 0xF) == 0) {
+					double changerate = (double)changecounter / loopcounter;
+					searchtime = (changerate > 0.05) ? std::chrono::duration_cast<std::chrono::milliseconds>(timelimit.first * changerate / 0.05) : timelimit.first;
+				}
+				//標準時間になったら指すか決める もし拮抗している局面なら時間を延長する
+				if (std::chrono::system_clock::now() - starttime >= searchtime && provisonalBestMove != nullptr) {
+					break;
+				}
+				//時間上限になったら指す
+				if (std::chrono::system_clock::now() - starttime + sleeptime >= timelimit.second) {
+					break;
+				}
+			} while (std::abs(root->eval) < SearchNode::getMateScoreBound());
+		}
+		else {
+			std::this_thread::sleep_for(timelimit.second);
+			agents.pauseSearch();
+			agents.joinPause();
+			const auto bestnode = root->getBestChild();
+			provisonalBestMove = bestnode;
+			recentBestNode = bestnode;
+		}
 		if (provisonalBestMove == nullptr) provisonalBestMove = recentBestNode;
 		chakushu(provisonalBestMove);
 	});
@@ -358,7 +372,7 @@ void Commander::info() {
 				std::lock_guard<std::mutex> lock(coutmtx);
 				const uint64_t evcount = tree.getEvaluationCount();
 				const auto now = std::chrono::system_clock::now();
-				if (info_enable) {
+				if (interimInfo && info_enable) {
 					const int nps = (evcount - info_prev_evcount) / ((double)std::chrono::duration_cast<std::chrono::milliseconds>(now - info_prevtime).count() / 1000);
 					info_prevtime = now;
 					//std::cout << "info string info" << std::endl;
@@ -386,6 +400,7 @@ void Commander::chakushu(SearchNode* const bestchild) {
 	std::lock_guard<std::mutex> tlock(treemtx);
 	agents.pauseSearch();
 	info_enable = false;
+	agents.joinPause();
 	const Kyokumen& kyokumen = tree.getRootPlayer().kyokumen;
 	if (kyokumen.isDeclarable()) {
 		std::cout << "bestmove win" << std::endl;
@@ -404,7 +419,7 @@ void Commander::chakushu(SearchNode* const bestchild) {
 	}
 	std::string pvstr;
 	int depth = 1;
-	for (SearchNode* node = bestchild; depth < 15 && node != nullptr; depth++,node = node->getBestChild()) pvstr += node->move.toUSI() + ' ';
+	for (SearchNode* node = bestchild; depth < 15 && !node->isLeaf() && node != nullptr; depth++,node = node->getBestChild()) pvstr += node->move.toUSI() + ' ';
 	std::cout << std::fixed;
 	std::cout << "info pv " << pvstr << "depth " << std::setprecision(2) << root->mass << " seldepth " << depth
 		<< " score cp " << static_cast<int>(root->eval) << " nodes " << SearchNode::getNodeCount() << std::endl;

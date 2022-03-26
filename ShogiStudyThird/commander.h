@@ -24,6 +24,7 @@ protected:
 	AgentPool agents{ tree };
 	std::thread deleteThread;
 	bool permitPonder;
+	bool interimInfo = true;
 	bool continuousTree = true;
 	int resign_border = 3;
 	std::chrono::milliseconds time_quickbm_lower{ 4000 };

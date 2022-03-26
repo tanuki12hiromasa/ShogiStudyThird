@@ -77,7 +77,7 @@ namespace kppt {
 	inline EvalIndex mochiToIndex(koma::Mochigoma k, bool teban) { return teban ? sMochiToIndexArr[static_cast<size_t>(k)] : gMochiToIndexArr[static_cast<size_t>(k)]; }
 	constexpr EvalIndex mirror(const EvalIndex index) {
 		if (index < fe_hand_end)return index;
-		int pos = (index - fe_hand_end) % 25;
+		int pos = (index - fe_hand_end) % 81;
 		return static_cast<EvalIndex>((int)index - pos + koma::mirrorX(pos));
 	}
 

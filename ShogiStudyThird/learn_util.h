@@ -25,7 +25,7 @@ public:
 	static SearchNode* choicePolicyRandomChild(const SearchNode* const root, const double T, double pip);
 	static SearchNode* choiceRandomChild(const SearchNode* const root, double pip);
 	static SearchNode* choiceBestChild(const SearchNode* const root);
-	static SearchNode* getPrincipalLeaf(const SearchNode* const root);
+	static SearchNode* getPrincipalLeaf(SearchNode* const root);
 	static SearchPlayer getQSBest(const SearchNode* const root, SearchPlayer& player, const int depthlimit);
 	static SearchPlayer getQSBest(const SearchNode* const root, SearchPlayer& player);
 	static double EvalToProb(const double eval);

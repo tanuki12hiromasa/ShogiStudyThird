@@ -76,7 +76,7 @@ void SearchAgent::simulate(SearchNode* const root) {
 	std::vector<SearchNode*> history = { node };
 	std::vector<std::pair<uint64_t, std::array<uint8_t, 95>>> k_history;
 	//選択
-	while (!node->isLeaf()) {
+	while (node && !node->isLeaf()) {
 		if (!search_enable) return;
 		double CE = std::numeric_limits<double>::max();
 		std::vector<dn> evals; evals.reserve(node->children.size());
@@ -118,7 +118,7 @@ void SearchAgent::simulate(SearchNode* const root) {
 	}
 	//展開・評価
 	{
-		if (!search_enable) return;
+		if (!search_enable || node == nullptr) return;
 		//末端ノードが他スレッドで展開中になっていないかチェック
 		LeafGuard dredear(node);
 		if (!dredear.Result()) {

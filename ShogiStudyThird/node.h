@@ -86,7 +86,7 @@ public:
 	void setOriginEval(const double evaluation) { origin_eval = evaluation; }
 
 	double getEvaluation()const { return eval.load(); }
-	bool isLeaf()const { const auto s = status.load(); return s == State::N || s == State::iE; }
+	bool isLeaf()const { const auto s = status.load(); return s == State::N || s == State::iE || s == State::T || s == State::D; }
 	bool isTerminal()const { return status == State::T || status == State::D; }
 	bool isRepetition()const { return status == State::D; }
 	bool isSearchable()const { const auto s = status.load(); return s == State::N || s == State::E; }
